@@ -58,17 +58,17 @@ class RGBTriangle {
                 {400.0f, 75.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(0, 255, 0),},
                 {700.0f, 675.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(0, 0, 255),},
             }};
+            const size_t rgbVerticesSize = rgbVertices.size() * sizeof(RGBVERTEX);
 
-            status = m_device->CreateVertexBuffer(rgbVertices.size() * sizeof(RGBVERTEX),
-                                                  0, RGBT_FVF_CODES,
+            status = m_device->CreateVertexBuffer(rgbVerticesSize, 0, RGBT_FVF_CODES,
                                                   D3DPOOL_DEFAULT, &m_vb);
             if (FAILED(status))
                 throw Error("Failed to create D3D8 vertex buffer");
 
-            status = m_vb->Lock(0, sizeof(rgbVertices), (BYTE**)&vertices, 0);
+            status = m_vb->Lock(0, rgbVerticesSize, (BYTE**)&vertices, 0);
             if (FAILED(status))
                 throw Error("Failed to lock D3D8 vertex buffer");
-            memcpy(vertices, rgbVertices.data(), sizeof(rgbVertices));
+            memcpy(vertices, rgbVertices.data(), rgbVerticesSize);
             status = m_vb->Unlock();
             if (FAILED(status))
                 throw Error("Failed to unlock D3D8 vertex buffer");
