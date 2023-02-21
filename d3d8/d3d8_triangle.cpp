@@ -1,3 +1,4 @@
+#include <array>
 #include <iostream>
 
 #include <d3d8.h>
@@ -10,9 +11,14 @@ struct RGBVERTEX {
     DWORD colour;
 };
 
+#define RGBT_FVF_CODES (D3DFVF_XYZRHW | D3DFVF_DIFFUSE)
+
 class RGBTriangle {
     
     public:
+
+        static const UINT WINDOW_WIDTH = 800;
+        static const UINT WINDOW_HEIGHT = 800;
 
         RGBTriangle(HWND hWnd) {
             m_d3d = Direct3DCreate8(D3D_SDK_VERSION);
@@ -29,6 +35,8 @@ class RGBTriangle {
 
             pp.Windowed = TRUE;
             pp.SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
+            pp.BackBufferWidth = WINDOW_WIDTH;
+            pp.BackBufferHeight = WINDOW_HEIGHT;
             pp.BackBufferFormat = dm.Format;
 
             status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd,
@@ -36,18 +44,23 @@ class RGBTriangle {
                                          &pp, &m_device);
             if (FAILED(status))
                 throw Error("Failed to create D3D8 device");
+
+            //Don't need any of this for 2D rendering
+            m_device->SetRenderState(D3DRS_ZENABLE, FALSE);
+            m_device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+            m_device->SetRenderState(D3DRS_LIGHTING, FALSE);
             
             //Vertex Buffer
-            VOID* vertices;
+            void* vertices = nullptr;
             
-            RGBVERTEX rgbVertices[] = {
+            std::array<RGBVERTEX, 3> rgbVertices = {{
                 {100.0f, 675.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(255, 0, 0),},
                 {400.0f, 75.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(0, 255, 0),},
                 {700.0f, 675.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(0, 0, 255),},
-            };
+            }};
 
-            status = m_device->CreateVertexBuffer(3 * sizeof(RGBVERTEX),
-                                                  0, D3DFVF_XYZRHW|D3DFVF_DIFFUSE,
+            status = m_device->CreateVertexBuffer(rgbVertices.size() * sizeof(RGBVERTEX),
+                                                  0, RGBT_FVF_CODES,
                                                   D3DPOOL_DEFAULT, &m_vb);
             if (FAILED(status))
                 throw Error("Failed to create D3D8 vertex buffer");
@@ -55,8 +68,10 @@ class RGBTriangle {
             status = m_vb->Lock(0, sizeof(rgbVertices), (BYTE**)&vertices, 0);
             if (FAILED(status))
                 throw Error("Failed to lock D3D8 vertex buffer");
-            memcpy(vertices, rgbVertices, sizeof(rgbVertices));
-            m_vb->Unlock();
+            memcpy(vertices, rgbVertices.data(), sizeof(rgbVertices));
+            status = m_vb->Unlock();
+            if (FAILED(status))
+                throw Error("Failed to unlock D3D8 vertex buffer");
         }
 
         void render() {
@@ -66,7 +81,7 @@ class RGBTriangle {
             m_device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
             m_device->BeginScene();
             m_device->SetStreamSource(0, m_vb.ptr(), sizeof(RGBVERTEX));
-            m_device->SetVertexShader(D3DFVF_XYZRHW|D3DFVF_DIFFUSE);
+            m_device->SetVertexShader(RGBT_FVF_CODES);
             m_device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 1);
             m_device->EndScene();
             m_device->Present(NULL, NULL, NULL, NULL);
@@ -96,8 +111,9 @@ INT WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
                      "D3D8_Triangle", NULL};
     RegisterClassEx(&wc);
 
-    HWND hWnd = CreateWindow("D3D8_Triangle", "D3D8 Triangle - Blisto Retro Edition",
-                              WS_OVERLAPPEDWINDOW, 50, 50, 800, 800,
+    HWND hWnd = CreateWindow("D3D8_Triangle", "D3D8 Triangle - Blisto Retro Edition", 
+                              WS_OVERLAPPEDWINDOW, 50, 50, 
+                              RGBTriangle::WINDOW_WIDTH, RGBTriangle::WINDOW_HEIGHT, 
                               GetDesktopWindow(), NULL, wc.hInstance, NULL);
 
     MSG msg;

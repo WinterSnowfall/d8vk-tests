@@ -15,8 +15,8 @@ D8VKTESTS_SRC_DIR=`dirname $(readlink -f $0)`
 D8VKTESTS_BUILD_DIR=$(realpath "$1")"/d8vk-tests"
 
 if [ -e "$D8VKTESTS_BUILD_DIR" ]; then
-  echo "Build directory $D8VKTESTS_BUILD_DIR already exists"
-  exit 1
+  echo "Clearing exising build directory $D8VKTESTS_BUILD_DIR"
+  rm -rf "$D8VKTESTS_BUILD_DIR"
 fi
 
 shift 1
