@@ -1,4 +1,4 @@
-project('dxvk-tests', ['cpp'], version : 'v1.0', meson_version : '>= 0.49', default_options : [ 'cpp_std=c++17' ])
+project('d8vk-tests', ['cpp'], version : 'v1.0', meson_version : '>= 0.49', default_options : [ 'cpp_std=c++17' ])
 
 cpu_family = target_machine.cpu_family()
 platform   = target_machine.system()
@@ -45,15 +45,7 @@ if cpu_family == 'x86'
 ]
 endif
 
-lib_d3d9    = cpp.find_library('d3d9')
-lib_d3d11   = cpp.find_library('d3d11')
-lib_dxgi    = cpp.find_library('dxgi')
-
-if dxvk_is_msvc
-  lib_d3dcompiler_47 = cpp.find_library('d3dcompiler')
-else
-  lib_d3dcompiler_47 = cpp.find_library('d3dcompiler_47')
-endif
+lib_d3d8    = cpp.find_library('d3d8')
 
 add_project_arguments(cpp.get_supported_arguments(compiler_args), language: 'cpp')
 add_project_link_arguments(cpp.get_supported_link_arguments(link_args), language: 'cpp')
@@ -62,6 +54,4 @@ exe_ext = ''
 dll_ext = ''
 def_spec_ext = '.def'
 
-subdir('d3d9')
-subdir('d3d11')
-subdir('shader')
+subdir('d3d8')
