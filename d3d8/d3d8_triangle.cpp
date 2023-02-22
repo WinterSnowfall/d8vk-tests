@@ -21,10 +21,12 @@ class RGBTriangle {
         static const UINT WINDOW_HEIGHT = 800;
 
         RGBTriangle(HWND hWnd) {
+            //D3D Interface
             m_d3d = Direct3DCreate8(D3D_SDK_VERSION);
             if(m_d3d.ptr() == nullptr)
                 throw Error("Failed to create D3D8 interface");
 
+            //D3D Device
             D3DDISPLAYMODE dm;
             HRESULT status = m_d3d->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &dm);
             if (FAILED(status))
@@ -34,6 +36,7 @@ class RGBTriangle {
             ZeroMemory(&pp, sizeof(pp));
 
             pp.Windowed = TRUE;
+            //alternatively, set to D3DSWAPEFFECT_FLIP for no VSync
             pp.SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
             pp.BackBufferWidth = WINDOW_WIDTH;
             pp.BackBufferHeight = WINDOW_HEIGHT;
@@ -45,7 +48,7 @@ class RGBTriangle {
             if (FAILED(status))
                 throw Error("Failed to create D3D8 device");
 
-            //Don't need any of this for 2D rendering
+            //Don't need any of these for 2D rendering
             m_device->SetRenderState(D3DRS_ZENABLE, FALSE);
             m_device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
             m_device->SetRenderState(D3DRS_LIGHTING, FALSE);
@@ -53,6 +56,7 @@ class RGBTriangle {
             //Vertex Buffer
             void* vertices = nullptr;
             
+            //tailored for 800 x 800 and the appearance of being centered
             std::array<RGBVERTEX, 3> rgbVertices = {{
                 {100.0f, 675.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(255, 0, 0),},
                 {400.0f, 75.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(0, 255, 0),},
@@ -76,15 +80,31 @@ class RGBTriangle {
 
         void render() {
             if(m_device.ptr() == nullptr)
-                throw Error("Failed to get a valid D3D8 device for present");
+                throw Error("Failed to get a valid D3D8 device for rendering");
 
-            m_device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
-            m_device->BeginScene();
-            m_device->SetStreamSource(0, m_vb.ptr(), sizeof(RGBVERTEX));
-            m_device->SetVertexShader(RGBT_FVF_CODES);
-            m_device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 1);
-            m_device->EndScene();
-            m_device->Present(NULL, NULL, NULL, NULL);
+            HRESULT status = m_device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
+            if (FAILED(status))
+                throw Error("Failed to clear D3D8 viewport");
+            if(m_device->BeginScene() == D3D_OK) {
+                status = m_device->SetStreamSource(0, m_vb.ptr(), sizeof(RGBVERTEX));
+                if (FAILED(status))
+                    throw Error("Failed to set D3D8 stream source");
+                status = m_device->SetVertexShader(RGBT_FVF_CODES);
+                if (FAILED(status))
+                    throw Error("Failed to set D3D8 vertex shader");
+                status = m_device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 1);
+                if (FAILED(status))
+                    throw Error("Failed to draw D3D8 triangle list");
+                if(m_device->EndScene() == D3D_OK) {
+                    status = m_device->Present(NULL, NULL, NULL, NULL);
+                    if (FAILED(status))
+                        throw Error("Failed to present");
+                } else {
+                    throw Error("Failed to end D3D8 scene");
+                }
+            } else {
+                throw Error("Failed to begin D3D8 scene");
+            }
         }
     
     private:
