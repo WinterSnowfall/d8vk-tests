@@ -51,7 +51,7 @@ class RGBTriangle {
                 throw Error("Failed to create D3D8 device");
 
             //don't need any of these for 2D rendering
-            status = m_device->SetRenderState(D3DRS_ZENABLE, FALSE);
+            status = m_device->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
             if (FAILED(status))
                 throw Error("Failed to set D3D8 render state for D3DRS_ZENABLE");
             status = m_device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
