@@ -38,6 +38,8 @@ class RGBTriangle {
             pp.Windowed = TRUE;
             //alternatively, set to D3DSWAPEFFECT_FLIP for no VSync
             pp.SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
+            //be stupid about the backbuffer count, like some D3D8 apps are
+            pp.BackBufferCount = 0;
             pp.BackBufferWidth = WINDOW_WIDTH;
             pp.BackBufferHeight = WINDOW_HEIGHT;
             pp.BackBufferFormat = dm.Format;
@@ -48,10 +50,21 @@ class RGBTriangle {
             if (FAILED(status))
                 throw Error("Failed to create D3D8 device");
 
-            //Don't need any of these for 2D rendering
-            m_device->SetRenderState(D3DRS_ZENABLE, FALSE);
-            m_device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-            m_device->SetRenderState(D3DRS_LIGHTING, FALSE);
+            //don't need any of these for 2D rendering
+            status = m_device->SetRenderState(D3DRS_ZENABLE, FALSE);
+            if (FAILED(status))
+                throw Error("Failed to set D3D8 render state for D3DRS_ZENABLE");
+            status = m_device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+            if (FAILED(status))
+                throw Error("Failed to set D3D8 render state for D3DRS_CULLMODE");
+            status = m_device->SetRenderState(D3DRS_LIGHTING, FALSE);
+            if (FAILED(status))
+                throw Error("Failed to set D3D8 render state for D3DRS_LIGHTING");
+
+            //BackBuffer test (this shouldn't fail even with BackBufferCount set to 0)
+            status = m_device->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &m_bbs);
+            if (FAILED(status))
+                throw Error("Failed to get D3D8 backbuffer");
             
             //Vertex Buffer
             void* vertices = nullptr;
@@ -111,6 +124,7 @@ class RGBTriangle {
 
         Com<IDirect3D8> m_d3d;
         Com<IDirect3DDevice8> m_device;
+        Com<IDirect3DSurface8> m_bbs;
         Com<IDirect3DVertexBuffer8> m_vb;
 };
 
