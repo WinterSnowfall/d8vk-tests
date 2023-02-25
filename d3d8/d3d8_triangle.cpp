@@ -37,9 +37,10 @@ class RGBTriangle {
             ZeroMemory(&pp, sizeof(pp));
 
             pp.Windowed = TRUE;
-            // alternatively, set to D3DSWAPEFFECT_FLIP for no VSync
+            pp.hDeviceWindow = hWnd;
+            // set to D3DSWAPEFFECT_COPY or D3DSWAPEFFECT_FLIP for no VSync
             pp.SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
-            // be stupid about the backbuffer count, like some D3D8 apps are
+            // according to D3D8 spec "0 is treated as 1" here
             pp.BackBufferCount = 0;
             pp.BackBufferWidth = WINDOW_WIDTH;
             pp.BackBufferHeight = WINDOW_HEIGHT;
@@ -110,7 +111,7 @@ class RGBTriangle {
             }
             // nested BeginScene test
             if(m_device->BeginScene() == D3D_OK) {
-                // this call should fail according to D#D8 spec
+                // this call should fail according to D3D8 spec
                 if(m_device->BeginScene() == D3D_OK) {
                     std::cout << "  - The nested BeginScene test has failed" << std::endl;
                 } else {
