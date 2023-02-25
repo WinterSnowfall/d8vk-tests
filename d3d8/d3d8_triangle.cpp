@@ -27,9 +27,16 @@ class RGBTriangle {
             if(m_d3d.ptr() == nullptr)
                 throw Error("Failed to create D3D8 interface");
 
+            D3DADAPTER_IDENTIFIER8 adapterId;
+            HRESULT status = m_d3d->GetAdapterIdentifier(D3DADAPTER_DEFAULT, 0, &adapterId);
+            if (FAILED(status))
+                throw Error("Failed to get D3D8 adapter identifier");
+
+            std::cout << format("Using adapter: ", adapterId.Description) << std::endl;
+
             // D3D Device
             D3DDISPLAYMODE dm;
-            HRESULT status = m_d3d->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &dm);
+            status = m_d3d->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &dm);
             if (FAILED(status))
                 throw Error("Failed to get D3D8 adapter display mode");
 
@@ -91,7 +98,7 @@ class RGBTriangle {
         void test() {
             UINT passedTests = 0;
             // to be updated when tests are added
-            UINT totalTests = 2;
+            const UINT totalTests = 2;
 
             if(m_device.ptr() == nullptr)
                 throw Error("Failed to get a valid D3D8 device for running tests");
