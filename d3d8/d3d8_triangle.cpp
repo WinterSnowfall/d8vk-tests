@@ -5,6 +5,7 @@
 
 #include "../common/com.h"
 #include "../common/error.h"
+#include "../common/str.h"
 
 struct RGBVERTEX {
     FLOAT x, y, z, rhw;
@@ -21,12 +22,12 @@ class RGBTriangle {
         static const UINT WINDOW_HEIGHT = 800;
 
         RGBTriangle(HWND hWnd) {
-            //D3D Interface
+            // D3D Interface
             m_d3d = Direct3DCreate8(D3D_SDK_VERSION);
             if(m_d3d.ptr() == nullptr)
                 throw Error("Failed to create D3D8 interface");
 
-            //D3D Device
+            // D3D Device
             D3DDISPLAYMODE dm;
             HRESULT status = m_d3d->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &dm);
             if (FAILED(status))
@@ -36,9 +37,9 @@ class RGBTriangle {
             ZeroMemory(&pp, sizeof(pp));
 
             pp.Windowed = TRUE;
-            //alternatively, set to D3DSWAPEFFECT_FLIP for no VSync
+            // alternatively, set to D3DSWAPEFFECT_FLIP for no VSync
             pp.SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
-            //be stupid about the backbuffer count, like some D3D8 apps are
+            // be stupid about the backbuffer count, like some D3D8 apps are
             pp.BackBufferCount = 0;
             pp.BackBufferWidth = WINDOW_WIDTH;
             pp.BackBufferHeight = WINDOW_HEIGHT;
@@ -50,7 +51,7 @@ class RGBTriangle {
             if (FAILED(status))
                 throw Error("Failed to create D3D8 device");
 
-            //don't need any of these for 2D rendering
+            // don't need any of these for 2D rendering
             status = m_device->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
             if (FAILED(status))
                 throw Error("Failed to set D3D8 render state for D3DRS_ZENABLE");
@@ -60,16 +61,11 @@ class RGBTriangle {
             status = m_device->SetRenderState(D3DRS_LIGHTING, FALSE);
             if (FAILED(status))
                 throw Error("Failed to set D3D8 render state for D3DRS_LIGHTING");
-
-            //BackBuffer test (this shouldn't fail even with BackBufferCount set to 0)
-            status = m_device->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &m_bbs);
-            if (FAILED(status))
-                throw Error("Failed to get D3D8 backbuffer");
             
-            //Vertex Buffer
+            // Vertex Buffer
             void* vertices = nullptr;
             
-            //tailored for 800 x 800 and the appearance of being centered
+            // tailored for 800 x 800 and the appearance of being centered
             std::array<RGBVERTEX, 3> rgbVertices = {{
                 {100.0f, 675.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(255, 0, 0),},
                 {400.0f, 75.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(0, 255, 0),},
@@ -89,6 +85,46 @@ class RGBTriangle {
             status = m_vb->Unlock();
             if (FAILED(status))
                 throw Error("Failed to unlock D3D8 vertex buffer");
+        }
+
+        void test() {
+            UINT passedTests = 0;
+            // to be updated when tests are added
+            UINT totalTests = 2;
+
+            if(m_device.ptr() == nullptr)
+                throw Error("Failed to get a valid D3D8 device for running tests");
+
+            HRESULT status = m_device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
+            if (FAILED(status))
+                throw Error("Failed to clear D3D8 viewport");
+
+            std::cout << "Running D3D8 tests:" << std::endl;
+            // GetBackBuffer test (this shouldn't fail even with BackBufferCount set to 0)
+            status = m_device->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &m_bbs);
+            if (FAILED(status)) {
+                std::cout << "  - The GetBackBuffer test has failed" << std::endl;
+            } else {
+                passedTests++;
+                std::cout << "  + The GetBackBuffer test has passed" << std::endl;
+            }
+            // nested BeginScene test
+            if(m_device->BeginScene() == D3D_OK) {
+                // this call should fail according to D#D8 spec
+                if(m_device->BeginScene() == D3D_OK) {
+                    std::cout << "  - The nested BeginScene test has failed" << std::endl;
+                } else {
+                    passedTests++;
+                    std::cout << "  + The nested BeginScene test has passed" << std::endl;
+                }
+            } else {
+                throw Error("Failed to begin D3D8 scene");
+            }
+            if(m_device->EndScene() != D3D_OK) {
+                throw Error("Failed to end D3D8 scene");
+            }
+
+            std::cout << format("Passed ", passedTests, "/", totalTests, " tests") << std::endl;
         }
 
         void render() {
@@ -157,6 +193,8 @@ INT WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
 
         ShowWindow(hWnd, SW_SHOWDEFAULT);
         UpdateWindow(hWnd);
+
+        rgbTriangle.test();
 
         while (true) {
             if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
