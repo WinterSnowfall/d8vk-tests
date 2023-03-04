@@ -40,59 +40,23 @@ class RGBTriangle {
             if (FAILED(status))
                 throw Error("Failed to get D3D8 adapter display mode");
 
-            D3DPRESENT_PARAMETERS pp;
-            ZeroMemory(&pp, sizeof(pp));
+            ZeroMemory(&m_pp, sizeof(m_pp));
 
-            pp.Windowed = TRUE;
-            pp.hDeviceWindow = hWnd;
+            m_pp.Windowed = TRUE;
+            m_pp.hDeviceWindow = hWnd;
             // set to D3DSWAPEFFECT_COPY or D3DSWAPEFFECT_FLIP for no VSync
-            pp.SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
+            m_pp.SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
             // according to D3D8 spec "0 is treated as 1" here
-            pp.BackBufferCount = 0;
-            pp.BackBufferWidth = WINDOW_WIDTH;
-            pp.BackBufferHeight = WINDOW_HEIGHT;
-            pp.BackBufferFormat = dm.Format;
+            m_pp.BackBufferCount = 0;
+            m_pp.BackBufferWidth = WINDOW_WIDTH;
+            m_pp.BackBufferHeight = WINDOW_HEIGHT;
+            m_pp.BackBufferFormat = dm.Format;
 
             status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd,
                                          D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
-                                         &pp, &m_device);
+                                         &m_pp, &m_device);
             if (FAILED(status))
                 throw Error("Failed to create D3D8 device");
-
-            // don't need any of these for 2D rendering
-            status = m_device->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
-            if (FAILED(status))
-                throw Error("Failed to set D3D8 render state for D3DRS_ZENABLE");
-            status = m_device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-            if (FAILED(status))
-                throw Error("Failed to set D3D8 render state for D3DRS_CULLMODE");
-            status = m_device->SetRenderState(D3DRS_LIGHTING, FALSE);
-            if (FAILED(status))
-                throw Error("Failed to set D3D8 render state for D3DRS_LIGHTING");
-            
-            // Vertex Buffer
-            void* vertices = nullptr;
-            
-            // tailored for 800 x 800 and the appearance of being centered
-            std::array<RGBVERTEX, 3> rgbVertices = {{
-                {100.0f, 675.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(255, 0, 0),},
-                {400.0f, 75.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(0, 255, 0),},
-                {700.0f, 675.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(0, 0, 255),},
-            }};
-            const size_t rgbVerticesSize = rgbVertices.size() * sizeof(RGBVERTEX);
-
-            status = m_device->CreateVertexBuffer(rgbVerticesSize, 0, RGBT_FVF_CODES,
-                                                  D3DPOOL_DEFAULT, &m_vb);
-            if (FAILED(status))
-                throw Error("Failed to create D3D8 vertex buffer");
-
-            status = m_vb->Lock(0, rgbVerticesSize, (BYTE**)&vertices, 0);
-            if (FAILED(status))
-                throw Error("Failed to lock D3D8 vertex buffer");
-            memcpy(vertices, rgbVertices.data(), rgbVerticesSize);
-            status = m_vb->Unlock();
-            if (FAILED(status))
-                throw Error("Failed to unlock D3D8 vertex buffer");
         }
 
         void test() {
@@ -116,14 +80,23 @@ class RGBTriangle {
                 passedTests++;
                 std::cout << "  + The GetBackBuffer test has passed" << std::endl;
             }
-            // nested BeginScene test
+            //releasing the surface to avoid any issues with m_device->Reset()
+            m_bbs = nullptr;
+
+            // BeginScene test
             if(m_device->BeginScene() == D3D_OK) {
-                // this call should fail according to D3D8 spec
-                if(m_device->BeginScene() == D3D_OK) {
-                    std::cout << "  - The nested BeginScene test has failed" << std::endl;
-                } else {
-                    passedTests++;
-                    std::cout << "  + The nested BeginScene test has passed" << std::endl;
+                status = m_device->Reset(&m_pp);
+                if(FAILED(status)) {
+                    throw Error("Failed to reset D3D8 device");
+                }
+                else {       
+                    // Reset() should have cleared the state so this should work properly
+                    if(m_device->BeginScene() == D3D_OK) {
+                        passedTests++;
+                        std::cout << "  + The BeginScene+Reset test has passed" << std::endl;
+                    } else {
+                        std::cout << "  - The BeginScene+Reset test has failed" << std::endl;
+                    }
                 }
             } else {
                 throw Error("Failed to begin D3D8 scene");
@@ -133,6 +106,43 @@ class RGBTriangle {
             }
 
             std::cout << format("Passed ", passedTests, "/", totalTests, " tests") << std::endl;
+        }
+
+        void prepare() {
+            // don't need any of these for 2D rendering
+            HRESULT status = m_device->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
+            if (FAILED(status))
+                throw Error("Failed to set D3D8 render state for D3DRS_ZENABLE");
+            status = m_device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+            if (FAILED(status))
+                throw Error("Failed to set D3D8 render state for D3DRS_CULLMODE");
+            status = m_device->SetRenderState(D3DRS_LIGHTING, FALSE);
+            if (FAILED(status))
+                throw Error("Failed to set D3D8 render state for D3DRS_LIGHTING");
+
+            // Vertex Buffer
+            void* vertices = nullptr;
+            
+            // tailored for 800 x 800 and the appearance of being centered
+            std::array<RGBVERTEX, 3> rgbVertices = {{
+                {100.0f, 675.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(255, 0, 0),},
+                {400.0f, 75.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(0, 255, 0),},
+                {700.0f, 675.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(0, 0, 255),},
+            }};
+            const size_t rgbVerticesSize = rgbVertices.size() * sizeof(RGBVERTEX);
+
+            status = m_device->CreateVertexBuffer(rgbVerticesSize, 0, RGBT_FVF_CODES,
+                                                  D3DPOOL_DEFAULT, &m_vb);
+            if (FAILED(status))
+                throw Error("Failed to create D3D8 vertex buffer");
+
+            status = m_vb->Lock(0, rgbVerticesSize, (BYTE**)&vertices, 0);
+            if (FAILED(status))
+                throw Error("Failed to lock D3D8 vertex buffer");
+            memcpy(vertices, rgbVertices.data(), rgbVerticesSize);
+            status = m_vb->Unlock();
+            if (FAILED(status))
+                throw Error("Failed to unlock D3D8 vertex buffer");
         }
 
         void render() {
@@ -170,6 +180,8 @@ class RGBTriangle {
         Com<IDirect3DDevice8> m_device;
         Com<IDirect3DSurface8> m_bbs;
         Com<IDirect3DVertexBuffer8> m_vb;
+
+        D3DPRESENT_PARAMETERS m_pp;
 };
 
 LRESULT WINAPI WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -203,6 +215,8 @@ INT WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
         UpdateWindow(hWnd);
 
         rgbTriangle.test();
+
+        rgbTriangle.prepare();
 
         while (true) {
             if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
