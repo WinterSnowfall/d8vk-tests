@@ -80,7 +80,7 @@ class RGBTriangle {
                 passedTests++;
                 std::cout << "  + The GetBackBuffer test has passed" << std::endl;
             }
-            //releasing the surface to avoid any issues with m_device->Reset()
+            // releasing the surface to avoid any issues with m_device->Reset()
             m_bbs = nullptr;
 
             // BeginScene test

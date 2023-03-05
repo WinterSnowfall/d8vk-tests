@@ -5,5 +5,5 @@ args = {
   'install': true
 }
 
-executable('d3d8-triangle', files('d3d8_triangle.cpp'), gui_app: true, kwargs: args)
+executable('d3d8-triangle', files('d3d8_triangle.cpp'), win_subsystem: 'console', kwargs: args)
 
