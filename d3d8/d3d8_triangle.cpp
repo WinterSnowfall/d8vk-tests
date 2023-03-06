@@ -62,7 +62,7 @@ class RGBTriangle {
 
         void test(HWND hWnd) {
             UINT passedTests = 0;
-            // to be updated when tests are added
+            // to be updated when static tests are added
             UINT totalTests = 2;
 
             if(m_d3d.ptr() == nullptr)
@@ -71,17 +71,16 @@ class RGBTriangle {
             if(m_device.ptr() == nullptr)
                 throw Error("Failed to get a valid D3D8 device for running tests");
 
-            HRESULT status = m_device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
-            if (FAILED(status))
-                throw Error("Failed to clear D3D8 viewport");
-
             std::cout << "Running D3D8 tests:" << std::endl;
 
-            //DS format tests
-            Com<IDirect3DDevice8> test_device;
-            D3DPRESENT_PARAMETERS test_pp;
+            HRESULT status;
 
-            memcpy(&test_pp, &m_pp, sizeof(m_pp));
+            // Depth Stencil format tests
+            Com<IDirect3DDevice8> dsDevice;
+            D3DPRESENT_PARAMETERS dsPP;
+
+            memcpy(&dsPP, &m_pp, sizeof(m_pp));
+            dsPP.EnableAutoDepthStencil = TRUE;
 
             std::map<D3DFORMAT, char const*> dsFormats = { {D3DFMT_D16_LOCKABLE, "D3DFMT_D16_LOCKABLE"}, 
                                                            {D3DFMT_D32, "D3DFMT_D32"}, 
@@ -94,19 +93,18 @@ class RGBTriangle {
             std::map<D3DFORMAT, char const*>::iterator dsFormatIter;
             
 			for (dsFormatIter = dsFormats.begin(); dsFormatIter != dsFormats.end(); dsFormatIter++) {
-                test_pp.EnableAutoDepthStencil = TRUE;
-                test_pp.AutoDepthStencilFormat = dsFormatIter->first;
+                dsPP.AutoDepthStencilFormat = dsFormatIter->first;
 
                 status = m_d3d->CheckDepthStencilMatch(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
-                                                       test_pp.BackBufferFormat, test_pp.BackBufferFormat,
-                                                       dsFormatIter->first);
+                                                       dsPP.BackBufferFormat, dsPP.BackBufferFormat,
+                                                       dsPP.AutoDepthStencilFormat);
                 if (FAILED(status)) {
                     std::cout << "  ~ The " << format(dsFormatIter->second) << " DS format is not supported" << std::endl;
                 } else {
                     totalTests++;
                     status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd,
-                                                D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
-                                                &test_pp, &test_device);
+                                                 D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
+                                                 &dsPP, &dsDevice);
                     if (FAILED(status)) {
                         std::cout << "  - The " << format(dsFormatIter->second) << " DS format test has failed" << std::endl;
                     } else {
@@ -115,9 +113,9 @@ class RGBTriangle {
                     }
                 }
             }
-            // clear/release DS format test device and present params
-            test_device = nullptr;
-            ZeroMemory(&test_pp, sizeof(test_pp));
+            // clear/release Depth Stencil format test device and present params
+            dsDevice = nullptr;
+            ZeroMemory(&dsPP, sizeof(dsPP));
 
             // GetBackBuffer test (this shouldn't fail even with BackBufferCount set to 0)
             status = m_device->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &m_bbs);
@@ -258,10 +256,10 @@ INT WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
     try {
         RGBTriangle rgbTriangle(hWnd);
 
+        rgbTriangle.test(hWnd);
+
         ShowWindow(hWnd, SW_SHOWDEFAULT);
         UpdateWindow(hWnd);
-
-        rgbTriangle.test(hWnd);
 
         rgbTriangle.prepare();
 
