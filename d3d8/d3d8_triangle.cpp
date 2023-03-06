@@ -1,3 +1,4 @@
+#include <map>
 #include <array>
 #include <iostream>
 
@@ -59,10 +60,13 @@ class RGBTriangle {
                 throw Error("Failed to create D3D8 device");
         }
 
-        void test() {
+        void test(HWND hWnd) {
             UINT passedTests = 0;
             // to be updated when tests are added
-            const UINT totalTests = 2;
+            UINT totalTests = 2;
+
+            if(m_d3d.ptr() == nullptr)
+                throw Error("Failed to get a valid D3D8 interface for running tests");
 
             if(m_device.ptr() == nullptr)
                 throw Error("Failed to get a valid D3D8 device for running tests");
@@ -72,6 +76,49 @@ class RGBTriangle {
                 throw Error("Failed to clear D3D8 viewport");
 
             std::cout << "Running D3D8 tests:" << std::endl;
+
+            //DS format tests
+            Com<IDirect3DDevice8> test_device;
+            D3DPRESENT_PARAMETERS test_pp;
+
+            memcpy(&test_pp, &m_pp, sizeof(m_pp));
+
+            std::map<D3DFORMAT, char const*> dsFormats = { {D3DFMT_D16_LOCKABLE, "D3DFMT_D16_LOCKABLE"}, 
+                                                      {D3DFMT_D32, "D3DFMT_D32"}, 
+                                                      {D3DFMT_D15S1, "D3DFMT_D15S1"}, 
+                                                      {D3DFMT_D24S8, "D3DFMT_D24S8"}, 
+                                                      {D3DFMT_D16, "D3DFMT_D16"},
+                                                      {D3DFMT_D24X8, "D3DFMT_D24X8"}, 
+                                                      {D3DFMT_D24X4S4, "D3DFMT_D24X4S4"} };
+
+            std::map<D3DFORMAT, char const*>::iterator iter;
+            
+			for (iter = dsFormats.begin(); iter != dsFormats.end(); iter++) {
+                test_pp.EnableAutoDepthStencil = TRUE;
+                test_pp.AutoDepthStencilFormat = iter->first;
+
+                status = m_d3d->CheckDepthStencilMatch(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
+                                                       test_pp.BackBufferFormat, test_pp.BackBufferFormat,
+                                                       iter->first);
+                if (FAILED(status)) {
+                    std::cout << "  ~ WARN: " << format(iter->second) << " DS format not supported" << std::endl;
+                } else {
+                    totalTests++;
+                    status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd,
+                                                D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
+                                                &test_pp, &test_device);
+                    if (FAILED(status)) {
+                        std::cout << "  - The " << format(iter->second) << " DS format test has failed" << std::endl;
+                    } else {
+                        passedTests++;
+                        std::cout << "  + The " << format(iter->second) << " DS format test has passed" << std::endl;
+                    }
+                }
+            }
+            // clear/release DS format test device and present params
+            test_device = nullptr;
+            ZeroMemory(&test_pp, sizeof(test_pp));
+
             // GetBackBuffer test (this shouldn't fail even with BackBufferCount set to 0)
             status = m_device->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &m_bbs);
             if (FAILED(status)) {
@@ -83,7 +130,7 @@ class RGBTriangle {
             // releasing the surface to avoid any issues with m_device->Reset()
             m_bbs = nullptr;
 
-            // BeginScene test
+            // BeginScene+Reset test
             if(m_device->BeginScene() == D3D_OK) {
                 status = m_device->Reset(&m_pp);
                 if(FAILED(status)) {
@@ -214,7 +261,7 @@ INT WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
         ShowWindow(hWnd, SW_SHOWDEFAULT);
         UpdateWindow(hWnd);
 
-        rgbTriangle.test();
+        rgbTriangle.test(hWnd);
 
         rgbTriangle.prepare();
 
