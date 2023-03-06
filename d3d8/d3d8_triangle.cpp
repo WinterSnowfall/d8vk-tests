@@ -84,34 +84,34 @@ class RGBTriangle {
             memcpy(&test_pp, &m_pp, sizeof(m_pp));
 
             std::map<D3DFORMAT, char const*> dsFormats = { {D3DFMT_D16_LOCKABLE, "D3DFMT_D16_LOCKABLE"}, 
-                                                      {D3DFMT_D32, "D3DFMT_D32"}, 
-                                                      {D3DFMT_D15S1, "D3DFMT_D15S1"}, 
-                                                      {D3DFMT_D24S8, "D3DFMT_D24S8"}, 
-                                                      {D3DFMT_D16, "D3DFMT_D16"},
-                                                      {D3DFMT_D24X8, "D3DFMT_D24X8"}, 
-                                                      {D3DFMT_D24X4S4, "D3DFMT_D24X4S4"} };
+                                                           {D3DFMT_D32, "D3DFMT_D32"}, 
+                                                           {D3DFMT_D15S1, "D3DFMT_D15S1"}, 
+                                                           {D3DFMT_D24S8, "D3DFMT_D24S8"}, 
+                                                           {D3DFMT_D16, "D3DFMT_D16"},
+                                                           {D3DFMT_D24X8, "D3DFMT_D24X8"}, 
+                                                           {D3DFMT_D24X4S4, "D3DFMT_D24X4S4"} };
 
-            std::map<D3DFORMAT, char const*>::iterator iter;
+            std::map<D3DFORMAT, char const*>::iterator dsFormatIter;
             
-			for (iter = dsFormats.begin(); iter != dsFormats.end(); iter++) {
+			for (dsFormatIter = dsFormats.begin(); dsFormatIter != dsFormats.end(); dsFormatIter++) {
                 test_pp.EnableAutoDepthStencil = TRUE;
-                test_pp.AutoDepthStencilFormat = iter->first;
+                test_pp.AutoDepthStencilFormat = dsFormatIter->first;
 
                 status = m_d3d->CheckDepthStencilMatch(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
                                                        test_pp.BackBufferFormat, test_pp.BackBufferFormat,
-                                                       iter->first);
+                                                       dsFormatIter->first);
                 if (FAILED(status)) {
-                    std::cout << "  ~ WARN: " << format(iter->second) << " DS format not supported" << std::endl;
+                    std::cout << "  ~ The " << format(dsFormatIter->second) << " DS format is not supported" << std::endl;
                 } else {
                     totalTests++;
                     status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd,
                                                 D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
                                                 &test_pp, &test_device);
                     if (FAILED(status)) {
-                        std::cout << "  - The " << format(iter->second) << " DS format test has failed" << std::endl;
+                        std::cout << "  - The " << format(dsFormatIter->second) << " DS format test has failed" << std::endl;
                     } else {
                         passedTests++;
-                        std::cout << "  + The " << format(iter->second) << " DS format test has passed" << std::endl;
+                        std::cout << "  + The " << format(dsFormatIter->second) << " DS format test has passed" << std::endl;
                     }
                 }
             }
