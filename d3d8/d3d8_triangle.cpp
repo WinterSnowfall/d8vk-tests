@@ -54,8 +54,8 @@ class RGBTriangle {
             m_pp.BackBufferFormat = dm.Format;
 
             status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
-                                                 D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
-                                                 &m_pp, &m_device);
+                                         D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
+                                         &m_pp, &m_device);
             if (FAILED(status))
                 throw Error("Failed to create D3D8 device");
         }
@@ -130,24 +130,24 @@ class RGBTriangle {
 
             std::map<D3DFORMAT, char const*>::iterator dsFormatIter;
             
-			for (dsFormatIter = dsFormats.begin(); dsFormatIter != dsFormats.end(); dsFormatIter++) {
+            for (dsFormatIter = dsFormats.begin(); dsFormatIter != dsFormats.end(); dsFormatIter++) {
                 dsPP.AutoDepthStencilFormat = dsFormatIter->first;
 
                 status = m_d3d->CheckDepthStencilMatch(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
                                                        dsPP.BackBufferFormat, dsPP.BackBufferFormat,
                                                        dsPP.AutoDepthStencilFormat);
                 if (FAILED(status)) {
-                    std::cout << "  ~ The " << format(dsFormatIter->second) << " DS format is not supported" << std::endl;
+                    std::cout << format("  ~ The ", dsFormatIter->second, " DS format is not supported") << std::endl;
                 } else {
                     m_totalTests++;
                     status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
                                                  D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
                                                  &dsPP, &m_device);
                     if (FAILED(status)) {
-                        std::cout << "  - The " << format(dsFormatIter->second) << " DS format test has failed" << std::endl;
+                        std::cout << format("  - The ", dsFormatIter->second, " DS format test has failed") << std::endl;
                     } else {
                         m_passedTests++;
-                        std::cout << "  + The " << format(dsFormatIter->second) << " DS format test has passed" << std::endl;
+                        std::cout << format("  + The ", dsFormatIter->second, " DS format test has passed") << std::endl;
                     }
                 }
             }
@@ -199,9 +199,6 @@ class RGBTriangle {
         }
 
         void render() {
-            if(m_device.ptr() == nullptr)
-                throw Error("Failed to get a valid D3D8 device for rendering");
-
             HRESULT status = m_device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
             if (FAILED(status))
                 throw Error("Failed to clear D3D8 viewport");
