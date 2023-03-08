@@ -19,10 +19,10 @@ class RGBTriangle {
     
     public:
 
-        static const UINT WINDOW_WIDTH = 800;
+        static const UINT WINDOW_WIDTH  = 800;
         static const UINT WINDOW_HEIGHT = 800;
 
-        RGBTriangle(HWND hWnd) {
+        RGBTriangle(HWND hWnd) : m_hWnd(hWnd) {
             // D3D Interface
             m_d3d = Direct3DCreate8(D3D_SDK_VERSION);
             if(m_d3d.ptr() == nullptr)
@@ -44,7 +44,7 @@ class RGBTriangle {
             ZeroMemory(&m_pp, sizeof(m_pp));
 
             m_pp.Windowed = TRUE;
-            m_pp.hDeviceWindow = hWnd;
+            m_pp.hDeviceWindow = m_hWnd;
             // set to D3DSWAPEFFECT_COPY or D3DSWAPEFFECT_FLIP for no VSync
             m_pp.SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
             // according to D3D8 spec "0 is treated as 1" here
@@ -53,30 +53,68 @@ class RGBTriangle {
             m_pp.BackBufferHeight = WINDOW_HEIGHT;
             m_pp.BackBufferFormat = dm.Format;
 
-            status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd,
-                                         D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
-                                         &m_pp, &m_device);
+            status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
+                                                 D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
+                                                 &m_pp, &m_device);
             if (FAILED(status))
                 throw Error("Failed to create D3D8 device");
         }
 
-        void test(HWND hWnd) {
-            UINT passedTests = 0;
-            // to be updated when static tests are added
-            UINT totalTests = 2;
+        // GetBackBuffer test (this shouldn't fail even with BackBufferCount set to 0)
+        void testBackBuffer() {
+            HRESULT status = m_device->Reset(&m_pp);
+            if(FAILED(status))
+                throw Error("Failed to reset D3D8 device");
 
-            if(m_d3d.ptr() == nullptr)
-                throw Error("Failed to get a valid D3D8 interface for running tests");
+            Com<IDirect3DSurface8> bbSurface;
 
-            if(m_device.ptr() == nullptr)
-                throw Error("Failed to get a valid D3D8 device for running tests");
+            m_totalTests++;
 
-            std::cout << "Running D3D8 tests:" << std::endl;
+            status = m_device->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &bbSurface);
+            if (FAILED(status)) {
+                std::cout << "  - The GetBackBuffer test has failed" << std::endl;
+            } else {
+                m_passedTests++;
+                std::cout << "  + The GetBackBuffer test has passed" << std::endl;
+            }
+        }
 
-            HRESULT status;
+        // BeginScene+Reset test
+        void testBeginSceneReset() {
+            HRESULT status = m_device->Reset(&m_pp);
+            if(FAILED(status))
+                throw Error("Failed to reset D3D8 device");
 
-            // Depth Stencil format tests
-            Com<IDirect3DDevice8> dsDevice;
+            m_totalTests++;
+
+            if(m_device->BeginScene() == D3D_OK) {
+                status = m_device->Reset(&m_pp);
+                if(FAILED(status)) {
+                    throw Error("Failed to reset D3D8 device");
+                }
+                else {       
+                    // Reset() should have cleared the state so this should work properly
+                    if(m_device->BeginScene() == D3D_OK) {
+                        m_passedTests++;
+                        std::cout << "  + The BeginScene+Reset test has passed" << std::endl;
+                    } else {
+                        std::cout << "  - The BeginScene+Reset test has failed" << std::endl;
+                    }
+                }
+            } else {
+                throw Error("Failed to begin D3D8 scene");
+            }
+            if(m_device->EndScene() != D3D_OK) {
+                throw Error("Failed to end D3D8 scene");
+            }
+        }
+
+        // Depth Stencil format tests
+        void testDepthStencilFormats() {
+            HRESULT status = m_device->Reset(&m_pp);
+            if(FAILED(status))
+                throw Error("Failed to reset D3D8 device");
+
             D3DPRESENT_PARAMETERS dsPP;
 
             memcpy(&dsPP, &m_pp, sizeof(m_pp));
@@ -101,61 +139,31 @@ class RGBTriangle {
                 if (FAILED(status)) {
                     std::cout << "  ~ The " << format(dsFormatIter->second) << " DS format is not supported" << std::endl;
                 } else {
-                    totalTests++;
-                    status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd,
+                    m_totalTests++;
+                    status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
                                                  D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
-                                                 &dsPP, &dsDevice);
+                                                 &dsPP, &m_device);
                     if (FAILED(status)) {
                         std::cout << "  - The " << format(dsFormatIter->second) << " DS format test has failed" << std::endl;
                     } else {
-                        passedTests++;
+                        m_passedTests++;
                         std::cout << "  + The " << format(dsFormatIter->second) << " DS format test has passed" << std::endl;
                     }
                 }
             }
-            // clear/release Depth Stencil format test device and present params
-            dsDevice = nullptr;
-            ZeroMemory(&dsPP, sizeof(dsPP));
+        }
 
-            // GetBackBuffer test (this shouldn't fail even with BackBufferCount set to 0)
-            status = m_device->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &m_bbs);
-            if (FAILED(status)) {
-                std::cout << "  - The GetBackBuffer test has failed" << std::endl;
-            } else {
-                passedTests++;
-                std::cout << "  + The GetBackBuffer test has passed" << std::endl;
-            }
-            // releasing the surface to avoid any issues with m_device->Reset()
-            m_bbs = nullptr;
-
-            // BeginScene+Reset test
-            if(m_device->BeginScene() == D3D_OK) {
-                status = m_device->Reset(&m_pp);
-                if(FAILED(status)) {
-                    throw Error("Failed to reset D3D8 device");
-                }
-                else {       
-                    // Reset() should have cleared the state so this should work properly
-                    if(m_device->BeginScene() == D3D_OK) {
-                        passedTests++;
-                        std::cout << "  + The BeginScene+Reset test has passed" << std::endl;
-                    } else {
-                        std::cout << "  - The BeginScene+Reset test has failed" << std::endl;
-                    }
-                }
-            } else {
-                throw Error("Failed to begin D3D8 scene");
-            }
-            if(m_device->EndScene() != D3D_OK) {
-                throw Error("Failed to end D3D8 scene");
-            }
-
-            std::cout << format("Passed ", passedTests, "/", totalTests, " tests") << std::endl;
+        void printTestResults() {
+            std::cout << format("Passed ", m_passedTests, "/", m_totalTests, " tests") << std::endl;
         }
 
         void prepare() {
+            HRESULT status = m_device->Reset(&m_pp);
+            if(FAILED(status))
+                throw Error("Failed to reset D3D8 device");
+
             // don't need any of these for 2D rendering
-            HRESULT status = m_device->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
+            status = m_device->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
             if (FAILED(status))
                 throw Error("Failed to set D3D8 render state for D3DRS_ZENABLE");
             status = m_device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
@@ -221,12 +229,16 @@ class RGBTriangle {
     
     private:
 
-        Com<IDirect3D8> m_d3d;
-        Com<IDirect3DDevice8> m_device;
-        Com<IDirect3DSurface8> m_bbs;
-        Com<IDirect3DVertexBuffer8> m_vb;
+        HWND                          m_hWnd;
 
-        D3DPRESENT_PARAMETERS m_pp;
+        Com<IDirect3D8>               m_d3d;
+        Com<IDirect3DDevice8>         m_device;
+        Com<IDirect3DVertexBuffer8>   m_vb;
+        
+        D3DPRESENT_PARAMETERS         m_pp;
+
+        UINT                          m_totalTests  = 0;
+        UINT                          m_passedTests = 0;
 };
 
 LRESULT WINAPI WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -256,12 +268,18 @@ INT WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
     try {
         RGBTriangle rgbTriangle(hWnd);
 
-        rgbTriangle.test(hWnd);
+        // D3D tests
+        std::cout << "Running D3D8 tests:" << std::endl;
+        rgbTriangle.testBackBuffer();
+        rgbTriangle.testBeginSceneReset();
+        rgbTriangle.testDepthStencilFormats();
+        rgbTriangle.printTestResults();
+
+        // D3D triangle
+        rgbTriangle.prepare();
 
         ShowWindow(hWnd, SW_SHOWDEFAULT);
-        UpdateWindow(hWnd);
-
-        rgbTriangle.prepare();
+        UpdateWindow(hWnd);        
 
         while (true) {
             if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
