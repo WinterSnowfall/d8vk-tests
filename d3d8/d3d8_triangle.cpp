@@ -87,14 +87,14 @@ class RGBTriangle {
 
             m_totalTests++;
 
-            if(m_device->BeginScene() == D3D_OK) {
+            if(SUCCEEDED(m_device->BeginScene())) {
                 status = m_device->Reset(&m_pp);
                 if(FAILED(status)) {
                     throw Error("Failed to reset D3D8 device");
                 }
                 else {       
                     // Reset() should have cleared the state so this should work properly
-                    if(m_device->BeginScene() == D3D_OK) {
+                    if(SUCCEEDED(m_device->BeginScene())) {
                         m_passedTests++;
                         std::cout << "  + The BeginScene+Reset test has passed" << std::endl;
                     } else {
@@ -104,7 +104,7 @@ class RGBTriangle {
             } else {
                 throw Error("Failed to begin D3D8 scene");
             }
-            if(m_device->EndScene() != D3D_OK) {
+            if(FAILED(m_device->EndScene())) {
                 throw Error("Failed to end D3D8 scene");
             }
         }
@@ -202,7 +202,7 @@ class RGBTriangle {
             HRESULT status = m_device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
             if (FAILED(status))
                 throw Error("Failed to clear D3D8 viewport");
-            if(m_device->BeginScene() == D3D_OK) {
+            if(SUCCEEDED(m_device->BeginScene())) {
                 status = m_device->SetStreamSource(0, m_vb.ptr(), sizeof(RGBVERTEX));
                 if (FAILED(status))
                     throw Error("Failed to set D3D8 stream source");
@@ -212,7 +212,7 @@ class RGBTriangle {
                 status = m_device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 1);
                 if (FAILED(status))
                     throw Error("Failed to draw D3D8 triangle list");
-                if(m_device->EndScene() == D3D_OK) {
+                if(SUCCEEDED(m_device->EndScene())) {
                     status = m_device->Present(NULL, NULL, NULL, NULL);
                     if (FAILED(status))
                         throw Error("Failed to present");
