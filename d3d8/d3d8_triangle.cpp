@@ -60,6 +60,38 @@ class RGBTriangle {
                 throw Error("Failed to create D3D8 device");
         }
 
+        // D3D Display Mode enumeration
+        void listAdapterModes() {
+            HRESULT          status;
+            D3DDISPLAYMODE   amDM;
+            UINT             adapterModeCount = 0;
+
+            ZeroMemory(&amDM, sizeof(amDM));
+            
+
+            adapterModeCount = m_d3d->GetAdapterModeCount(D3DADAPTER_DEFAULT);
+            if(adapterModeCount == 0)
+                throw Error("Failed to query for D3D8 adapter modes");
+
+            // these are all the possible adapter formats, at least in theory
+            std::map<D3DFORMAT, char const*> amDMFormats = { {D3DFMT_A2W10V10U10, "D3DFMT_A2W10V10U10"}, 
+                                                             {D3DFMT_X8R8G8B8, "D3DFMT_X8R8G8B8"}, 
+                                                             {D3DFMT_X1R5G5B5, "D3DFMT_X1R5G5B5"}, 
+                                                             {D3DFMT_R5G6B5, "D3DFMT_R5G6B5"} };
+
+            for(UINT i = 0; i < adapterModeCount; i++) {
+                status =  m_d3d->EnumAdapterModes(D3DADAPTER_DEFAULT, i, &amDM);
+                if (FAILED(status)) {
+                    std::cout << format("    Failed to get adapter mode ", i) << std::endl;
+                } else {
+                    std::cout << format("    ", amDMFormats[amDM.Format], " ", amDM.Width, 
+                                        " x ", amDM.Height, " @ ", amDM.RefreshRate, " Hz") << std::endl;
+                }
+            }
+
+            std::cout << format("Listed a total of ", adapterModeCount, " adapter modes") << std::endl;
+        }
+
         // GetBackBuffer test (this shouldn't fail even with BackBufferCount set to 0)
         void testBackBuffer() {
             HRESULT status = m_device->Reset(&m_pp);
@@ -265,10 +297,15 @@ INT WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
     try {
         RGBTriangle rgbTriangle(hWnd);
 
+        // D3D display modes
+        std::cout << std::endl << "Enumerating supported adapter modes:" << std::endl;
+        rgbTriangle.listAdapterModes();
+
         // D3D tests
-        std::cout << "Running D3D8 tests:" << std::endl;
+        std::cout << std::endl << "Running D3D8 tests:" << std::endl;
         rgbTriangle.testBackBuffer();
         rgbTriangle.testBeginSceneReset();
+        std::cout << "Running DS format tests:" << std::endl;
         rgbTriangle.testDepthStencilFormats();
         rgbTriangle.printTestResults();
 
