@@ -73,8 +73,7 @@ class RGBTriangle {
                 throw Error("Failed to query for D3D8 adapter display modes");
 
             // these are all the possible adapter display formats, at least in theory
-            std::map<D3DFORMAT, char const*> amDMFormats = { {D3DFMT_A2W10V10U10, "D3DFMT_A2W10V10U10"}, 
-                                                             {D3DFMT_X8R8G8B8, "D3DFMT_X8R8G8B8"}, 
+            std::map<D3DFORMAT, char const*> amDMFormats = { {D3DFMT_X8R8G8B8, "D3DFMT_X8R8G8B8"}, 
                                                              {D3DFMT_X1R5G5B5, "D3DFMT_X1R5G5B5"}, 
                                                              {D3DFMT_R5G6B5, "D3DFMT_R5G6B5"} };
 
@@ -184,6 +183,49 @@ class RGBTriangle {
             }
         }
 
+        // BackBuffer format tests
+        void testBackBufferFormats(BOOL windowed) {
+            HRESULT status = m_device->Reset(&m_pp);
+            if(FAILED(status))
+                throw Error("Failed to reset D3D8 device");
+
+            D3DPRESENT_PARAMETERS bbPP;
+
+            memcpy(&bbPP, &m_pp, sizeof(m_pp));
+
+            // these are all the possible backbuffer formats, at least in theory
+            std::map<D3DFORMAT, char const*> bbFormats = { {D3DFMT_A8R8G8B8, "D3DFMT_A8R8G8B8"}, 
+                                                           {D3DFMT_X8R8G8B8, "D3DFMT_X8R8G8B8"}, 
+                                                           {D3DFMT_A1R5G5B5, "D3DFMT_A1R5G5B5"}, 
+                                                           {D3DFMT_X1R5G5B5, "D3DFMT_X1R5G5B5"},
+                                                           {D3DFMT_R5G6B5, "D3DFMT_R5G6B5"} };
+
+            std::map<D3DFORMAT, char const*>::iterator bbFormatIter;
+            
+            for (bbFormatIter = bbFormats.begin(); bbFormatIter != bbFormats.end(); bbFormatIter++) {
+                status = m_d3d->CheckDeviceType(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
+                                                bbFormatIter->first, bbFormatIter->first,
+                                                windowed);
+                if (FAILED(status)) {
+                    std::cout << format("  ~ The ", bbFormatIter->second, " BB format is not supported") << std::endl;
+                } else {
+                    m_totalTests++;
+
+                    bbPP.BackBufferFormat = bbFormatIter->first;
+                    
+                    status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
+                                                 D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
+                                                 &bbPP, &m_device);
+                    if (FAILED(status)) {
+                        std::cout << format("  - The ", bbFormatIter->second, " BB format test has failed") << std::endl;
+                    } else {
+                        m_passedTests++;
+                        std::cout << format("  + The ", bbFormatIter->second, " BB format test has passed") << std::endl;
+                    }
+                }
+            }
+        }
+
         void printTestResults() {
             std::cout << format("Passed ", m_passedTests, "/", m_totalTests, " tests") << std::endl;
         }
@@ -286,7 +328,7 @@ INT WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
                      "D3D8_Triangle", NULL};
     RegisterClassEx(&wc);
 
-    HWND hWnd = CreateWindow("D3D8_Triangle", "D3D8 Triangle - Blisto Retro Edition", 
+    HWND hWnd = CreateWindow("D3D8_Triangle", "D3D8 Triangle - Blisto Retro Testing Edition", 
                               WS_OVERLAPPEDWINDOW, 50, 50, 
                               RGBTriangle::WINDOW_WIDTH, RGBTriangle::WINDOW_HEIGHT, 
                               GetDesktopWindow(), NULL, wc.hInstance, NULL);
@@ -306,6 +348,10 @@ INT WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
         rgbTriangle.testBeginSceneReset();
         std::cout << "Running DS format tests:" << std::endl;
         rgbTriangle.testDepthStencilFormats();
+        std::cout << "Running full screen BB format tests:" << std::endl;
+        rgbTriangle.testBackBufferFormats(FALSE);
+        std::cout << "Running windowed BB format tests:" << std::endl;
+        rgbTriangle.testBackBufferFormats(TRUE);
         rgbTriangle.printTestResults();
 
         // D3D triangle
