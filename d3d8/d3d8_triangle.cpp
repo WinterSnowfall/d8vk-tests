@@ -139,6 +139,29 @@ class RGBTriangle {
             }
         }
 
+        // SWVP Render State test (games like Massive Assault try to enable SWVP in PUREDEVICE mode)
+        void testPureDeviceSetSWVPRenderState() {
+            HRESULT status = m_device->Reset(&m_pp);
+            if(FAILED(status))
+                throw Error("Failed to reset D3D8 device");
+
+            status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
+                                         D3DCREATE_PUREDEVICE, 
+                                         &m_pp, &m_device);
+            if(FAILED(status))
+                throw Error("Failed to create PURE D3D8 device");
+
+            m_totalTests++;
+
+            status = m_device->SetRenderState(D3DRS_SOFTWAREVERTEXPROCESSING, TRUE);
+            if (FAILED(status)) {
+                std::cout << "  - The enable SWVP RS in PUREDEVICE mode test has failed" << std::endl;
+            } else {
+                m_passedTests++;
+                std::cout << "  + The enable SWVP RS in PUREDEVICE mode test has passed" << std::endl;
+            }
+        }
+
         // Depth Stencil format tests
         void testDepthStencilFormats() {
             HRESULT status = m_device->Reset(&m_pp);
@@ -346,6 +369,7 @@ INT WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
         std::cout << std::endl << "Running D3D8 tests:" << std::endl;
         rgbTriangle.testZeroBackBufferCount();
         rgbTriangle.testBeginSceneReset();
+        rgbTriangle.testPureDeviceSetSWVPRenderState();
         std::cout << "Running DS format tests:" << std::endl;
         rgbTriangle.testDepthStencilFormats();
         std::cout << "Running full screen BB format tests:" << std::endl;
@@ -358,7 +382,7 @@ INT WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
         rgbTriangle.prepare();
 
         ShowWindow(hWnd, SW_SHOWDEFAULT);
-        UpdateWindow(hWnd);        
+        UpdateWindow(hWnd);
 
         while (true) {
             if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
