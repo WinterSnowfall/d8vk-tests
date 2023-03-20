@@ -194,7 +194,7 @@ class RGBTriangle {
                 } else {
                     m_totalTests++;
                     status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
-                                                 D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
+                                                 D3DCREATE_MIXED_VERTEXPROCESSING, 
                                                  &dsPP, &m_device);
                     if (FAILED(status)) {
                         std::cout << format("  - The ", dsFormatIter->second, " DS format test has failed") << std::endl;
@@ -237,7 +237,7 @@ class RGBTriangle {
                     bbPP.BackBufferFormat = bbFormatIter->first;
                     
                     status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
-                                                 D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
+                                                 D3DCREATE_MIXED_VERTEXPROCESSING, 
                                                  &bbPP, &m_device);
                     if (FAILED(status)) {
                         std::cout << format("  - The ", bbFormatIter->second, " BB format test has failed") << std::endl;
@@ -254,7 +254,13 @@ class RGBTriangle {
         }
 
         void prepare() {
-            HRESULT status = m_device->Reset(&m_pp);
+            HRESULT status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
+                                                 D3DCREATE_HARDWARE_VERTEXPROCESSING, 
+                                                 &m_pp, &m_device);
+            if (FAILED(status))
+                throw Error("Failed to create D3D8 device");
+
+            status = m_device->Reset(&m_pp);
             if(FAILED(status))
                 throw Error("Failed to reset D3D8 device");
 
