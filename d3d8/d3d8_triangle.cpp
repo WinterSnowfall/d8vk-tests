@@ -148,17 +148,25 @@ class RGBTriangle {
             status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
                                          D3DCREATE_PUREDEVICE, 
                                          &m_pp, &m_device);
-            if(FAILED(status))
-                throw Error("Failed to create PURE D3D8 device");
+            if(FAILED(status)) {
+                // apparently this is no longer supported on recent versions of Windows
+                std::cout << "  ~ The PUREDEVICE mode is not supported" << std::endl;
 
-            m_totalTests++;
-
-            status = m_device->SetRenderState(D3DRS_SOFTWAREVERTEXPROCESSING, TRUE);
-            if (FAILED(status)) {
-                std::cout << "  - The enable SWVP RS in PUREDEVICE mode test has failed" << std::endl;
+                status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
+                                             D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
+                                             &m_pp, &m_device);
+                if (FAILED(status))
+                    throw Error("Failed to create D3D8 device");
             } else {
-                m_passedTests++;
-                std::cout << "  + The enable SWVP RS in PUREDEVICE mode test has passed" << std::endl;
+                m_totalTests++;
+
+                status = m_device->SetRenderState(D3DRS_SOFTWAREVERTEXPROCESSING, TRUE);
+                if (FAILED(status)) {
+                    std::cout << "  - The enable SWVP RS in PUREDEVICE mode test has failed" << std::endl;
+                } else {
+                    m_passedTests++;
+                    std::cout << "  + The enable SWVP RS in PUREDEVICE mode test has passed" << std::endl;
+                }
             }
         }
 
@@ -241,6 +249,12 @@ class RGBTriangle {
                                                  &bbPP, &m_device);
                     if (FAILED(status)) {
                         std::cout << format("  - The ", bbFormatIter->second, " BB format test has failed") << std::endl;
+
+                        status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
+                                                     D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
+                                                     &m_pp, &m_device);
+                        if (FAILED(status))
+                            throw Error("Failed to create D3D8 device");
                     } else {
                         m_passedTests++;
                         std::cout << format("  + The ", bbFormatIter->second, " BB format test has passed") << std::endl;
