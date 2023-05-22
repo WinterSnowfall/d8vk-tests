@@ -183,38 +183,38 @@ class RGBTriangle {
 
             // should be exposed for D3D8
             if (caps8.RasterCaps & D3DPRASTERCAPS_ZBIAS) {
-                std::cout << "  + D3DPRASTERCAPS_ZBIAS is supported." << std::endl;
+                std::cout << "  + The D3DPRASTERCAPS_ZBIAS test has passed" << std::endl;
                 m_passedTests++;
             } else {
-                std::cout << "  - D3DPRASTERCAPS_ZBIAS is not supported." << std::endl;
+                std::cout << "  - The D3DPRASTERCAPS_ZBIAS test has failed" << std::endl;
             }
 
             // 1.1 is the latest supported in D3D8
             UINT majorVSVersion = static_cast<UINT>((caps8.VertexShaderVersion & 0x0000FF00) >> 8);
             UINT minorVSVersion = static_cast<UINT>(caps8.VertexShaderVersion & 0x000000FF);
             if (majorVSVersion == 1u && minorVSVersion <= 1u) {
-                std::cout << format("  + Vertex Shader Version: ", majorVSVersion, ".", minorVSVersion) << std::endl;
+                std::cout << format("  + The Vertex Shader Version test has passed (", majorVSVersion, ".", minorVSVersion, ")") << std::endl;
                 m_passedTests++;
             } else {
-                std::cout << format("  - Vertex Shader Version: ", majorVSVersion, ".", minorVSVersion) << std::endl;
+                std::cout << format("  - The Vertex Shader Version test has failed (", majorVSVersion, ".", minorVSVersion, ")") << std::endl;
             }
 
             // typically 256 and should not go above that in D3D8
             if (static_cast<UINT>(caps8.MaxVertexShaderConst) <= 256u) {
-                std::cout << format("  + Max Vertex Shader Const: ", caps8.MaxVertexShaderConst) << std::endl;
+                std::cout << format("  + The Max Vertex Shader Const test has passed (", caps8.MaxVertexShaderConst, ")") << std::endl;
                 m_passedTests++;
             } else {
-                std::cout << format("  - Max Vertex Shader Const: ", caps8.MaxVertexShaderConst) << std::endl;
+                std::cout << format("  - The Max Vertex Shader Const test has failed (", caps8.MaxVertexShaderConst, ")") << std::endl;
             }
             
             // 1.4 is the latest supported in D3D8
             UINT majorPSVersion = static_cast<UINT>((caps8.PixelShaderVersion & 0x0000FF00) >> 8);
             UINT minorPSVersion = static_cast<UINT>(caps8.PixelShaderVersion & 0x000000FF);
             if (majorVSVersion == 1u && minorVSVersion <= 4u) {
-                std::cout << format("  + Pixel Shader Version: ", majorPSVersion, ".", minorPSVersion) << std::endl;
+                std::cout << format("  + The Pixel Shader Version test has passed (", majorPSVersion, ".", minorPSVersion, ")") << std::endl;
                 m_passedTests++;
             } else {
-                std::cout << format("  - Pixel Shader Version: ", majorPSVersion, ".", minorPSVersion) << std::endl;
+                std::cout << format("  - The Pixel Shader Version test has failed (", majorPSVersion, ".", minorPSVersion, ")") << std::endl;
             }
         }
 
