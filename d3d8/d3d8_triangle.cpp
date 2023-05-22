@@ -25,7 +25,7 @@ class RGBTriangle {
         RGBTriangle(HWND hWnd) : m_hWnd(hWnd) {
             // D3D Interface
             m_d3d = Direct3DCreate8(D3D_SDK_VERSION);
-            if(m_d3d.ptr() == nullptr)
+            if (m_d3d.ptr() == nullptr)
                 throw Error("Failed to create D3D8 interface");
 
             D3DADAPTER_IDENTIFIER8 adapterId;
@@ -69,7 +69,7 @@ class RGBTriangle {
             ZeroMemory(&amDM, sizeof(amDM));
 
             adapterModeCount = m_d3d->GetAdapterModeCount(D3DADAPTER_DEFAULT);
-            if(adapterModeCount == 0)
+            if (adapterModeCount == 0)
                 throw Error("Failed to query for D3D8 adapter display modes");
 
             // these are all the possible adapter display formats, at least in theory
@@ -93,7 +93,7 @@ class RGBTriangle {
         // GetBackBuffer test (this shouldn't fail even with BackBufferCount set to 0)
         void testZeroBackBufferCount() {
             HRESULT status = m_device->Reset(&m_pp);
-            if(FAILED(status))
+            if (FAILED(status))
                 throw Error("Failed to reset D3D8 device");
 
             Com<IDirect3DSurface8> bbSurface;
@@ -112,19 +112,19 @@ class RGBTriangle {
         // BeginScene+Reset test
         void testBeginSceneReset() {
             HRESULT status = m_device->Reset(&m_pp);
-            if(FAILED(status))
+            if (FAILED(status))
                 throw Error("Failed to reset D3D8 device");
 
             m_totalTests++;
 
-            if(SUCCEEDED(m_device->BeginScene())) {
+            if (SUCCEEDED(m_device->BeginScene())) {
                 status = m_device->Reset(&m_pp);
-                if(FAILED(status)) {
+                if (FAILED(status)) {
                     throw Error("Failed to reset D3D8 device");
                 }
                 else {       
                     // Reset() should have cleared the state so this should work properly
-                    if(SUCCEEDED(m_device->BeginScene())) {
+                    if (SUCCEEDED(m_device->BeginScene())) {
                         m_passedTests++;
                         std::cout << "  + The BeginScene+Reset test has passed" << std::endl;
                     } else {
@@ -134,7 +134,7 @@ class RGBTriangle {
             } else {
                 throw Error("Failed to begin D3D8 scene");
             }
-            if(FAILED(m_device->EndScene())) {
+            if (FAILED(m_device->EndScene())) {
                 throw Error("Failed to end D3D8 scene");
             }
         }
@@ -142,13 +142,13 @@ class RGBTriangle {
         // SWVP Render State test (games like Massive Assault try to enable SWVP in PUREDEVICE mode)
         void testPureDeviceSetSWVPRenderState() {
             HRESULT status = m_device->Reset(&m_pp);
-            if(FAILED(status))
+            if (FAILED(status))
                 throw Error("Failed to reset D3D8 device");
 
             status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
                                          D3DCREATE_PUREDEVICE, 
                                          &m_pp, &m_device);
-            if(FAILED(status)) {
+            if (FAILED(status)) {
                 // apparently this is no longer supported on recent versions of Windows
                 std::cout << "  ~ The PUREDEVICE mode is not supported" << std::endl;
 
@@ -170,10 +170,58 @@ class RGBTriangle {
             }
         }
 
+        // D3D Device capabilities test
+        void testDeviceCapabilities() {
+            HRESULT status = m_device->Reset(&m_pp);
+            if (FAILED(status))
+                throw Error("Failed to reset D3D8 device");
+
+            m_totalTests += 4;
+
+            D3DCAPS8 caps8;
+            m_device->GetDeviceCaps(&caps8);
+
+            // should be exposed for D3D8
+            if (caps8.RasterCaps & D3DPRASTERCAPS_ZBIAS) {
+                std::cout << "  + D3DPRASTERCAPS_ZBIAS is supported." << std::endl;
+                m_passedTests++;
+            } else {
+                std::cout << "  - D3DPRASTERCAPS_ZBIAS is not supported." << std::endl;
+            }
+
+            // 1.1 is the latest supported in D3D8
+            UINT majorVSVersion = static_cast<UINT>((caps8.VertexShaderVersion & 0x0000FF00) >> 8);
+            UINT minorVSVersion = static_cast<UINT>(caps8.VertexShaderVersion & 0x000000FF);
+            if (majorVSVersion == 1u && minorVSVersion <= 1u) {
+                std::cout << format("  + Vertex Shader Version: ", majorVSVersion, ".", minorVSVersion) << std::endl;
+                m_passedTests++;
+            } else {
+                std::cout << format("  - Vertex Shader Version: ", majorVSVersion, ".", minorVSVersion) << std::endl;
+            }
+
+            // typically 256 and should not go above that in D3D8
+            if (static_cast<UINT>(caps8.MaxVertexShaderConst) <= 256u) {
+                std::cout << format("  + Max Vertex Shader Const: ", caps8.MaxVertexShaderConst) << std::endl;
+                m_passedTests++;
+            } else {
+                std::cout << format("  - Max Vertex Shader Const: ", caps8.MaxVertexShaderConst) << std::endl;
+            }
+            
+            // 1.4 is the latest supported in D3D8
+            UINT majorPSVersion = static_cast<UINT>((caps8.PixelShaderVersion & 0x0000FF00) >> 8);
+            UINT minorPSVersion = static_cast<UINT>(caps8.PixelShaderVersion & 0x000000FF);
+            if (majorVSVersion == 1u && minorVSVersion <= 4u) {
+                std::cout << format("  + Pixel Shader Version: ", majorPSVersion, ".", minorPSVersion) << std::endl;
+                m_passedTests++;
+            } else {
+                std::cout << format("  - Pixel Shader Version: ", majorPSVersion, ".", minorPSVersion) << std::endl;
+            }
+        }
+
         // Depth Stencil format tests
         void testDepthStencilFormats() {
             HRESULT status = m_device->Reset(&m_pp);
-            if(FAILED(status))
+            if (FAILED(status))
                 throw Error("Failed to reset D3D8 device");
 
             D3DPRESENT_PARAMETERS dsPP;
@@ -217,7 +265,7 @@ class RGBTriangle {
         // BackBuffer format tests
         void testBackBufferFormats(BOOL windowed) {
             HRESULT status = m_device->Reset(&m_pp);
-            if(FAILED(status))
+            if (FAILED(status))
                 throw Error("Failed to reset D3D8 device");
 
             D3DPRESENT_PARAMETERS bbPP;
@@ -275,7 +323,7 @@ class RGBTriangle {
                 throw Error("Failed to create D3D8 device");
 
             status = m_device->Reset(&m_pp);
-            if(FAILED(status))
+            if (FAILED(status))
                 throw Error("Failed to reset D3D8 device");
 
             // don't need any of these for 2D rendering
@@ -318,7 +366,7 @@ class RGBTriangle {
             HRESULT status = m_device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
             if (FAILED(status))
                 throw Error("Failed to clear D3D8 viewport");
-            if(SUCCEEDED(m_device->BeginScene())) {
+            if (SUCCEEDED(m_device->BeginScene())) {
                 status = m_device->SetStreamSource(0, m_vb.ptr(), sizeof(RGBVERTEX));
                 if (FAILED(status))
                     throw Error("Failed to set D3D8 stream source");
@@ -328,7 +376,7 @@ class RGBTriangle {
                 status = m_device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 1);
                 if (FAILED(status))
                     throw Error("Failed to draw D3D8 triangle list");
-                if(SUCCEEDED(m_device->EndScene())) {
+                if (SUCCEEDED(m_device->EndScene())) {
                     status = m_device->Present(NULL, NULL, NULL, NULL);
                     if (FAILED(status))
                         throw Error("Failed to present");
@@ -390,6 +438,8 @@ INT WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
         rgbTriangle.testZeroBackBufferCount();
         rgbTriangle.testBeginSceneReset();
         rgbTriangle.testPureDeviceSetSWVPRenderState();
+        std::cout << "Running Device capabilities tests:" << std::endl;
+        rgbTriangle.testDeviceCapabilities();
         std::cout << "Running DS format tests:" << std::endl;
         rgbTriangle.testDepthStencilFormats();
         std::cout << "Running full screen BB format tests:" << std::endl;
