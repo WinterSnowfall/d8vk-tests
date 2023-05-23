@@ -176,11 +176,63 @@ class RGBTriangle {
             if (FAILED(status))
                 throw Error("Failed to reset D3D8 device");
 
-            m_totalTests += 4;
-
             D3DCAPS8 caps8;
             m_device->GetDeviceCaps(&caps8);
 
+            // not a test, just informative
+            if (caps8.Caps2 & D3DCAPS2_NO2DDURING3DSCENE) {
+                std::cout << "  ~ The D3DCAPS2_NO2DDURING3DSCENE capability is supported" << std::endl;
+            } else {
+                std::cout << "  ~ The D3DCAPS2_NO2DDURING3DSCENE capability is not supported" << std::endl;
+            }
+
+            // not a test, just informative
+            if (caps8.DevCaps & D3DDEVCAPS_QUINTICRTPATCHES) {
+                std::cout << "  ~ The D3DDEVCAPS_QUINTICRTPATCHES capability is supported" << std::endl;
+            } else {
+                std::cout << "  ~ The D3DDEVCAPS_QUINTICRTPATCHES capability is not supported" << std::endl;
+            }
+
+            // not a test, just informative
+            if (caps8.DevCaps & D3DDEVCAPS_RTPATCHES) {
+                std::cout << "  ~ The D3DDEVCAPS_RTPATCHES capability is supported" << std::endl;
+            } else {
+                std::cout << "  ~ The D3DDEVCAPS_RTPATCHES capability is not supported" << std::endl;
+            }
+
+            // not a test, just informative
+            if (caps8.DevCaps & D3DDEVCAPS_RTPATCHHANDLEZERO) {
+                std::cout << "  ~ The D3DDEVCAPS_RTPATCHHANDLEZERO capability is supported" << std::endl;
+            } else {
+                std::cout << "  ~ The D3DDEVCAPS_RTPATCHHANDLEZERO capability is not supported" << std::endl;
+            }
+
+            // not a test, just informative
+            if (caps8.DevCaps & D3DDEVCAPS_NPATCHES) {
+                std::cout << "  ~ The D3DDEVCAPS_NPATCHES capability is supported" << std::endl;
+            } else {
+                std::cout << "  ~ The D3DDEVCAPS_NPATCHES capability is not supported" << std::endl;
+            }
+
+            m_totalTests++;
+            // should be exposed for D3D8
+            if (caps8.RasterCaps & D3DPRASTERCAPS_ANTIALIASEDGES) {
+                std::cout << "  + The D3DPRASTERCAPS_ANTIALIASEDGES test has passed" << std::endl;
+                m_passedTests++;
+            } else {
+                std::cout << "  - The D3DPRASTERCAPS_ANTIALIASEDGES test has failed" << std::endl;
+            }
+
+            m_totalTests++;
+            // should be exposed for D3D8
+            if (caps8.RasterCaps & D3DPRASTERCAPS_PAT) {
+                std::cout << "  + The D3DPRASTERCAPS_PAT test has passed" << std::endl;
+                m_passedTests++;
+            } else {
+                std::cout << "  - The D3DPRASTERCAPS_PAT test has failed" << std::endl;
+            }
+
+            m_totalTests++;
             // should be exposed for D3D8
             if (caps8.RasterCaps & D3DPRASTERCAPS_ZBIAS) {
                 std::cout << "  + The D3DPRASTERCAPS_ZBIAS test has passed" << std::endl;
@@ -189,6 +241,21 @@ class RGBTriangle {
                 std::cout << "  - The D3DPRASTERCAPS_ZBIAS test has failed" << std::endl;
             }
 
+            // not a test, just informative
+            if (caps8.RasterCaps & D3DPRASTERCAPS_STRETCHBLTMULTISAMPLE) {
+                std::cout << "  ~ The D3DPRASTERCAPS_STRETCHBLTMULTISAMPLE capability is supported" << std::endl;
+            } else {
+                std::cout << "  ~ The D3DPRASTERCAPS_STRETCHBLTMULTISAMPLE capability is not supported" << std::endl;
+            }
+
+            // not a test, just informative
+            if (caps8.VertexProcessingCaps & D3DVTXPCAPS_NO_VSDT_UBYTE4) {
+                std::cout << "  ~ The D3DVTXPCAPS_NO_VSDT_UBYTE4 capability is supported" << std::endl;
+            } else {
+                std::cout << "  ~ The D3DVTXPCAPS_NO_VSDT_UBYTE4 capability is not supported" << std::endl;
+            }
+
+            m_totalTests++;
             // 1.1 is the latest supported in D3D8
             UINT majorVSVersion = static_cast<UINT>((caps8.VertexShaderVersion & 0x0000FF00) >> 8);
             UINT minorVSVersion = static_cast<UINT>(caps8.VertexShaderVersion & 0x000000FF);
@@ -199,6 +266,7 @@ class RGBTriangle {
                 std::cout << format("  - The Vertex Shader Version test has failed (", majorVSVersion, ".", minorVSVersion, ")") << std::endl;
             }
 
+            m_totalTests++;
             // typically 256 and should not go above that in D3D8
             if (static_cast<UINT>(caps8.MaxVertexShaderConst) <= 256u) {
                 std::cout << format("  + The Max Vertex Shader Const test has passed (", caps8.MaxVertexShaderConst, ")") << std::endl;
@@ -207,6 +275,7 @@ class RGBTriangle {
                 std::cout << format("  - The Max Vertex Shader Const test has failed (", caps8.MaxVertexShaderConst, ")") << std::endl;
             }
             
+            m_totalTests++;
             // 1.4 is the latest supported in D3D8
             UINT majorPSVersion = static_cast<UINT>((caps8.PixelShaderVersion & 0x0000FF00) >> 8);
             UINT minorPSVersion = static_cast<UINT>(caps8.PixelShaderVersion & 0x000000FF);
