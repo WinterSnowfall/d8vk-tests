@@ -90,6 +90,63 @@ class RGBTriangle {
             std::cout << format("Listed a total of ", adapterModeCount, " adapter display modes") << std::endl;
         }
 
+        // D3D Device capabilities check
+        void listDeviceCapabilities() {
+            HRESULT status = m_device->Reset(&m_pp);
+            if (FAILED(status))
+                throw Error("Failed to reset D3D8 device");
+
+            D3DCAPS8 caps8;
+            m_device->GetDeviceCaps(&caps8);
+
+            if (caps8.Caps2 & D3DCAPS2_NO2DDURING3DSCENE)
+                std::cout << "  + D3DCAPS2_NO2DDURING3DSCENE is supported" << std::endl;
+            else
+                std::cout << "  - D3DCAPS2_NO2DDURING3DSCENE is not supported" << std::endl;
+
+            if (caps8.DevCaps & D3DDEVCAPS_QUINTICRTPATCHES)
+                std::cout << "  + D3DDEVCAPS_QUINTICRTPATCHES is supported" << std::endl;
+            else
+                std::cout << "  - D3DDEVCAPS_QUINTICRTPATCHES is not supported" << std::endl;
+
+            if (caps8.DevCaps & D3DDEVCAPS_RTPATCHES)
+                std::cout << "  + D3DDEVCAPS_RTPATCHES is supported" << std::endl;
+            else
+                std::cout << "  - D3DDEVCAPS_RTPATCHES is not supported" << std::endl;
+
+            if (caps8.DevCaps & D3DDEVCAPS_RTPATCHHANDLEZERO)
+                std::cout << "  + D3DDEVCAPS_RTPATCHHANDLEZERO is supported" << std::endl;
+            else
+                std::cout << "  - D3DDEVCAPS_RTPATCHHANDLEZERO is not supported" << std::endl;
+
+            if (caps8.DevCaps & D3DDEVCAPS_NPATCHES)
+                std::cout << "  + D3DDEVCAPS_NPATCHES is supported" << std::endl;
+            else
+                std::cout << "  - D3DDEVCAPS_NPATCHES is not supported" << std::endl;
+
+            // depends on D3DPRASTERCAPS_PAT
+            if (caps8.PrimitiveMiscCaps & D3DPMISCCAPS_LINEPATTERNREP)
+                std::cout << "  + D3DPMISCCAPS_LINEPATTERNREP is supported" << std::endl;
+            else
+                std::cout << "  - D3DPMISCCAPS_LINEPATTERNREP is not supported" << std::endl;
+
+            // this isn't typically exposed even on native
+            if (caps8.RasterCaps & D3DPRASTERCAPS_ANTIALIASEDGES)
+                std::cout << "  + D3DPRASTERCAPS_ANTIALIASEDGES is supported" << std::endl;
+            else
+                std::cout << "  - D3DPRASTERCAPS_ANTIALIASEDGES is not supported" << std::endl;
+
+            if (caps8.RasterCaps & D3DPRASTERCAPS_STRETCHBLTMULTISAMPLE)
+                std::cout << "  + D3DPRASTERCAPS_STRETCHBLTMULTISAMPLE is supported" << std::endl;
+            else
+                std::cout << "  - D3DPRASTERCAPS_STRETCHBLTMULTISAMPLE is not supported" << std::endl;
+
+            if (caps8.VertexProcessingCaps & D3DVTXPCAPS_NO_VSDT_UBYTE4)
+                std::cout << "  + D3DVTXPCAPS_NO_VSDT_UBYTE4 is supported" << std::endl;
+            else
+                std::cout << "  - D3DVTXPCAPS_NO_VSDT_UBYTE4 is not supported" << std::endl;
+        }
+
         // GetBackBuffer test (this shouldn't fail even with BackBufferCount set to 0)
         void testZeroBackBufferCount() {
             HRESULT status = m_device->Reset(&m_pp);
@@ -162,15 +219,15 @@ class RGBTriangle {
 
                 status = m_device->SetRenderState(D3DRS_SOFTWAREVERTEXPROCESSING, TRUE);
                 if (FAILED(status)) {
-                    std::cout << "  - The enable SWVP RS in PUREDEVICE mode test has failed" << std::endl;
+                    std::cout << "  - The SWVP RS in PUREDEVICE mode test has failed" << std::endl;
                 } else {
                     m_passedTests++;
-                    std::cout << "  + The enable SWVP RS in PUREDEVICE mode test has passed" << std::endl;
+                    std::cout << "  + The SWVP RS in PUREDEVICE mode test has passed" << std::endl;
                 }
             }
         }
 
-        // D3D Device capabilities test
+        // D3D Device capabilities tests
         void testDeviceCapabilities() {
             HRESULT status = m_device->Reset(&m_pp);
             if (FAILED(status))
@@ -179,52 +236,7 @@ class RGBTriangle {
             D3DCAPS8 caps8;
             m_device->GetDeviceCaps(&caps8);
 
-            // not a test, just informative
-            if (caps8.Caps2 & D3DCAPS2_NO2DDURING3DSCENE) {
-                std::cout << "  ~ The D3DCAPS2_NO2DDURING3DSCENE capability is supported" << std::endl;
-            } else {
-                std::cout << "  ~ The D3DCAPS2_NO2DDURING3DSCENE capability is not supported" << std::endl;
-            }
-
-            // not a test, just informative
-            if (caps8.DevCaps & D3DDEVCAPS_QUINTICRTPATCHES) {
-                std::cout << "  ~ The D3DDEVCAPS_QUINTICRTPATCHES capability is supported" << std::endl;
-            } else {
-                std::cout << "  ~ The D3DDEVCAPS_QUINTICRTPATCHES capability is not supported" << std::endl;
-            }
-
-            // not a test, just informative
-            if (caps8.DevCaps & D3DDEVCAPS_RTPATCHES) {
-                std::cout << "  ~ The D3DDEVCAPS_RTPATCHES capability is supported" << std::endl;
-            } else {
-                std::cout << "  ~ The D3DDEVCAPS_RTPATCHES capability is not supported" << std::endl;
-            }
-
-            // not a test, just informative
-            if (caps8.DevCaps & D3DDEVCAPS_RTPATCHHANDLEZERO) {
-                std::cout << "  ~ The D3DDEVCAPS_RTPATCHHANDLEZERO capability is supported" << std::endl;
-            } else {
-                std::cout << "  ~ The D3DDEVCAPS_RTPATCHHANDLEZERO capability is not supported" << std::endl;
-            }
-
-            // not a test, just informative
-            if (caps8.DevCaps & D3DDEVCAPS_NPATCHES) {
-                std::cout << "  ~ The D3DDEVCAPS_NPATCHES capability is supported" << std::endl;
-            } else {
-                std::cout << "  ~ The D3DDEVCAPS_NPATCHES capability is not supported" << std::endl;
-            }
-
             m_totalTests++;
-            // should be exposed for D3D8
-            if (caps8.RasterCaps & D3DPRASTERCAPS_ANTIALIASEDGES) {
-                std::cout << "  + The D3DPRASTERCAPS_ANTIALIASEDGES test has passed" << std::endl;
-                m_passedTests++;
-            } else {
-                std::cout << "  - The D3DPRASTERCAPS_ANTIALIASEDGES test has failed" << std::endl;
-            }
-
-            m_totalTests++;
-            // should be exposed for D3D8
             if (caps8.RasterCaps & D3DPRASTERCAPS_PAT) {
                 std::cout << "  + The D3DPRASTERCAPS_PAT test has passed" << std::endl;
                 m_passedTests++;
@@ -233,7 +245,7 @@ class RGBTriangle {
             }
 
             m_totalTests++;
-            // should be exposed for D3D8
+            // Some D3D8 UE2.x games only enable character shadows if this capability is supported
             if (caps8.RasterCaps & D3DPRASTERCAPS_ZBIAS) {
                 std::cout << "  + The D3DPRASTERCAPS_ZBIAS test has passed" << std::endl;
                 m_passedTests++;
@@ -241,49 +253,35 @@ class RGBTriangle {
                 std::cout << "  - The D3DPRASTERCAPS_ZBIAS test has failed" << std::endl;
             }
 
-            // not a test, just informative
-            if (caps8.RasterCaps & D3DPRASTERCAPS_STRETCHBLTMULTISAMPLE) {
-                std::cout << "  ~ The D3DPRASTERCAPS_STRETCHBLTMULTISAMPLE capability is supported" << std::endl;
-            } else {
-                std::cout << "  ~ The D3DPRASTERCAPS_STRETCHBLTMULTISAMPLE capability is not supported" << std::endl;
-            }
-
-            // not a test, just informative
-            if (caps8.VertexProcessingCaps & D3DVTXPCAPS_NO_VSDT_UBYTE4) {
-                std::cout << "  ~ The D3DVTXPCAPS_NO_VSDT_UBYTE4 capability is supported" << std::endl;
-            } else {
-                std::cout << "  ~ The D3DVTXPCAPS_NO_VSDT_UBYTE4 capability is not supported" << std::endl;
-            }
-
             m_totalTests++;
-            // 1.1 is the latest supported in D3D8
+            // VS 1.1 is the latest version supported in D3D8
             UINT majorVSVersion = static_cast<UINT>((caps8.VertexShaderVersion & 0x0000FF00) >> 8);
             UINT minorVSVersion = static_cast<UINT>(caps8.VertexShaderVersion & 0x000000FF);
             if (majorVSVersion == 1u && minorVSVersion <= 1u) {
-                std::cout << format("  + The Vertex Shader Version test has passed (", majorVSVersion, ".", minorVSVersion, ")") << std::endl;
+                std::cout << format("  + The VertexShaderVersion test has passed (", majorVSVersion, ".", minorVSVersion, ")") << std::endl;
                 m_passedTests++;
             } else {
-                std::cout << format("  - The Vertex Shader Version test has failed (", majorVSVersion, ".", minorVSVersion, ")") << std::endl;
+                std::cout << format("  - The VertexShaderVersion test has failed (", majorVSVersion, ".", minorVSVersion, ")") << std::endl;
             }
 
             m_totalTests++;
             // typically 256 and should not go above that in D3D8
             if (static_cast<UINT>(caps8.MaxVertexShaderConst) <= 256u) {
-                std::cout << format("  + The Max Vertex Shader Const test has passed (", caps8.MaxVertexShaderConst, ")") << std::endl;
+                std::cout << format("  + The MaxVertexShaderConst test has passed (", caps8.MaxVertexShaderConst, ")") << std::endl;
                 m_passedTests++;
             } else {
-                std::cout << format("  - The Max Vertex Shader Const test has failed (", caps8.MaxVertexShaderConst, ")") << std::endl;
+                std::cout << format("  - The MaxVertexShaderConst test has failed (", caps8.MaxVertexShaderConst, ")") << std::endl;
             }
             
             m_totalTests++;
-            // 1.4 is the latest supported in D3D8
+            // PS 1.4 is the latest version supported in D3D8
             UINT majorPSVersion = static_cast<UINT>((caps8.PixelShaderVersion & 0x0000FF00) >> 8);
             UINT minorPSVersion = static_cast<UINT>(caps8.PixelShaderVersion & 0x000000FF);
             if (majorVSVersion == 1u && minorVSVersion <= 4u) {
-                std::cout << format("  + The Pixel Shader Version test has passed (", majorPSVersion, ".", minorPSVersion, ")") << std::endl;
+                std::cout << format("  + The PixelShaderVersion test has passed (", majorPSVersion, ".", minorPSVersion, ")") << std::endl;
                 m_passedTests++;
             } else {
-                std::cout << format("  - The Pixel Shader Version test has failed (", majorPSVersion, ".", minorPSVersion, ")") << std::endl;
+                std::cout << format("  - The PixelShaderVersion test has failed (", majorPSVersion, ".", minorPSVersion, ")") << std::endl;
             }
         }
 
@@ -501,13 +499,16 @@ INT WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
         // D3D adapter display modes
         std::cout << std::endl << "Enumerating supported adapter display modes:" << std::endl;
         rgbTriangle.listAdapterDisplayModes();
+        // D3D device capabilities
+        std::cout << std::endl << "Listing device capabilities support:" << std::endl;
+        rgbTriangle.listDeviceCapabilities();
 
         // D3D tests
         std::cout << std::endl << "Running D3D8 tests:" << std::endl;
         rgbTriangle.testZeroBackBufferCount();
         rgbTriangle.testBeginSceneReset();
         rgbTriangle.testPureDeviceSetSWVPRenderState();
-        std::cout << "Running Device capabilities tests:" << std::endl;
+        std::cout << "Running device capabilities tests:" << std::endl;
         rgbTriangle.testDeviceCapabilities();
         std::cout << "Running DS format tests:" << std::endl;
         rgbTriangle.testDepthStencilFormats();
