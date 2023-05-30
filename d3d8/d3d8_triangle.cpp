@@ -77,6 +77,8 @@ class RGBTriangle {
                                                              {D3DFMT_X1R5G5B5, "D3DFMT_X1R5G5B5"}, 
                                                              {D3DFMT_R5G6B5, "D3DFMT_R5G6B5"} };
 
+            std::cout << std::endl << "Enumerating supported adapter display modes:" << std::endl;
+
             for(UINT i = 0; i < adapterModeCount; i++) {
                 status =  m_d3d->EnumAdapterModes(D3DADAPTER_DEFAULT, i, &amDM);
                 if (FAILED(status)) {
@@ -92,12 +94,32 @@ class RGBTriangle {
 
         // D3D Device capabilities check
         void listDeviceCapabilities() {
-            HRESULT status = m_device->Reset(&m_pp);
-            if (FAILED(status))
-                throw Error("Failed to reset D3D8 device");
-
+            D3DCAPS8 caps8SWVP;
+            D3DCAPS8 caps8HWVP;
             D3DCAPS8 caps8;
-            m_device->GetDeviceCaps(&caps8);
+
+            // get the capabilities from the D3D device in SWVP mode
+            HRESULT status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
+                                                 D3DCREATE_SOFTWARE_VERTEXPROCESSING, &m_pp, &m_device);
+                                             
+            if (FAILED(status))
+                throw Error("Failed to create SWVP D3D8 device");
+
+            m_device->GetDeviceCaps(&caps8SWVP);
+
+            // get the capabilities from the D3D device in HWVP mode
+            status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
+                                         D3DCREATE_HARDWARE_VERTEXPROCESSING, &m_pp, &m_device);
+                                             
+            if (FAILED(status))
+                throw Error("Failed to create HWVP D3D8 device");
+
+            m_device->GetDeviceCaps(&caps8HWVP);
+
+            // get the capabilities from the D3D interface
+            m_d3d->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &caps8);
+
+            std::cout << std::endl << "Listing device capabilities support:" << std::endl;
 
             if (caps8.Caps2 & D3DCAPS2_NO2DDURING3DSCENE)
                 std::cout << "  + D3DCAPS2_NO2DDURING3DSCENE is supported" << std::endl;
@@ -145,6 +167,50 @@ class RGBTriangle {
                 std::cout << "  + D3DVTXPCAPS_NO_VSDT_UBYTE4 is supported" << std::endl;
             else
                 std::cout << "  - D3DVTXPCAPS_NO_VSDT_UBYTE4 is not supported" << std::endl;
+
+            std::cout << std::endl << "Listing device capability limits:" << std::endl;
+
+            std::cout << format("  ~ MaxTextureWidth: ", caps8.MaxTextureWidth) << std::endl;
+            std::cout << format("  ~ MaxTextureHeight: ", caps8.MaxTextureHeight) << std::endl;
+            std::cout << format("  ~ MaxVolumeExtent: ", caps8.MaxVolumeExtent) << std::endl;
+            std::cout << format("  ~ MaxTextureRepeat: ", caps8.MaxTextureRepeat) << std::endl;
+            std::cout << format("  ~ MaxTextureAspectRatio: ", caps8.MaxTextureAspectRatio) << std::endl;
+            std::cout << format("  ~ MaxAnisotropy: ", caps8.MaxAnisotropy) << std::endl;
+            std::cout << format("  ~ MaxVertexW: ", caps8.MaxVertexW) << std::endl;
+            std::cout << format("  ~ GuardBandLeft: ", caps8.GuardBandLeft) << std::endl;
+            std::cout << format("  ~ GuardBandTop: ", caps8.GuardBandTop) << std::endl;
+            std::cout << format("  ~ GuardBandRight: ", caps8.GuardBandRight) << std::endl;
+            std::cout << format("  ~ GuardBandBottom: ", caps8.GuardBandBottom) << std::endl;
+            std::cout << format("  ~ ExtentsAdjust: ", caps8.ExtentsAdjust) << std::endl;
+            std::cout << format("  ~ MaxTextureBlendStages: ", caps8.MaxTextureBlendStages) << std::endl;
+            std::cout << format("  ~ MaxSimultaneousTextures: ", caps8.MaxSimultaneousTextures) << std::endl;
+            // may vary between interface and device modes (SWVP or HWVP)
+            std::cout << format("  ~ MaxActiveLights: ", caps8.MaxActiveLights, " (I), ", caps8SWVP.MaxActiveLights,
+                                " (SWVP), ", caps8SWVP.MaxActiveLights, " (HWVP)") << std::endl;
+            // may vary between interface and device modes (SWVP or HWVP)
+            std::cout << format("  ~ MaxUserClipPlanes: ", caps8.MaxUserClipPlanes, " (I), ", caps8SWVP.MaxUserClipPlanes,
+                                " (SWVP), ", caps8HWVP.MaxUserClipPlanes, " (HWVP)") << std::endl;
+            // may vary between interface and device modes (SWVP or HWVP)
+            std::cout << format("  ~ MaxVertexBlendMatrices: ", caps8.MaxVertexBlendMatrices, " (I), ", caps8SWVP.MaxVertexBlendMatrices,
+                                " (SWVP), ", caps8HWVP.MaxVertexBlendMatrices, " (HWVP)") << std::endl;
+            // may vary between interface and device modes (SWVP or HWVP)
+            std::cout << format("  ~ MaxVertexBlendMatrixIndex: ", caps8.MaxVertexBlendMatrixIndex, " (I), ", caps8SWVP.MaxVertexBlendMatrixIndex,
+                                " (SWVP), ", caps8HWVP.MaxVertexBlendMatrixIndex, " (HWVP)") << std::endl;                         
+            std::cout << format("  ~ MaxPointSize: ", caps8.MaxPointSize) << std::endl;
+            std::cout << format("  ~ MaxPrimitiveCount: ", caps8.MaxPrimitiveCount) << std::endl;
+            std::cout << format("  ~ MaxVertexIndex: ", caps8.MaxVertexIndex) << std::endl;
+            std::cout << format("  ~ MaxStreams: ", caps8.MaxStreams) << std::endl;
+            std::cout << format("  ~ MaxStreamStride: ", caps8.MaxStreamStride) << std::endl;
+            std::cout << format("  ~ MaxVertexShaderConst: ", caps8.MaxVertexShaderConst) << std::endl;
+            // typically FLT_MAX
+            std::cout << format("  ~ MaxPixelShaderValue: ", caps8.MaxPixelShaderValue) << std::endl;
+        }
+
+        void startTests() {
+            std::cout << std::endl << "Running D3D8 tests:" << std::endl;
+
+            m_totalTests = 0;
+            m_passedTests = 0;
         }
 
         // GetBackBuffer test (this shouldn't fail even with BackBufferCount set to 0)
@@ -229,12 +295,19 @@ class RGBTriangle {
 
         // D3D Device capabilities tests
         void testDeviceCapabilities() {
-            HRESULT status = m_device->Reset(&m_pp);
+            HRESULT status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
+                                                 D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
+                                                 &m_pp, &m_device);
             if (FAILED(status))
-                throw Error("Failed to reset D3D8 device");
+                throw Error("Failed to create D3D8 device");
 
+            D3DCAPS8 caps8SWVP;
             D3DCAPS8 caps8;
-            m_device->GetDeviceCaps(&caps8);
+
+            m_device->GetDeviceCaps(&caps8SWVP);
+            m_d3d->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &caps8);
+
+            std::cout << "Running device capabilities tests:" << std::endl;
 
             m_totalTests++;
             if (caps8.RasterCaps & D3DPRASTERCAPS_PAT) {
@@ -251,6 +324,18 @@ class RGBTriangle {
                 m_passedTests++;
             } else {
                 std::cout << "  - The D3DPRASTERCAPS_ZBIAS test has failed" << std::endl;
+            }
+
+            m_totalTests++;
+            // MaxVertexBlendMatrixIndex should be 0 when queried from the D3D8 interface
+            // and 255 when queried from the device in SWVP mode
+            if (caps8.MaxVertexBlendMatrixIndex == 0u && caps8SWVP.MaxVertexBlendMatrixIndex == 255u) {
+                std::cout << format("  + The MaxVertexBlendMatrixIndex INTF and SWVP test has passed (", caps8.MaxVertexBlendMatrixIndex, 
+                                    ", ", caps8SWVP.MaxVertexBlendMatrixIndex, ")") << std::endl;
+                m_passedTests++;
+            } else {
+                std::cout << format("  - The MaxVertexBlendMatrixIndex INTF and SWVP test has failed (", caps8.MaxVertexBlendMatrixIndex, 
+                                    ", ", caps8SWVP.MaxVertexBlendMatrixIndex, ")") << std::endl;
             }
 
             m_totalTests++;
@@ -305,6 +390,8 @@ class RGBTriangle {
                                                            {D3DFMT_D24X4S4, "D3DFMT_D24X4S4"} };
 
             std::map<D3DFORMAT, char const*>::iterator dsFormatIter;
+
+            std::cout << "Running DS format tests:" << std::endl;
             
             for (dsFormatIter = dsFormats.begin(); dsFormatIter != dsFormats.end(); dsFormatIter++) {
                 dsPP.AutoDepthStencilFormat = dsFormatIter->first;
@@ -347,6 +434,11 @@ class RGBTriangle {
                                                            {D3DFMT_R5G6B5, "D3DFMT_R5G6B5"} };
 
             std::map<D3DFORMAT, char const*>::iterator bbFormatIter;
+
+            if (windowed)
+                std::cout << "Running windowed BB format tests:" << std::endl;
+            else
+                std::cout << "Running full screen BB format tests:" << std::endl;
             
             for (bbFormatIter = bbFormats.begin(); bbFormatIter != bbFormats.end(); bbFormatIter++) {
                 status = m_d3d->CheckDeviceType(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
@@ -465,8 +557,8 @@ class RGBTriangle {
         
         D3DPRESENT_PARAMETERS         m_pp;
 
-        UINT                          m_totalTests  = 0;
-        UINT                          m_passedTests = 0;
+        UINT                          m_totalTests;
+        UINT                          m_passedTests;
 };
 
 LRESULT WINAPI WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -497,24 +589,18 @@ INT WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
         RGBTriangle rgbTriangle(hWnd);
 
         // D3D adapter display modes
-        std::cout << std::endl << "Enumerating supported adapter display modes:" << std::endl;
         rgbTriangle.listAdapterDisplayModes();
         // D3D device capabilities
-        std::cout << std::endl << "Listing device capabilities support:" << std::endl;
         rgbTriangle.listDeviceCapabilities();
 
         // D3D tests
-        std::cout << std::endl << "Running D3D8 tests:" << std::endl;
+        rgbTriangle.startTests();
         rgbTriangle.testZeroBackBufferCount();
         rgbTriangle.testBeginSceneReset();
         rgbTriangle.testPureDeviceSetSWVPRenderState();
-        std::cout << "Running device capabilities tests:" << std::endl;
         rgbTriangle.testDeviceCapabilities();
-        std::cout << "Running DS format tests:" << std::endl;
         rgbTriangle.testDepthStencilFormats();
-        std::cout << "Running full screen BB format tests:" << std::endl;
         rgbTriangle.testBackBufferFormats(FALSE);
-        std::cout << "Running windowed BB format tests:" << std::endl;
         rgbTriangle.testBackBufferFormats(TRUE);
         rgbTriangle.printTestResults();
 
