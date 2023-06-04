@@ -45,13 +45,13 @@ function build_arch {
     opt_strip=--strip
   fi
 
-  meson --cross-file "$D8VKTESTS_SRC_DIR/$crossfile$1.txt" \
-        --buildtype "release"                              \
-        --prefix "$D8VKTESTS_BUILD_DIR"                    \
-        $opt_strip                                         \
-        --bindir "x$1"                                     \
-        --libdir "x$1"                                     \
-        "$D8VKTESTS_BUILD_DIR/build.$1"
+  meson setup --cross-file "$D8VKTESTS_SRC_DIR/$crossfile$1.txt" \
+              --buildtype "release"                              \
+              --prefix "$D8VKTESTS_BUILD_DIR"                    \
+              $opt_strip                                         \
+              --bindir "x$1"                                     \
+              --libdir "x$1"                                     \
+              "$D8VKTESTS_BUILD_DIR/build.$1"
 
   echo "*" > "$D8VKTESTS_BUILD_DIR/../.gitignore"
 

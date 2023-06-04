@@ -1,4 +1,4 @@
-project('d8vk-tests', ['cpp'], version : 'v1.0', meson_version : '>= 0.49', default_options : [ 'cpp_std=c++17' ])
+project('d8vk-tests', ['cpp'], version : 'v1.0', meson_version : '>= 0.56', default_options : [ 'cpp_std=c++17' ])
 
 cpu_family = target_machine.cpu_family()
 platform   = target_machine.system()
