@@ -303,6 +303,7 @@ class RGBTriangle {
             Com<IDirect3DSurface8> tempDS;
             m_device->CreateDepthStencilSurface(800, 600, D3DFMT_D24X8, D3DMULTISAMPLE_NONE, &tempDS);
 
+            m_totalTests++;
             // according to D3D8 docs, I quote: "Reset will fail unless the application releases all resources 
             // that are allocated in D3DPOOL_DEFAULT, including those created by the IDirect3DDevice8::CreateRenderTarget 
             // and IDirect3DDevice8::CreateDepthStencilSurface methods.", so this call should fail
