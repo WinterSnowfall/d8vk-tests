@@ -232,7 +232,7 @@ class RGBTriangle {
             }
         }
 
-        // BeginScene+Reset test
+        // BeginScene & Reset test
         void testBeginSceneReset() {
             HRESULT status = m_device->Reset(&m_pp);
             if (FAILED(status))
@@ -249,9 +249,9 @@ class RGBTriangle {
                     // Reset() should have cleared the state so this should work properly
                     if (SUCCEEDED(m_device->BeginScene())) {
                         m_passedTests++;
-                        std::cout << "  + The BeginScene+Reset test has passed" << std::endl;
+                        std::cout << "  + The BeginScene & Reset test has passed" << std::endl;
                     } else {
-                        std::cout << "  - The BeginScene+Reset test has failed" << std::endl;
+                        std::cout << "  - The BeginScene & Reset test has failed" << std::endl;
                     }
                 }
             } else {
@@ -290,6 +290,28 @@ class RGBTriangle {
                     m_passedTests++;
                     std::cout << "  + The SWVP RS in PUREDEVICE mode test has passed" << std::endl;
                 }
+            }
+        }
+
+        // D3DPOOL_DEFAULT allocation & Reset test
+        void testDefaultPoolAllocationReset() {
+            HRESULT status = m_device->Reset(&m_pp);
+            if (FAILED(status))
+                throw Error("Failed to reset D3D8 device");
+
+            // create a temporary DS surface
+            Com<IDirect3DSurface8> tempDS;
+            m_device->CreateDepthStencilSurface(800, 600, D3DFMT_D24X8, D3DMULTISAMPLE_NONE, &tempDS);
+
+            // according to D3D8 docs, I quote: "Reset will fail unless the application releases all resources 
+            // that are allocated in D3DPOOL_DEFAULT, including those created by the IDirect3DDevice8::CreateRenderTarget 
+            // and IDirect3DDevice8::CreateDepthStencilSurface methods.", so this call should fail
+            status = m_device->Reset(&m_pp);
+            if (FAILED(status)) {
+                m_passedTests++;
+                std::cout << "  + The D3DPOOL_DEFAULT allocation & Reset test has passed" << std::endl;
+            } else {
+                std::cout << "  - The D3DPOOL_DEFAULT allocation & Reset test has failed" << std::endl;
             }
         }
 
@@ -598,6 +620,7 @@ INT WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
         rgbTriangle.testZeroBackBufferCount();
         rgbTriangle.testBeginSceneReset();
         rgbTriangle.testPureDeviceSetSWVPRenderState();
+        rgbTriangle.testDefaultPoolAllocationReset();
         rgbTriangle.testDeviceCapabilities();
         rgbTriangle.testDepthStencilFormats();
         rgbTriangle.testBackBufferFormats(FALSE);
