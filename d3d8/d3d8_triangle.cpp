@@ -310,6 +310,12 @@ class RGBTriangle {
             if (FAILED(status)) {
                 m_passedTests++;
                 std::cout << "  + The D3DPOOL_DEFAULT allocation & Reset test has passed" << std::endl;
+
+                status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
+                                             D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
+                                             &m_pp, &m_device);
+                if (FAILED(status))
+                    throw Error("Failed to create D3D8 device");
             } else {
                 std::cout << "  - The D3DPOOL_DEFAULT allocation & Reset test has failed" << std::endl;
             }
