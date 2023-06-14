@@ -215,15 +215,13 @@ class RGBTriangle {
 
         // GetBackBuffer test (this shouldn't fail even with BackBufferCount set to 0)
         void testZeroBackBufferCount() {
-            HRESULT status = m_device->Reset(&m_pp);
-            if (FAILED(status))
-                throw Error("Failed to reset D3D8 device");
+            resetDeviceOnTestStart();
 
             Com<IDirect3DSurface8> bbSurface;
 
             m_totalTests++;
 
-            status = m_device->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &bbSurface);
+            HRESULT status = m_device->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &bbSurface);
             if (FAILED(status)) {
                 std::cout << "  - The GetBackBuffer test has failed" << std::endl;
             } else {
@@ -234,14 +232,12 @@ class RGBTriangle {
 
         // BeginScene & Reset test
         void testBeginSceneReset() {
-            HRESULT status = m_device->Reset(&m_pp);
-            if (FAILED(status))
-                throw Error("Failed to reset D3D8 device");
+            resetDeviceOnTestStart();
 
             m_totalTests++;
 
             if (SUCCEEDED(m_device->BeginScene())) {
-                status = m_device->Reset(&m_pp);
+                HRESULT status = m_device->Reset(&m_pp);
                 if (FAILED(status)) {
                     throw Error("Failed to reset D3D8 device");
                 }
@@ -264,13 +260,11 @@ class RGBTriangle {
 
         // SWVP Render State test (games like Massive Assault try to enable SWVP in PUREDEVICE mode)
         void testPureDeviceSetSWVPRenderState() {
-            HRESULT status = m_device->Reset(&m_pp);
-            if (FAILED(status))
-                throw Error("Failed to reset D3D8 device");
+            resetDeviceOnTestStart();
 
-            status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
-                                         D3DCREATE_PUREDEVICE, 
-                                         &m_pp, &m_device);
+            HRESULT status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
+                                                 D3DCREATE_PUREDEVICE, 
+                                                 &m_pp, &m_device);
             if (FAILED(status)) {
                 // apparently this is no longer supported on recent versions of Windows
                 std::cout << "  ~ The PUREDEVICE mode is not supported" << std::endl;
@@ -295,19 +289,18 @@ class RGBTriangle {
 
         // D3DPOOL_DEFAULT allocation & Reset test
         void testDefaultPoolAllocationReset() {
-            HRESULT status = m_device->Reset(&m_pp);
-            if (FAILED(status))
-                throw Error("Failed to reset D3D8 device");
+            resetDeviceOnTestStart();
 
             // create a temporary DS surface
             Com<IDirect3DSurface8> tempDS;
-            m_device->CreateDepthStencilSurface(800, 600, D3DFMT_D24X8, D3DMULTISAMPLE_NONE, &tempDS);
+            m_device->CreateDepthStencilSurface(RGBTriangle::WINDOW_WIDTH, RGBTriangle::WINDOW_HEIGHT, 
+                                                D3DFMT_D24X8, D3DMULTISAMPLE_NONE, &tempDS);
 
             m_totalTests++;
             // according to D3D8 docs, I quote: "Reset will fail unless the application releases all resources 
             // that are allocated in D3DPOOL_DEFAULT, including those created by the IDirect3DDevice8::CreateRenderTarget 
             // and IDirect3DDevice8::CreateDepthStencilSurface methods.", so this call should fail
-            status = m_device->Reset(&m_pp);
+            HRESULT status = m_device->Reset(&m_pp);
             if (FAILED(status)) {
                 m_passedTests++;
                 std::cout << "  + The D3DPOOL_DEFAULT allocation & Reset test has passed" << std::endl;
@@ -401,10 +394,9 @@ class RGBTriangle {
 
         // Depth Stencil format tests
         void testDepthStencilFormats() {
-            HRESULT status = m_device->Reset(&m_pp);
-            if (FAILED(status))
-                throw Error("Failed to reset D3D8 device");
+            resetDeviceOnTestStart();
 
+            HRESULT status;
             D3DPRESENT_PARAMETERS dsPP;
 
             memcpy(&dsPP, &m_pp, sizeof(m_pp));
@@ -447,10 +439,9 @@ class RGBTriangle {
 
         // BackBuffer format tests
         void testBackBufferFormats(BOOL windowed) {
-            HRESULT status = m_device->Reset(&m_pp);
-            if (FAILED(status))
-                throw Error("Failed to reset D3D8 device");
+            resetDeviceOnTestStart();
 
+            HRESULT status;
             D3DPRESENT_PARAMETERS bbPP;
 
             memcpy(&bbPP, &m_pp, sizeof(m_pp));
@@ -577,6 +568,16 @@ class RGBTriangle {
         }
     
     private:
+
+        void resetDeviceOnTestStart() {
+            // shouldn't ever happen, but worth a quick validation
+            if (m_device == nullptr)
+                throw Error("The D3D8 device hasn't been initialized");
+
+            HRESULT status = m_device->Reset(&m_pp);
+            if (FAILED(status))
+                throw Error("Failed to reset D3D8 device");
+        }
 
         HWND                          m_hWnd;
 
