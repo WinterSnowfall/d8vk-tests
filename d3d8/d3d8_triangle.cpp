@@ -287,7 +287,7 @@ class RGBTriangle {
             }
         }
 
-        // D3DPOOL_DEFAULT allocation & Reset test
+        // D3DPOOL_DEFAULT allocation & Reset + D3DERR_DEVICENOTRESET state test (2 in 1)
         void testDefaultPoolAllocationReset() {
             resetDeviceOnTestStart();
 
@@ -305,6 +305,16 @@ class RGBTriangle {
                 m_passedTests++;
                 std::cout << "  + The D3DPOOL_DEFAULT allocation & Reset test has passed" << std::endl;
 
+                m_totalTests++;
+                // check to see if the device state is D3DERR_DEVICENOTRESET
+                status = m_device->TestCooperativeLevel();
+                if (status == D3DERR_DEVICENOTRESET) {
+                    m_passedTests++;
+                    std::cout << "  + The D3DERR_DEVICENOTRESET state test has passed" << std::endl;
+                } else {
+                    std::cout << "  - The D3DERR_DEVICENOTRESET state test has failed" << std::endl;
+                }
+
                 status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
                                              D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
                                              &m_pp, &m_device);
@@ -312,6 +322,7 @@ class RGBTriangle {
                     throw Error("Failed to create D3D8 device");
             } else {
                 std::cout << "  - The D3DPOOL_DEFAULT allocation & Reset test has failed" << std::endl;
+                std::cout << "  ~ The D3DERR_DEVICENOTRESET state test did not run" << std::endl;
             }
         }
 
