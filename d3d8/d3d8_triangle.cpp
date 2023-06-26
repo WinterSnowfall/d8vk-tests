@@ -146,6 +146,12 @@ class RGBTriangle {
             else
                 std::cout << "  - D3DDEVCAPS_NPATCHES is not supported" << std::endl;
 
+            // WineD3D supports it, but native drivers do not
+            if (caps8.RasterCaps & D3DPRASTERCAPS_PAT)
+                std::cout << "  + D3DPRASTERCAPS_PAT is supported" << std::endl;
+            else
+                std::cout << "  - D3DPRASTERCAPS_PAT is not supported" << std::endl;
+
             // depends on D3DPRASTERCAPS_PAT
             if (caps8.PrimitiveMiscCaps & D3DPMISCCAPS_LINEPATTERNREP)
                 std::cout << "  + D3DPMISCCAPS_LINEPATTERNREP is supported" << std::endl;
@@ -341,14 +347,6 @@ class RGBTriangle {
             m_d3d->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &caps8);
 
             std::cout << "Running device capabilities tests:" << std::endl;
-
-            m_totalTests++;
-            if (caps8.RasterCaps & D3DPRASTERCAPS_PAT) {
-                std::cout << "  + The D3DPRASTERCAPS_PAT test has passed" << std::endl;
-                m_passedTests++;
-            } else {
-                std::cout << "  - The D3DPRASTERCAPS_PAT test has failed" << std::endl;
-            }
 
             m_totalTests++;
             // Some D3D8 UE2.x games only enable character shadows if this capability is supported
