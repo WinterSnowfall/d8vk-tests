@@ -146,17 +146,17 @@ class RGBTriangle {
             else
                 std::cout << "  - D3DDEVCAPS_NPATCHES is not supported" << std::endl;
 
-            // WineD3D supports it, but native drivers do not
-            if (caps8.RasterCaps & D3DPRASTERCAPS_PAT)
-                std::cout << "  + D3DPRASTERCAPS_PAT is supported" << std::endl;
-            else
-                std::cout << "  - D3DPRASTERCAPS_PAT is not supported" << std::endl;
-
             // depends on D3DPRASTERCAPS_PAT
             if (caps8.PrimitiveMiscCaps & D3DPMISCCAPS_LINEPATTERNREP)
                 std::cout << "  + D3DPMISCCAPS_LINEPATTERNREP is supported" << std::endl;
             else
                 std::cout << "  - D3DPMISCCAPS_LINEPATTERNREP is not supported" << std::endl;
+
+            // WineD3D supports it, but native drivers do not
+            if (caps8.RasterCaps & D3DPRASTERCAPS_PAT)
+                std::cout << "  + D3DPRASTERCAPS_PAT is supported" << std::endl;
+            else
+                std::cout << "  - D3DPRASTERCAPS_PAT is not supported" << std::endl;
 
             // this isn't typically exposed even on native
             if (caps8.RasterCaps & D3DPRASTERCAPS_ANTIALIASEDGES)
