@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include <d3d8.h>
+#include <d3d9caps.h>
 
 #include "../common/com.h"
 #include "../common/error.h"
@@ -210,6 +211,141 @@ class RGBTriangle {
             std::cout << format("  ~ MaxVertexShaderConst: ", caps8.MaxVertexShaderConst) << std::endl;
             // typically FLT_MAX
             std::cout << format("  ~ MaxPixelShaderValue: ", caps8.MaxPixelShaderValue) << std::endl;
+        }
+
+        void testD3D9DeviceCaps() {
+            D3DCAPS8 caps8;
+            bool d3d9DeviceCapTestPassed = true;
+
+            // get the capabilities from the D3D interface
+            m_d3d->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &caps8);
+
+            std::cout << std::endl << "Testing for the absence of D3D9 device capabilities flags:" << std::endl;
+
+            if (caps8.Caps2 & D3DCAPS2_CANAUTOGENMIPMAP) {
+                d3d9DeviceCapTestPassed = false;
+                std::cout << "  + D3DCAPS2_CANAUTOGENMIPMAP is supported" << std::endl;
+            } else
+                std::cout << "  - D3DCAPS2_CANAUTOGENMIPMAP is not supported" << std::endl;
+
+            if (caps8.Caps3 & D3DCAPS3_LINEAR_TO_SRGB_PRESENTATION) {
+                d3d9DeviceCapTestPassed = false;
+                std::cout << "  + D3DCAPS3_LINEAR_TO_SRGB_PRESENTATION is supported" << std::endl;
+            } else
+                std::cout << "  - D3DCAPS3_LINEAR_TO_SRGB_PRESENTATION is not supported" << std::endl;
+
+            if (caps8.Caps3 & D3DCAPS3_COPY_TO_VIDMEM) {
+                d3d9DeviceCapTestPassed = false;
+                std::cout << "  + D3DCAPS3_COPY_TO_VIDMEM is supported" << std::endl;
+            } else
+                std::cout << "  - D3DCAPS3_COPY_TO_VIDMEM is not supported" << std::endl;
+
+            if (caps8.Caps3 & D3DCAPS3_COPY_TO_SYSTEMMEM) {
+                d3d9DeviceCapTestPassed = false;
+                std::cout << "  + D3DCAPS3_COPY_TO_SYSTEMMEM is supported" << std::endl;
+            } else
+                std::cout << "  - D3DCAPS3_COPY_TO_SYSTEMMEM is not supported" << std::endl;
+
+            if (caps8.PrimitiveMiscCaps & D3DPMISCCAPS_INDEPENDENTWRITEMASKS) {
+                d3d9DeviceCapTestPassed = false;
+                std::cout << "  + D3DPMISCCAPS_INDEPENDENTWRITEMASKS is supported" << std::endl;
+            } else
+                std::cout << "  - D3DPMISCCAPS_INDEPENDENTWRITEMASKS is not supported" << std::endl;
+
+            if (caps8.PrimitiveMiscCaps & D3DPMISCCAPS_PERSTAGECONSTANT) {
+                d3d9DeviceCapTestPassed = false;
+                std::cout << "  + D3DPMISCCAPS_PERSTAGECONSTANT is supported" << std::endl;
+            } else
+                std::cout << "  - D3DPMISCCAPS_PERSTAGECONSTANT is not supported" << std::endl;
+
+            if (caps8.PrimitiveMiscCaps & D3DPMISCCAPS_FOGANDSPECULARALPHA) {
+                d3d9DeviceCapTestPassed = false;
+                std::cout << "  + D3DPMISCCAPS_FOGANDSPECULARALPHA is supported" << std::endl;
+            } else
+                std::cout << "  - D3DPMISCCAPS_FOGANDSPECULARALPHA is not supported" << std::endl;
+
+            if (caps8.PrimitiveMiscCaps & D3DPMISCCAPS_SEPARATEALPHABLEND) {
+                d3d9DeviceCapTestPassed = false;
+                std::cout << "  + D3DPMISCCAPS_SEPARATEALPHABLEND is supported" << std::endl;
+            } else
+                std::cout << "  - D3DPMISCCAPS_SEPARATEALPHABLEND is not supported" << std::endl;
+
+            if (caps8.PrimitiveMiscCaps & D3DPMISCCAPS_MRTINDEPENDENTBITDEPTHS) {
+                d3d9DeviceCapTestPassed = false;
+                std::cout << "  + D3DPMISCCAPS_MRTINDEPENDENTBITDEPTHS is supported" << std::endl;
+            } else
+                std::cout << "  - D3DPMISCCAPS_MRTINDEPENDENTBITDEPTHS is not supported" << std::endl;
+
+            if (caps8.PrimitiveMiscCaps & D3DPMISCCAPS_MRTPOSTPIXELSHADERBLENDING) {
+                d3d9DeviceCapTestPassed = false;
+                std::cout << "  + D3DPMISCCAPS_MRTPOSTPIXELSHADERBLENDING is supported" << std::endl;
+            } else
+                std::cout << "  - D3DPMISCCAPS_MRTPOSTPIXELSHADERBLENDING is not supported" << std::endl;
+
+            if (caps8.PrimitiveMiscCaps & D3DPMISCCAPS_FOGVERTEXCLAMPED) {
+                d3d9DeviceCapTestPassed = false;
+                std::cout << "  + D3DPMISCCAPS_FOGVERTEXCLAMPED is supported" << std::endl;
+            } else
+                std::cout << "  - D3DPMISCCAPS_FOGVERTEXCLAMPED is not supported" << std::endl;
+
+            if (caps8.PrimitiveMiscCaps & D3DPMISCCAPS_POSTBLENDSRGBCONVERT) {
+                d3d9DeviceCapTestPassed = false;
+                std::cout << "  + D3DPMISCCAPS_POSTBLENDSRGBCONVERT is supported" << std::endl;
+            } else
+                std::cout << "  - D3DPMISCCAPS_POSTBLENDSRGBCONVERT is not supported" << std::endl;
+
+            if (caps8.RasterCaps & D3DPRASTERCAPS_SCISSORTEST) {
+                d3d9DeviceCapTestPassed = false;
+                std::cout << "  + D3DPRASTERCAPS_SCISSORTEST is supported" << std::endl;
+            } else
+                std::cout << "  - D3DPRASTERCAPS_SCISSORTEST is not supported" << std::endl;
+
+            if (caps8.RasterCaps & D3DPRASTERCAPS_SLOPESCALEDEPTHBIAS) {
+                d3d9DeviceCapTestPassed = false;
+                std::cout << "  + D3DPRASTERCAPS_SLOPESCALEDEPTHBIAS is supported" << std::endl;
+            } else
+                std::cout << "  - D3DPRASTERCAPS_SLOPESCALEDEPTHBIAS is not supported" << std::endl;
+
+            if (caps8.RasterCaps & D3DPRASTERCAPS_DEPTHBIAS) {
+                d3d9DeviceCapTestPassed = false;
+                std::cout << "  + D3DPRASTERCAPS_DEPTHBIAS is supported" << std::endl;
+            } else
+                std::cout << "  - D3DPRASTERCAPS_DEPTHBIAS is not supported" << std::endl;
+
+            if (caps8.RasterCaps & D3DPRASTERCAPS_MULTISAMPLE_TOGGLE) {
+                d3d9DeviceCapTestPassed = false;
+                std::cout << "  + D3DPRASTERCAPS_MULTISAMPLE_TOGGLE is supported" << std::endl;
+            } else
+                std::cout << "  - D3DPRASTERCAPS_MULTISAMPLE_TOGGLE is not supported" << std::endl;
+
+            if (caps8.SrcBlendCaps & D3DPBLENDCAPS_INVSRCCOLOR2) {
+                d3d9DeviceCapTestPassed = false;
+                std::cout << "  + D3DPBLENDCAPS_INVSRCCOLOR2 is supported" << std::endl;
+            } else
+                std::cout << "  - D3DPBLENDCAPS_INVSRCCOLOR2 is not supported" << std::endl;
+
+            if (caps8.SrcBlendCaps & D3DPBLENDCAPS_SRCCOLOR2) {
+                d3d9DeviceCapTestPassed = false;
+                std::cout << "  + D3DPBLENDCAPS_SRCCOLOR2 is supported" << std::endl;
+            } else
+                std::cout << "  - D3DPBLENDCAPS_SRCCOLOR2 is not supported" << std::endl;
+            
+            if (caps8.LineCaps & D3DLINECAPS_ANTIALIAS) {
+                d3d9DeviceCapTestPassed = false;
+                std::cout << "  + D3DLINECAPS_ANTIALIAS is supported" << std::endl;
+            } else
+                std::cout << "  - D3DLINECAPS_ANTIALIAS is not supported" << std::endl;
+
+            if (caps8.StencilCaps & D3DSTENCILCAPS_TWOSIDED) {
+                d3d9DeviceCapTestPassed = false;
+                std::cout << "  + D3DSTENCILCAPS_TWOSIDED is supported" << std::endl;
+            } else
+                std::cout << "  - D3DSTENCILCAPS_TWOSIDED is not supported" << std::endl;
+
+            if (d3d9DeviceCapTestPassed)
+                std::cout << "Result: PASSED" << std::endl;
+            else
+                std::cout << "Result: FAILED" << std::endl;
         }
 
         void startTests() {
@@ -627,12 +763,15 @@ INT WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
     try {
         RGBTriangle rgbTriangle(hWnd);
 
-        // D3D adapter display modes
+        // D3D8 adapter display modes
         rgbTriangle.listAdapterDisplayModes();
-        // D3D device capabilities
+        // D3D8 device capabilities
         rgbTriangle.listDeviceCapabilities();
-
-        // D3D tests
+        
+        // D3D9 device capabilities test
+        rgbTriangle.testD3D9DeviceCaps();
+        
+        // D3D8 tests
         rgbTriangle.startTests();
         rgbTriangle.testZeroBackBufferCount();
         rgbTriangle.testBeginSceneReset();
@@ -644,7 +783,7 @@ INT WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
         rgbTriangle.testBackBufferFormats(TRUE);
         rgbTriangle.printTestResults();
 
-        // D3D triangle
+        // D3D8 triangle
         rgbTriangle.prepare();
 
         ShowWindow(hWnd, SW_SHOWDEFAULT);
