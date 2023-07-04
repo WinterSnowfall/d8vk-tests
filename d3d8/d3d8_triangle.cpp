@@ -54,7 +54,7 @@ class RGBTriangle {
             m_pp.BackBufferHeight = WINDOW_HEIGHT;
             m_pp.BackBufferFormat = dm.Format;
 
-            createDeviceWithFlags(D3DCREATE_HARDWARE_VERTEXPROCESSING, true);
+            createDeviceWithFlags(&m_pp, D3DCREATE_HARDWARE_VERTEXPROCESSING, true);
         }
 
         // D3D Adapter Display Mode enumeration
@@ -96,11 +96,11 @@ class RGBTriangle {
             D3DCAPS8 caps8;
 
             // get the capabilities from the D3D device in SWVP mode
-            createDeviceWithFlags(D3DCREATE_SOFTWARE_VERTEXPROCESSING, true);
+            createDeviceWithFlags(&m_pp, D3DCREATE_SOFTWARE_VERTEXPROCESSING, true);
             m_device->GetDeviceCaps(&caps8SWVP);
 
             // get the capabilities from the D3D device in HWVP mode
-            createDeviceWithFlags(D3DCREATE_HARDWARE_VERTEXPROCESSING, true);
+            createDeviceWithFlags(&m_pp, D3DCREATE_HARDWARE_VERTEXPROCESSING, true);
             m_device->GetDeviceCaps(&caps8HWVP);
 
             // get the capabilities from the D3D interface
@@ -389,7 +389,7 @@ class RGBTriangle {
 
         // SWVP Render State test (games like Massive Assault try to enable SWVP in PUREDEVICE mode)
         void testPureDeviceSetSWVPRenderState() {
-            HRESULT status = createDeviceWithFlags(D3DCREATE_PUREDEVICE, false);
+            HRESULT status = createDeviceWithFlags(&m_pp, D3DCREATE_PUREDEVICE, false);
 
             if (FAILED(status)) {
                 // apparently this is no longer supported on recent versions of Windows
@@ -443,7 +443,7 @@ class RGBTriangle {
 
         // D3D Device capabilities tests
         void testDeviceCapabilities() {
-            createDeviceWithFlags(D3DCREATE_SOFTWARE_VERTEXPROCESSING, true);
+            createDeviceWithFlags(&m_pp, D3DCREATE_SOFTWARE_VERTEXPROCESSING, true);
 
             D3DCAPS8 caps8SWVP;
             D3DCAPS8 caps8;
@@ -539,7 +539,7 @@ class RGBTriangle {
                 } else {
                     m_totalTests++;
 
-                    status = createDeviceWithFlags(D3DCREATE_HARDWARE_VERTEXPROCESSING, false);
+                    status = createDeviceWithFlags(&dsPP, D3DCREATE_HARDWARE_VERTEXPROCESSING, false);
                     if (FAILED(status)) {
                         std::cout << format("  - The ", dsFormatIter->second, " DS format test has failed") << std::endl;
                     } else {
@@ -584,7 +584,7 @@ class RGBTriangle {
 
                     bbPP.BackBufferFormat = bbFormatIter->first;
                     
-                    status = createDeviceWithFlags(D3DCREATE_HARDWARE_VERTEXPROCESSING, false);
+                    status = createDeviceWithFlags(&bbPP, D3DCREATE_HARDWARE_VERTEXPROCESSING, false);
                     if (FAILED(status)) {
                         std::cout << format("  - The ", bbFormatIter->second, " BB format test has failed") << std::endl;
                     } else {
@@ -600,7 +600,7 @@ class RGBTriangle {
         }
 
         void prepare() {
-            createDeviceWithFlags(D3DCREATE_HARDWARE_VERTEXPROCESSING, true);
+            createDeviceWithFlags(&m_pp, D3DCREATE_HARDWARE_VERTEXPROCESSING, true);
 
             // don't need any of these for 2D rendering
             HRESULT status = m_device->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
@@ -666,7 +666,9 @@ class RGBTriangle {
     
     private:
 
-        HRESULT createDeviceWithFlags(DWORD behaviorFlags, bool throwErrorOnFail) {
+        HRESULT createDeviceWithFlags(D3DPRESENT_PARAMETERS* presentParams, 
+                                      DWORD behaviorFlags, 
+                                      bool throwErrorOnFail) {
             if (m_d3d == nullptr)
                 throw Error("The D3D8 interface hasn't been initialized");
 
@@ -674,7 +676,7 @@ class RGBTriangle {
                 m_device->Release();
 
             HRESULT status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
-                                                 behaviorFlags, &m_pp, &m_device);
+                                                 behaviorFlags, presentParams, &m_device);
             if (throwErrorOnFail && FAILED(status))
                 throw Error("Failed to create D3D8 device");
 
