@@ -54,11 +54,7 @@ class RGBTriangle {
             m_pp.BackBufferHeight = WINDOW_HEIGHT;
             m_pp.BackBufferFormat = dm.Format;
 
-            status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
-                                         D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
-                                         &m_pp, &m_device);
-            if (FAILED(status))
-                throw Error("Failed to create D3D8 device");
+            createDeviceWithFlags(D3DCREATE_HARDWARE_VERTEXPROCESSING, true);
         }
 
         // D3D Adapter Display Mode enumeration
@@ -100,21 +96,11 @@ class RGBTriangle {
             D3DCAPS8 caps8;
 
             // get the capabilities from the D3D device in SWVP mode
-            HRESULT status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
-                                                 D3DCREATE_SOFTWARE_VERTEXPROCESSING, &m_pp, &m_device);
-                                             
-            if (FAILED(status))
-                throw Error("Failed to create SWVP D3D8 device");
-
+            createDeviceWithFlags(D3DCREATE_SOFTWARE_VERTEXPROCESSING, true);
             m_device->GetDeviceCaps(&caps8SWVP);
 
             // get the capabilities from the D3D device in HWVP mode
-            status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
-                                         D3DCREATE_HARDWARE_VERTEXPROCESSING, &m_pp, &m_device);
-                                             
-            if (FAILED(status))
-                throw Error("Failed to create HWVP D3D8 device");
-
+            createDeviceWithFlags(D3DCREATE_HARDWARE_VERTEXPROCESSING, true);
             m_device->GetDeviceCaps(&caps8HWVP);
 
             // get the capabilities from the D3D interface
@@ -357,7 +343,7 @@ class RGBTriangle {
 
         // GetBackBuffer test (this shouldn't fail even with BackBufferCount set to 0)
         void testZeroBackBufferCount() {
-            resetDeviceOnTestStart();
+            resetOrRecreateDevice();
 
             Com<IDirect3DSurface8> bbSurface;
 
@@ -374,16 +360,17 @@ class RGBTriangle {
 
         // BeginScene & Reset test
         void testBeginSceneReset() {
-            resetDeviceOnTestStart();
+            resetOrRecreateDevice();
 
             m_totalTests++;
 
             if (SUCCEEDED(m_device->BeginScene())) {
                 HRESULT status = m_device->Reset(&m_pp);
                 if (FAILED(status)) {
-                    throw Error("Failed to reset D3D8 device");
+                    // Shouldn't happen in theory, unless the device is FUBAR
+                    std::cout << "  - The BeginScene & Reset test has failed on Reset()" << std::endl;
                 }
-                else {       
+                else {
                     // Reset() should have cleared the state so this should work properly
                     if (SUCCEEDED(m_device->BeginScene())) {
                         m_passedTests++;
@@ -395,27 +382,18 @@ class RGBTriangle {
             } else {
                 throw Error("Failed to begin D3D8 scene");
             }
-            if (FAILED(m_device->EndScene())) {
-                throw Error("Failed to end D3D8 scene");
-            }
+
+            // this call can fail in certain scenarios, but it makes no difference
+            m_device->EndScene();
         }
 
         // SWVP Render State test (games like Massive Assault try to enable SWVP in PUREDEVICE mode)
         void testPureDeviceSetSWVPRenderState() {
-            resetDeviceOnTestStart();
+            HRESULT status = createDeviceWithFlags(D3DCREATE_PUREDEVICE, false);
 
-            HRESULT status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
-                                                 D3DCREATE_PUREDEVICE, 
-                                                 &m_pp, &m_device);
             if (FAILED(status)) {
                 // apparently this is no longer supported on recent versions of Windows
                 std::cout << "  ~ The PUREDEVICE mode is not supported" << std::endl;
-
-                status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
-                                             D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
-                                             &m_pp, &m_device);
-                if (FAILED(status))
-                    throw Error("Failed to create D3D8 device");
             } else {
                 m_totalTests++;
 
@@ -431,7 +409,7 @@ class RGBTriangle {
 
         // D3DPOOL_DEFAULT allocation & Reset + D3DERR_DEVICENOTRESET state test (2 in 1)
         void testDefaultPoolAllocationReset() {
-            resetDeviceOnTestStart();
+            resetOrRecreateDevice();
 
             // create a temporary DS surface
             Com<IDirect3DSurface8> tempDS;
@@ -457,11 +435,6 @@ class RGBTriangle {
                     std::cout << "  - The D3DERR_DEVICENOTRESET state test has failed" << std::endl;
                 }
 
-                status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
-                                             D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
-                                             &m_pp, &m_device);
-                if (FAILED(status))
-                    throw Error("Failed to create D3D8 device");
             } else {
                 std::cout << "  - The D3DPOOL_DEFAULT allocation & Reset test has failed" << std::endl;
                 std::cout << "  ~ The D3DERR_DEVICENOTRESET state test did not run" << std::endl;
@@ -470,11 +443,7 @@ class RGBTriangle {
 
         // D3D Device capabilities tests
         void testDeviceCapabilities() {
-            HRESULT status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
-                                                 D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
-                                                 &m_pp, &m_device);
-            if (FAILED(status))
-                throw Error("Failed to create D3D8 device");
+            createDeviceWithFlags(D3DCREATE_SOFTWARE_VERTEXPROCESSING, true);
 
             D3DCAPS8 caps8SWVP;
             D3DCAPS8 caps8;
@@ -539,7 +508,7 @@ class RGBTriangle {
 
         // Depth Stencil format tests
         void testDepthStencilFormats() {
-            resetDeviceOnTestStart();
+            resetOrRecreateDevice();
 
             HRESULT status;
             D3DPRESENT_PARAMETERS dsPP;
@@ -569,9 +538,8 @@ class RGBTriangle {
                     std::cout << format("  ~ The ", dsFormatIter->second, " DS format is not supported") << std::endl;
                 } else {
                     m_totalTests++;
-                    status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
-                                                 D3DCREATE_MIXED_VERTEXPROCESSING, 
-                                                 &dsPP, &m_device);
+
+                    status = createDeviceWithFlags(D3DCREATE_HARDWARE_VERTEXPROCESSING, false);
                     if (FAILED(status)) {
                         std::cout << format("  - The ", dsFormatIter->second, " DS format test has failed") << std::endl;
                     } else {
@@ -584,7 +552,7 @@ class RGBTriangle {
 
         // BackBuffer format tests
         void testBackBufferFormats(BOOL windowed) {
-            resetDeviceOnTestStart();
+            resetOrRecreateDevice();
 
             HRESULT status;
             D3DPRESENT_PARAMETERS bbPP;
@@ -616,17 +584,9 @@ class RGBTriangle {
 
                     bbPP.BackBufferFormat = bbFormatIter->first;
                     
-                    status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
-                                                 D3DCREATE_MIXED_VERTEXPROCESSING, 
-                                                 &bbPP, &m_device);
+                    status = createDeviceWithFlags(D3DCREATE_HARDWARE_VERTEXPROCESSING, false);
                     if (FAILED(status)) {
                         std::cout << format("  - The ", bbFormatIter->second, " BB format test has failed") << std::endl;
-
-                        status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
-                                                     D3DCREATE_SOFTWARE_VERTEXPROCESSING, 
-                                                     &m_pp, &m_device);
-                        if (FAILED(status))
-                            throw Error("Failed to create D3D8 device");
                     } else {
                         m_passedTests++;
                         std::cout << format("  + The ", bbFormatIter->second, " BB format test has passed") << std::endl;
@@ -640,18 +600,10 @@ class RGBTriangle {
         }
 
         void prepare() {
-            HRESULT status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
-                                                 D3DCREATE_HARDWARE_VERTEXPROCESSING, 
-                                                 &m_pp, &m_device);
-            if (FAILED(status))
-                throw Error("Failed to create D3D8 device");
-
-            status = m_device->Reset(&m_pp);
-            if (FAILED(status))
-                throw Error("Failed to reset D3D8 device");
+            createDeviceWithFlags(D3DCREATE_HARDWARE_VERTEXPROCESSING, true);
 
             // don't need any of these for 2D rendering
-            status = m_device->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
+            HRESULT status = m_device->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
             if (FAILED(status))
                 throw Error("Failed to set D3D8 render state for D3DRS_ZENABLE");
             status = m_device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
@@ -714,14 +666,42 @@ class RGBTriangle {
     
     private:
 
-        void resetDeviceOnTestStart() {
-            // shouldn't ever happen, but worth a quick validation
-            if (m_device == nullptr)
-                throw Error("The D3D8 device hasn't been initialized");
+        HRESULT createDeviceWithFlags(DWORD behaviorFlags, bool throwErrorOnFail) {
+            if (m_d3d == nullptr)
+                throw Error("The D3D8 interface hasn't been initialized");
 
-            HRESULT status = m_device->Reset(&m_pp);
+            if (m_device != nullptr)
+                m_device->Release();
+
+            HRESULT status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
+                                                 behaviorFlags, &m_pp, &m_device);
+            if (throwErrorOnFail && FAILED(status))
+                throw Error("Failed to create D3D8 device");
+
+            return status;
+        }
+
+        HRESULT resetOrRecreateDevice() {
+            if (m_d3d == nullptr)
+                throw Error("The D3D8 interface hasn't been initialized");
+
+            HRESULT status = D3D_OK;
+
+            // return early if the call to Reset() works
+            if (m_device != nullptr) {
+                if(SUCCEEDED(m_device->Reset(&m_pp)))
+                    return status;
+                // prepare to clear the device otherwise
+                m_device->Release();
+            }
+
+            status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
+                                         D3DCREATE_HARDWARE_VERTEXPROCESSING, 
+                                         &m_pp, &m_device);
             if (FAILED(status))
-                throw Error("Failed to reset D3D8 device");
+                throw Error("Failed to create D3D8 device");
+
+            return status;
         }
 
         HWND                          m_hWnd;
