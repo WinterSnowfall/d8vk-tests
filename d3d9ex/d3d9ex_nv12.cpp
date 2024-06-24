@@ -10,7 +10,7 @@
 #include "../common/error.h"
 #include "../common/str.h"
 
-#include "d3d9_nv12.yuv.h"
+#include "d3d9ex_nv12.yuv.h"
 
 struct Extent2D {
   uint32_t w, h;
