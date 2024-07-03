@@ -403,6 +403,105 @@ class RGBTriangle {
             std::cout << std::endl << "Running D3D9 tests:" << std::endl;
         }
 
+        // BeginScene & Reset test
+        void testBeginSceneReset() {
+            resetOrRecreateDevice();
+
+            m_totalTests++;
+
+            if (SUCCEEDED(m_device->BeginScene())) {
+                HRESULT status = m_device->Reset(&m_pp);
+                if (FAILED(status)) {
+                    std::cout << "  - The BeginScene & Reset test has failed on Reset()" << std::endl;
+                }
+                else {
+                    // Reset() should have cleared the state so this should work properly
+                    if (SUCCEEDED(m_device->BeginScene())) {
+                        m_passedTests++;
+                        std::cout << "  + The BeginScene & Reset test has passed" << std::endl;
+                    } else {
+                        std::cout << "  - The BeginScene & Reset test has failed" << std::endl;
+                    }
+                }
+            } else {
+                throw Error("Failed to begin D3D9 scene");
+            }
+
+            // this call is expected fail in certain scenarios, but it makes no difference
+            m_device->EndScene();
+        }
+
+        // D3DCREATE_PUREDEVICE only with D3DCREATE_HARDWARE_VERTEXPROCESSING test
+        void testPureDeviceOnlyWithHWVP() {
+            // native drivers will fail to create a device with D3DCREATE_PUREDEVICE unless
+            // it is combined together with D3DCREATE_HARDWARE_VERTEXPROCESSING
+            HRESULT statusHWVP = createDeviceWithFlags(&m_pp, D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_PUREDEVICE, false);
+            HRESULT statusSWVP = createDeviceWithFlags(&m_pp, D3DCREATE_SOFTWARE_VERTEXPROCESSING | D3DCREATE_PUREDEVICE, false);
+            HRESULT statusMVP = createDeviceWithFlags(&m_pp, D3DCREATE_MIXED_VERTEXPROCESSING | D3DCREATE_PUREDEVICE, false);
+
+            m_totalTests++;
+
+            if (SUCCEEDED(statusHWVP) && FAILED(statusSWVP) && FAILED(statusMVP)) {
+                m_passedTests++;
+                std::cout << "  + The PUREDEVICE mode only with HWVP test has passed" << std::endl;
+            } else {
+                std::cout << "  - The PUREDEVICE mode only with HWVP test has failed" << std::endl;
+            }
+        }
+
+        // D3DPOOL_DEFAULT allocation & Reset + D3DERR_DEVICENOTRESET state test (2 in 1)
+        void testDefaultPoolAllocationReset() {
+            resetOrRecreateDevice();
+
+            // create a temporary DS surface
+            Com<IDirect3DSurface9> tempDS;
+            m_device->CreateDepthStencilSurface(RGBTriangle::WINDOW_WIDTH, RGBTriangle::WINDOW_HEIGHT,
+                                                D3DFMT_D24X8, D3DMULTISAMPLE_NONE, 0, FALSE, &tempDS, NULL);
+
+            m_totalTests++;
+            // according to D3D9 docs, I quote: "Reset will fail unless the application releases all resources
+            // that are allocated in D3DPOOL_DEFAULT, including those created by the IDirect3DDevice9::CreateRenderTarget
+            // and IDirect3DDevice9::CreateDepthStencilSurface methods.", so this call should fail
+            HRESULT status = m_device->Reset(&m_pp);
+            if (FAILED(status)) {
+                m_passedTests++;
+                std::cout << "  + The D3DPOOL_DEFAULT allocation & Reset test has passed" << std::endl;
+
+                m_totalTests++;
+                // check to see if the device state is D3DERR_DEVICENOTRESET
+                status = m_device->TestCooperativeLevel();
+                if (status == D3DERR_DEVICENOTRESET) {
+                    m_passedTests++;
+                    std::cout << "  + The D3DERR_DEVICENOTRESET state test has passed" << std::endl;
+                } else {
+                    std::cout << "  - The D3DERR_DEVICENOTRESET state test has failed" << std::endl;
+                }
+
+            } else {
+                std::cout << "  - The D3DPOOL_DEFAULT allocation & Reset test has failed" << std::endl;
+                std::cout << "  ~ The D3DERR_DEVICENOTRESET state test did not run" << std::endl;
+            }
+        }
+
+        // CreateStateBlock & Reset test
+        void testCreateStateBlockAndReset() {
+            resetOrRecreateDevice();
+
+            // create a temporary state block
+            Com<IDirect3DStateBlock9> stateBlock;
+            m_device->CreateStateBlock(D3DSBT_ALL, &stateBlock);
+
+            m_totalTests++;
+            // D3D9 state blocks don't survive device Reset() calls and should be counted as losable resources
+            HRESULT status = m_device->Reset(&m_pp);
+            if (FAILED(status)) {
+                m_passedTests++;
+                std::cout << "  + The CreateStateBlock & Reset test has passed" << std::endl;
+            } else {
+                std::cout << "  - The CreateStateBlock & Reset test has failed" << std::endl;
+            }
+        }
+
         void printTestResults() {
             std::cout << format("Passed ", m_passedTests, "/", m_totalTests, " tests") << std::endl;
         }
@@ -561,6 +660,10 @@ int main(int, char**) {
 
         // run D3D Device tests
         rgbTriangle.startTests();
+        rgbTriangle.testBeginSceneReset();
+        rgbTriangle.testPureDeviceOnlyWithHWVP();
+        rgbTriangle.testDefaultPoolAllocationReset();
+        rgbTriangle.testCreateStateBlockAndReset();
         rgbTriangle.printTestResults();
 
         // D3D9 triangle
