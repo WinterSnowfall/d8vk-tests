@@ -655,6 +655,26 @@ class RGBTriangle {
             }
         }
 
+        // StateBlock calls with an invalid token test
+        /*void testStateBlockWithInvalidToken() {
+            resetOrRecreateDevice();
+
+            DWORD invalidToken = 5000;
+
+            m_totalTests++;
+
+            HRESULT captureStatus = m_device->CaptureStateBlock(invalidToken);
+            HRESULT applyStatus = m_device->ApplyStateBlock(invalidToken);
+            HRESULT deleteStatus = m_device->DeleteStateBlock(invalidToken);
+
+            if (FAILED(captureStatus) && FAILED(applyStatus) && FAILED(deleteStatus)) {
+                m_passedTests++;
+                std::cout << "  + The StateBlock with invalid token test has passed" << std::endl;
+            } else {
+                std::cout << "  - The StateBlock with invalid token test has failed" << std::endl;
+            }
+        }*/
+
         // CopyRects with depth stencil format test
         void testCopyRectsDepthStencilFormat() {
             resetOrRecreateDevice();
@@ -1018,6 +1038,9 @@ int main(int, char**) {
         rgbTriangle.testDefaultPoolAllocationReset();
         rgbTriangle.testCreateStateBlockAndReset();
         rgbTriangle.testCreateStateBlockMonotonicTokens(100);
+        // native drivers don't appear to validate tokens at
+        // all, and will straight-up crash in these situations
+        //rgbTriangle.testStateBlockWithInvalidToken();
         rgbTriangle.testCopyRectsDepthStencilFormat();
         rgbTriangle.testVCacheQueryResult();
         rgbTriangle.testDeviceCapabilities();
