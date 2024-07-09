@@ -600,6 +600,7 @@ class RGBTriangle {
             // create a temporary state block
             DWORD stateBlockToken;
             m_device->CreateStateBlock(D3DSBT_ALL, &stateBlockToken);
+            //std::cout << format("  * State block token:", stateBlockToken) << std::endl;
 
             m_totalTests++;
             // D3D8 state blocks survive device Reset() calls and shouldn't be counted as losable resources
@@ -620,8 +621,20 @@ class RGBTriangle {
 
             std::vector<DWORD> stateBlockTokens;
             DWORD currentStateBlockToken;
-            for (UINT i = 0; i < stateBlocksCount; i++) {
-                // this shouldn't ever fail...
+            // create stateBlocksCount/2 state blocks
+            for (UINT i = 0; i < stateBlocksCount/2; i++) {
+                m_device->CreateStateBlock(D3DSBT_ALL, &currentStateBlockToken);
+                //std::cout << format("  * State block token:", currentStateBlockToken) << std::endl;
+                stateBlockTokens.emplace_back(currentStateBlockToken);
+            }
+            // delete the last 10
+            for (UINT i = stateBlocksCount/2; i > stateBlocksCount/2 - 10; i--) {
+                m_device->DeleteStateBlock(i);
+                //std::cout << format("  * Deleted state block token:", i) << std::endl;
+                stateBlockTokens.pop_back();
+            }
+            // create another stateBlocksCount/2 state blocks
+            for (UINT i = 0; i < stateBlocksCount/2; i++) {
                 m_device->CreateStateBlock(D3DSBT_ALL, &currentStateBlockToken);
                 //std::cout << format("  * State block token:", currentStateBlockToken) << std::endl;
                 stateBlockTokens.emplace_back(currentStateBlockToken);
@@ -630,9 +643,7 @@ class RGBTriangle {
             m_totalTests++;
 
             bool monotonicStreak = true;
-            // the initial value of the token should be 1, as in the previous test
-            // we've also created a state block (with token 0), and device resets
-            // in D3D8 don't affect state blocks/tokens in any meaningful way
+            // the initial value of the token should be 1
             DWORD monotonicCounter = 1;
             for (auto& stateBlockToken : stateBlockTokens) {
                 // subsequent tokens simply increment the initial value
