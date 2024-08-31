@@ -196,6 +196,51 @@ class RGBTriangle {
             }
         }
 
+        // Obscure FOURCC surface format check
+        void listObscureFOURCCSurfaceFormats() {
+            resetOrRecreateDevice();
+
+            std::map<uint32_t, char const*> sfFormats = { {MAKEFOURCC('A', 'I', '4', '4'), "AI44"},
+                                                          {MAKEFOURCC('I', 'A', '4', '4'), "IA44"},
+                                                          {MAKEFOURCC('R', '2', 'V', 'B'), "R2VB"},
+                                                          {MAKEFOURCC('C', 'O', 'P', 'M'), "COPM"},
+                                                          {MAKEFOURCC('S', 'S', 'A', 'A'), "SSAA"},
+                                                          // following 2 formats are used by a lot of games
+                                                          {MAKEFOURCC('A', 'L', '1', '6'), "AL16"},
+                                                          {MAKEFOURCC(' ', 'R', '1', '6'), "R16"},
+                                                          // wierd variant of the regular L16 (used by Scrapland)
+                                                          {MAKEFOURCC(' ', 'L', '1', '6'), "L16"},
+                                                          // undocumented format (used by Scrapland)
+                                                          {MAKEFOURCC('A', 'R', '1', '6'), "AR16"} };
+
+            std::map<uint32_t, char const*>::iterator sfFormatIter;
+
+            Com<IDirect3DSurface9> surface;
+            Com<IDirect3DTexture9> texture;
+
+            std::cout << std::endl << "Obscure FOURCC surface format support:" << std::endl;
+
+            for (sfFormatIter = sfFormats.begin(); sfFormatIter != sfFormats.end(); sfFormatIter++) {
+                D3DFORMAT surfaceFormat = (D3DFORMAT) sfFormatIter->first;
+
+                HRESULT status = m_device->CreateOffscreenPlainSurface(256, 256, surfaceFormat, D3DPOOL_SCRATCH, &surface, NULL);
+
+                if (FAILED(status)) {
+                    std::cout << format("  - The ", sfFormatIter->second, " format is not supported by CreateOffscreenPlainSurface") << std::endl;
+                } else {
+                    std::cout << format("  + The ", sfFormatIter->second, " format is supported by CreateOffscreenPlainSurface") << std::endl;
+                }
+
+                status = m_device->CreateTexture(256, 256, 1, 0, surfaceFormat, D3DPOOL_DEFAULT, &texture, NULL);
+
+                if (FAILED(status)) {
+                    std::cout << format("  - The ", sfFormatIter->second, " format is not supported by CreateTexture") << std::endl;
+                } else {
+                    std::cout << format("  + The ", sfFormatIter->second, " format is supported by CreateTexture") << std::endl;
+                }
+            }
+        }
+
         // D3D Device capabilities check
         void listDeviceCapabilities() {
             D3DCAPS9 caps9SWVP;
@@ -681,6 +726,7 @@ int main(int, char**) {
         rgbTriangle.listAdapterDisplayModes();
         rgbTriangle.listBackBufferFormats(FALSE);
         rgbTriangle.listBackBufferFormats(TRUE);
+        rgbTriangle.listObscureFOURCCSurfaceFormats();
         rgbTriangle.listDeviceCapabilities();
         rgbTriangle.listVCacheQueryResult();
 

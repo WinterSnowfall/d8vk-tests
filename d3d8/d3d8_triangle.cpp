@@ -712,7 +712,7 @@ class RGBTriangle {
         }
 
         // StateBlock calls with an invalid token test
-        /*void testStateBlockWithInvalidToken() {
+        void testStateBlockWithInvalidToken() {
             resetOrRecreateDevice();
 
             DWORD invalidToken = 5000;
@@ -729,7 +729,7 @@ class RGBTriangle {
             } else {
                 std::cout << "  - The StateBlock with invalid token test has failed" << std::endl;
             }
-        }*/
+        }
 
         // CopyRects with depth stencil format test
         void testCopyRectsDepthStencilFormat() {
@@ -766,6 +766,36 @@ class RGBTriangle {
             } else {
                 m_passedTests++;
                 std::cout << "  + The VCache query response test has passed" << std::endl;
+            }
+        }
+
+        // SetIndices with UINT BaseVertexIndex test
+        void testSetIndicesWithUINTBVI() {
+            resetOrRecreateDevice();
+
+            Com<IDirect3DIndexBuffer8> ib;
+            UINT baseVertexIndex = 0;
+
+            // Create the index buffer with above INT_MAX length
+            m_device->CreateIndexBuffer((UINT) INT_MAX + 2, 0, D3DFMT_INDEX32, D3DPOOL_DEFAULT, &ib);
+
+            m_totalTests++;
+            // Use a INT_MAX + 1 BaseVertexIndex
+            HRESULT status = m_device->SetIndices(ib.ptr(), (UINT) INT_MAX + 1);
+            if (FAILED(status)) {
+                std::cout << "  - The SetIndices with UINT BaseVertexIndex test has failed" << std::endl;
+            } else {
+                ib = nullptr;
+                // GetIndices should return the previously set value for BaseVertexIndex
+                m_device->GetIndices(&ib, &baseVertexIndex);
+                //std::cout << format("  ~ BaseVertexIndex is: ", baseVertexIndex) << std::endl;
+
+                if (baseVertexIndex == (UINT) INT_MAX + 1) {
+                    m_passedTests++;
+                    std::cout << "  + The SetIndices with UINT BaseVertexIndex test has passed" << std::endl;
+                } else {
+                    std::cout << "  - The SetIndices with UINT BaseVertexIndex test has failed" << std::endl;
+                }
             }
         }
 
@@ -1100,6 +1130,10 @@ int main(int, char**) {
         //rgbTriangle.testStateBlockWithInvalidToken();
         rgbTriangle.testCopyRectsDepthStencilFormat();
         rgbTriangle.testVCacheQueryResult();
+        // tests against the underflow of BaseVertexIndex,
+        // but has to allocate a ~2GB index buffer to do so,
+        // which is very slow, hence disabling by default
+        //rgbTriangle.testSetIndicesWithUINTBVI();
         rgbTriangle.testDeviceCapabilities();
         rgbTriangle.testSurfaceFormats();
         rgbTriangle.testDepthStencilFormats();
