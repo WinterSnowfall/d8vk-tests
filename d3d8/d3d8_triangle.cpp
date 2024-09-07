@@ -799,6 +799,27 @@ class RGBTriangle {
             }
         }
 
+        // RenderState with D3DRS_ZVISIBLE test
+        void testRenderStateZVisible() {
+            resetOrRecreateDevice();
+
+            DWORD pValue;
+
+            m_totalTests++;
+            // the state isn't supported, so allowed values aren't documented, but let's use TRUE
+            HRESULT setStatus = m_device->SetRenderState(D3DRS_ZVISIBLE, TRUE);
+            HRESULT getStatus = m_device->GetRenderState(D3DRS_ZVISIBLE, &pValue);
+            //std::cout << format("  ~ pValue is: ", pValue) << std::endl;
+
+            // although the state isn't supported, the above calls should return D3D_OK
+            if (SUCCEEDED(setStatus) && SUCCEEDED(getStatus)) {
+                m_passedTests++;
+                std::cout << "  + The RenderState with D3DRS_ZVISIBLE test has passed" << std::endl;
+            } else {
+                std::cout << "  - The RenderState with D3DRS_ZVISIBLE test has failed" << std::endl;
+            }
+        }
+
         // D3D Device capabilities tests
         void testDeviceCapabilities() {
             createDeviceWithFlags(&m_pp, D3DCREATE_SOFTWARE_VERTEXPROCESSING, true);
@@ -1134,6 +1155,7 @@ int main(int, char**) {
         // but has to allocate a ~2GB index buffer to do so,
         // which is very slow, hence disabling by default
         //rgbTriangle.testSetIndicesWithUINTBVI();
+        rgbTriangle.testRenderStateZVisible();
         rgbTriangle.testDeviceCapabilities();
         rgbTriangle.testSurfaceFormats();
         rgbTriangle.testDepthStencilFormats();
