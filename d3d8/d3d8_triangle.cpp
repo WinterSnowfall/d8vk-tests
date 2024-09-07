@@ -643,7 +643,7 @@ class RGBTriangle {
             resetOrRecreateDevice();
 
             // create a temporary state block
-            DWORD stateBlockToken;
+            DWORD stateBlockToken = 0;
             m_device->CreateStateBlock(D3DSBT_ALL, &stateBlockToken);
             //std::cout << format("  * State block token:", stateBlockToken) << std::endl;
 
@@ -665,7 +665,7 @@ class RGBTriangle {
             resetOrRecreateDevice();
 
             std::vector<DWORD> stateBlockTokens;
-            DWORD currentStateBlockToken;
+            DWORD currentStateBlockToken = 0;
             // create stateBlocksCount/2 state blocks
             for (UINT i = 0; i < stateBlocksCount/2; i++) {
                 m_device->CreateStateBlock(D3DSBT_ALL, &currentStateBlockToken);
@@ -803,7 +803,7 @@ class RGBTriangle {
         void testRenderStateZVisible() {
             resetOrRecreateDevice();
 
-            DWORD pValue;
+            DWORD pValue = 0;
 
             m_totalTests++;
             // the state isn't supported, so allowed values aren't documented, but let's use TRUE
@@ -817,6 +817,26 @@ class RGBTriangle {
                 std::cout << "  + The RenderState with D3DRS_ZVISIBLE test has passed" << std::endl;
             } else {
                 std::cout << "  - The RenderState with D3DRS_ZVISIBLE test has failed" << std::endl;
+            }
+        }
+
+        // Invalid (larger than backbuffer) viewport test
+        void testInvalidViewport() {
+            resetOrRecreateDevice();
+
+            DWORD offset = 100;
+            D3DVIEWPORT8 vp = {0, 0, m_pp.BackBufferWidth + offset, m_pp.BackBufferHeight + offset, 0.0, 1.0};
+
+            m_totalTests++;
+            // according to D3D8 docs, this call should fail "if pViewport describes
+            // a region that cannot exist within the render target surface"
+            HRESULT status = m_device->SetViewport(&vp);
+
+            if (FAILED(status)) {
+                m_passedTests++;
+                std::cout << "  + The invalid viewport test has passed" << std::endl;
+            } else {
+                std::cout << "  - The invalid viewport test has failed" << std::endl;
             }
         }
 
@@ -1156,6 +1176,7 @@ int main(int, char**) {
         // which is very slow, hence disabling by default
         //rgbTriangle.testSetIndicesWithUINTBVI();
         rgbTriangle.testRenderStateZVisible();
+        rgbTriangle.testInvalidViewport();
         rgbTriangle.testDeviceCapabilities();
         rgbTriangle.testSurfaceFormats();
         rgbTriangle.testDepthStencilFormats();
