@@ -820,23 +820,29 @@ class RGBTriangle {
             }
         }
 
-        // Invalid (larger than backbuffer) viewport test
-        void testInvalidViewport() {
+        // Invalid (outside of the render target) viewports test
+        void testInvalidViewports() {
             resetOrRecreateDevice();
 
             DWORD offset = 100;
-            D3DVIEWPORT8 vp = {0, 0, m_pp.BackBufferWidth + offset, m_pp.BackBufferHeight + offset, 0.0, 1.0};
+            D3DVIEWPORT8 vp1 = {0, 0, m_pp.BackBufferWidth + offset,
+                                m_pp.BackBufferHeight + offset, 0.0, 1.0};
+            D3DVIEWPORT8 vp2 = {offset * 2, offset * 2, m_pp.BackBufferWidth - offset / 2,
+                                m_pp.BackBufferHeight - offset / 2, 0.0, 1.0};
 
             m_totalTests++;
             // according to D3D8 docs, this call should fail "if pViewport describes
             // a region that cannot exist within the render target surface"
-            HRESULT status = m_device->SetViewport(&vp);
+            HRESULT statusVP1 = m_device->SetViewport(&vp1);
+            // a viewport with a too great X or Y offset should be rejected even
+            // if its dimensions are technically smaller than the render target surface
+            HRESULT statusVP2 = m_device->SetViewport(&vp2);
 
-            if (FAILED(status)) {
+            if (FAILED(statusVP1) && FAILED(statusVP2)) {
                 m_passedTests++;
-                std::cout << "  + The invalid viewport test has passed" << std::endl;
+                std::cout << "  + The invalid viewports test has passed" << std::endl;
             } else {
-                std::cout << "  - The invalid viewport test has failed" << std::endl;
+                std::cout << "  - The invalid viewports test has failed" << std::endl;
             }
         }
 
@@ -1210,7 +1216,7 @@ int main(int, char**) {
         // which is very slow, hence disabling by default
         //rgbTriangle.testSetIndicesWithUINTBVI();
         rgbTriangle.testRenderStateZVisible();
-        rgbTriangle.testInvalidViewport();
+        rgbTriangle.testInvalidViewports();
         rgbTriangle.testViewportAdjustmentWithSmallerRT();
         rgbTriangle.testDeviceCapabilities();
         rgbTriangle.testSurfaceFormats();
