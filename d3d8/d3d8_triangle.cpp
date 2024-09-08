@@ -840,6 +840,40 @@ class RGBTriangle {
             }
         }
 
+        // Viewport adjustment with smaller render target test
+        void testViewportAdjustmentWithSmallerRT() {
+            resetOrRecreateDevice();
+
+            Com<IDirect3DSurface8> surface;
+            UINT rtWidth  = 256;
+            UINT rtHeight = 256;
+
+            m_totalTests++;
+            // set a fullscreen viewport
+            D3DVIEWPORT8 vp = {0, 0, m_pp.BackBufferWidth, m_pp.BackBufferHeight, 0.0, 1.0};
+            m_device->SetViewport(&vp);
+            // create a smaller render target
+            m_device->CreateRenderTarget(rtWidth, rtHeight, m_pp.BackBufferFormat,
+                                         D3DMULTISAMPLE_NONE, TRUE, &surface);
+            // set the newly created render target
+            HRESULT statusRT = m_device->SetRenderTarget(surface.ptr(), NULL);
+
+            D3DVIEWPORT8 nvp;
+            // the viewport should automatically get adjusted to the dimensions
+            // of the new render target, without any subsequent calls to SetViewport
+            HRESULT statusGV = m_device->GetViewport(&nvp);
+            //std::cout << format("  ~ viewport width is: ", nvp.Width) << std::endl;
+            //std::cout << format("  ~ viewport height is: ", nvp.Height) << std::endl;
+
+            if (SUCCEEDED(statusRT) && SUCCEEDED(statusGV) &&
+                rtWidth == nvp.Width && rtHeight == nvp.Height) {
+                m_passedTests++;
+                std::cout << "  + The viewport adjustment with smaller RT test has passed" << std::endl;
+            } else {
+                std::cout << "  - The viewport adjustment with smaller RT test has failed" << std::endl;
+            }
+        }
+
         // D3D Device capabilities tests
         void testDeviceCapabilities() {
             createDeviceWithFlags(&m_pp, D3DCREATE_SOFTWARE_VERTEXPROCESSING, true);
@@ -1177,6 +1211,7 @@ int main(int, char**) {
         //rgbTriangle.testSetIndicesWithUINTBVI();
         rgbTriangle.testRenderStateZVisible();
         rgbTriangle.testInvalidViewport();
+        rgbTriangle.testViewportAdjustmentWithSmallerRT();
         rgbTriangle.testDeviceCapabilities();
         rgbTriangle.testSurfaceFormats();
         rgbTriangle.testDepthStencilFormats();
