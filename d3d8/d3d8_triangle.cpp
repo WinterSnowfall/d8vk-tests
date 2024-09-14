@@ -233,6 +233,7 @@ class RGBTriangle {
                     std::cout << format("  - The ", sfFormatIter->second, " format is not supported by CreateImageSurface") << std::endl;
                 } else {
                     std::cout << format("  + The ", sfFormatIter->second, " format is supported by CreateImageSurface") << std::endl;
+                    surface = nullptr;
                 }
 
                 status = m_device->CreateTexture(256, 256, 1, 0, surfaceFormat, D3DPOOL_DEFAULT, &texture);
@@ -241,6 +242,7 @@ class RGBTriangle {
                     std::cout << format("  - The ", sfFormatIter->second, " format is not supported by CreateTexture") << std::endl;
                 } else {
                     std::cout << format("  + The ", sfFormatIter->second, " format is supported by CreateTexture") << std::endl;
+                    texture = nullptr;
                 }
             }
         }
@@ -752,6 +754,35 @@ class RGBTriangle {
             }
         }
 
+        // CopyRects with different surface formats test
+        void testCopyRectsWithDifferentSurfaceFormats() {
+            resetOrRecreateDevice();
+
+            Com<IDirect3DSurface8> srcSurface;
+            Com<IDirect3DSurface8> dstSurface;
+
+            m_totalTests++;
+            // create a source render target with the D3DFMT_X8R8G8B8 format
+            HRESULT statusCRT = m_device->CreateRenderTarget(256, 256, D3DFMT_X8R8G8B8,
+                                                             D3DMULTISAMPLE_NONE, TRUE, &srcSurface);
+            // create a target image surface with the D3DFMT_R8G8B8 format
+            HRESULT statusCIS = m_device->CreateImageSurface(256, 256, D3DFMT_R8G8B8, &dstSurface);
+
+            if (SUCCEEDED(statusCRT) && SUCCEEDED(statusCIS)) {
+                // CopyRects will not support format conversions, so this call should fail
+                HRESULT status = m_device->CopyRects(srcSurface.ptr(), nullptr, 0, dstSurface.ptr(), nullptr);
+
+                if (FAILED(status)) {
+                    m_passedTests++;
+                    std::cout << "  + The CopyRects with different surface formats test has passed" << std::endl;
+                } else {
+                    std::cout << "  - The CopyRects with different surface formats test has failed" << std::endl;
+                }
+            } else {
+                std::cout << "  ~ The CopyRects with different surface formats test did not run" << std::endl;
+            }
+        }
+
         // VCache query result test
         void testVCacheQueryResult() {
             resetOrRecreateDevice();
@@ -979,6 +1010,7 @@ class RGBTriangle {
                 } else {
                     m_passedTests++;
                     std::cout << format("  + The CreateImageSurface with ", sfFormatIter->second, " test has passed") << std::endl;
+                    surface = nullptr;
                 }
 
                 // D3DFMT_L6V5U5 is used in Star Wars: Republic Commando for bump mapping;
@@ -991,6 +1023,7 @@ class RGBTriangle {
                     m_totalTests++;
                     m_passedTests++;
                     std::cout << format("  + The CreateTexture with ", sfFormatIter->second, " test has passed") << std::endl;
+                    texture = nullptr;
                 }
             }
         }
@@ -1210,6 +1243,7 @@ int main(int, char**) {
         // all, and will straight-up crash in these situations
         //rgbTriangle.testStateBlockWithInvalidToken();
         rgbTriangle.testCopyRectsDepthStencilFormat();
+        rgbTriangle.testCopyRectsWithDifferentSurfaceFormats();
         rgbTriangle.testVCacheQueryResult();
         // tests against the underflow of BaseVertexIndex,
         // but has to allocate a ~2GB index buffer to do so,
