@@ -675,9 +675,10 @@ class RGBTriangle {
                 stateBlockTokens.emplace_back(currentStateBlockToken);
             }
             // delete the last 10
-            for (UINT i = stateBlocksCount/2; i > stateBlocksCount/2 - 10; i--) {
-                m_device->DeleteStateBlock(i);
-                //std::cout << format("  * Deleted state block token:", i) << std::endl;
+            UINT deleteOffset =  stateBlockTokens.size() - 1;
+            for (UINT i = 0; i < 10; i++) {
+                m_device->DeleteStateBlock(stateBlockTokens[deleteOffset - i]);
+                //std::cout << format("  * Deleted state block token:", stateBlockTokens[deleteOffset - i]) << std::endl;
                 stateBlockTokens.pop_back();
             }
             // create another stateBlocksCount/2 state blocks
