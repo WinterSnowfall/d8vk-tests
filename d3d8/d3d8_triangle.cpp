@@ -862,6 +862,10 @@ class RGBTriangle {
             D3DVIEWPORT8 vp2 = {offset * 2, offset * 2, m_pp.BackBufferWidth - offset / 2,
                                 m_pp.BackBufferHeight - offset / 2, 0.0, 1.0};
 
+            // not really needed, more of a d3d8to9 quirk to trigger viewport validation
+            Com<IDirect3DSurface8> rt;
+            m_device->GetRenderTarget(&rt);
+
             m_totalTests++;
             // according to D3D8 docs, this call should fail "if pViewport describes
             // a region that cannot exist within the render target surface"
