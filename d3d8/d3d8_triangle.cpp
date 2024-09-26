@@ -916,6 +916,25 @@ class RGBTriangle {
             }
         }
 
+        // GetDepthStencilSurface without EnableAutoDepthStencil test
+        void testGetRenderTargetWithoutEADS() {
+            resetOrRecreateDevice();
+
+            Com<IDirect3DSurface8> surface;
+
+            m_totalTests++;
+            // since the devices has been created without EnableAutoDepthStencil
+            // set to True, the following call to GetDepthStencilSurface should fail
+            HRESULT status = m_device->GetDepthStencilSurface(&surface);
+
+            if (FAILED(status)) {
+                m_passedTests++;
+                std::cout << "  + The GetDepthStencilSurface without EnableAutoDepthStencil test has passed" << std::endl;
+            } else {
+                std::cout << "  - The GetDepthStencilSurface without EnableAutoDepthStencil test has failed" << std::endl;
+            }
+        }
+
         // D3D Device capabilities tests
         void testDeviceCapabilities() {
             createDeviceWithFlags(&m_pp, D3DCREATE_SOFTWARE_VERTEXPROCESSING, true);
@@ -1263,6 +1282,7 @@ int main(int, char**) {
         rgbTriangle.testRenderStateZVisible();
         rgbTriangle.testInvalidViewports();
         rgbTriangle.testViewportAdjustmentWithSmallerRT();
+        rgbTriangle.testGetRenderTargetWithoutEADS();
         rgbTriangle.testDeviceCapabilities();
         rgbTriangle.testSurfaceFormats();
         rgbTriangle.testDepthStencilFormats();
