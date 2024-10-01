@@ -640,6 +640,42 @@ class RGBTriangle {
             }
         }
 
+        // CreateVertexShader handle generation test
+        void testCreateVertexShaderHandleGeneration() {
+            resetOrRecreateDevice();
+
+            // sample shader declaration for FVF
+            DWORD dwDecl[] =
+            {
+                D3DVSD_STREAM(0),
+                D3DVSD_REG(D3DVSDE_POSITION,  D3DVSDT_FLOAT3),
+                D3DVSD_REG(D3DVSDE_DIFFUSE,   D3DVSDT_D3DCOLOR),
+                D3DVSD_END()
+            };
+
+            m_totalTests++;
+
+            DWORD firstHandle = 0;
+            HRESULT status = m_device->CreateVertexShader(dwDecl, NULL, &firstHandle, 0);
+            //std::cout << format("  * First VS handle: ", firstHandle) << std::endl;
+
+            // shader handles start at 3, to skip lower value FVF handles
+            if (SUCCEEDED(status) && firstHandle == 3) {
+                DWORD secondHandle = 0;
+                status = m_device->CreateVertexShader(dwDecl, NULL, &secondHandle, 0);
+                //std::cout << format("  * Second VS handle: ", secondHandle) << std::endl;
+
+                if (SUCCEEDED(status) && secondHandle == 5) {
+                    m_passedTests++;
+                    std::cout << "  + The CreateVertexShader handle generation test has passed" << std::endl;
+                } else {
+                    std::cout << "  - The CreateVertexShader handle generation test has failed" << std::endl;
+                }
+            } else {
+                std::cout << "  - The CreateVertexShader handle generation test has failed" << std::endl;
+            }
+        }
+
         // CreateStateBlock & Reset test
         void testCreateStateBlockAndReset() {
             resetOrRecreateDevice();
@@ -820,7 +856,7 @@ class RGBTriangle {
                 ib = nullptr;
                 // GetIndices should return the previously set value for BaseVertexIndex
                 m_device->GetIndices(&ib, &baseVertexIndex);
-                //std::cout << format("  ~ BaseVertexIndex is: ", baseVertexIndex) << std::endl;
+                //std::cout << format("  * BaseVertexIndex is: ", baseVertexIndex) << std::endl;
 
                 if (baseVertexIndex == (UINT) INT_MAX + 1) {
                     m_passedTests++;
@@ -841,7 +877,7 @@ class RGBTriangle {
             // the state isn't supported, so allowed values aren't documented, but let's use TRUE
             HRESULT setStatus = m_device->SetRenderState(D3DRS_ZVISIBLE, TRUE);
             HRESULT getStatus = m_device->GetRenderState(D3DRS_ZVISIBLE, &pValue);
-            //std::cout << format("  ~ pValue is: ", pValue) << std::endl;
+            //std::cout << format("  * D3DRS_ZVISIBLE is: ", pValue) << std::endl;
 
             // although the state isn't supported, the above calls should return D3D_OK
             if (SUCCEEDED(setStatus) && SUCCEEDED(getStatus)) {
@@ -904,8 +940,8 @@ class RGBTriangle {
             // the viewport should automatically get adjusted to the dimensions
             // of the new render target, without any subsequent calls to SetViewport
             HRESULT statusGV = m_device->GetViewport(&nvp);
-            //std::cout << format("  ~ viewport width is: ", nvp.Width) << std::endl;
-            //std::cout << format("  ~ viewport height is: ", nvp.Height) << std::endl;
+            //std::cout << format("  * Viewport width is: ", nvp.Width) << std::endl;
+            //std::cout << format("  * Viewport height is: ", nvp.Height) << std::endl;
 
             if (SUCCEEDED(statusRT) && SUCCEEDED(statusGV) &&
                 rtWidth == nvp.Width && rtHeight == nvp.Height) {
@@ -1267,6 +1303,7 @@ int main(int, char**) {
         rgbTriangle.testPureDeviceSetSWVPRenderState();
         rgbTriangle.testPureDeviceOnlyWithHWVP();
         rgbTriangle.testDefaultPoolAllocationReset();
+        rgbTriangle.testCreateVertexShaderHandleGeneration();
         rgbTriangle.testCreateStateBlockAndReset();
         rgbTriangle.testCreateStateBlockMonotonicTokens(100);
         // native drivers don't appear to validate tokens at
