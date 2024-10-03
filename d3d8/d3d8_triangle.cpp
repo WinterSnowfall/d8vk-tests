@@ -971,6 +971,24 @@ class RGBTriangle {
             }
         }
 
+        //D3DRS_POINTSIZE_MIN default value test
+        void testPointSizeMinRSDefaultValue() {
+            resetOrRecreateDevice();
+
+            DWORD pointSizeMin = 0;
+
+            m_totalTests++;
+            HRESULT status = m_device->GetRenderState(D3DRS_POINTSIZE_MIN, &pointSizeMin);
+
+            // the default value of D3DRS_POINTSIZE_MIN is 0.0 in D3D8, as opposed to 1.0 in D3D9
+            if (SUCCEEDED(status) && pointSizeMin == static_cast<DWORD>(0.0)) {
+                m_passedTests++;
+                std::cout << "  + The D3DRS_POINTSIZE_MIN default value test has passed" << std::endl;
+            } else {
+                std::cout << "  - The D3DRS_POINTSIZE_MIN default value test has failed" << std::endl;
+            }
+        }
+
         // D3D Device capabilities tests
         void testDeviceCapabilities() {
             createDeviceWithFlags(&m_pp, D3DCREATE_SOFTWARE_VERTEXPROCESSING, true);
@@ -1320,6 +1338,7 @@ int main(int, char**) {
         rgbTriangle.testInvalidViewports();
         rgbTriangle.testViewportAdjustmentWithSmallerRT();
         rgbTriangle.testGetRenderTargetWithoutEADS();
+        rgbTriangle.testPointSizeMinRSDefaultValue();
         rgbTriangle.testDeviceCapabilities();
         rgbTriangle.testSurfaceFormats();
         rgbTriangle.testDepthStencilFormats();
