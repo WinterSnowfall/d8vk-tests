@@ -217,26 +217,38 @@ class RGBTriangle {
 
             Com<IDirect3DSurface9> surface;
             Com<IDirect3DTexture9> texture;
+            Com<IDirect3DCubeTexture9> cubeTexture;
 
             std::cout << std::endl << "Obscure FOURCC surface format support:" << std::endl;
 
             for (sfFormatIter = sfFormats.begin(); sfFormatIter != sfFormats.end(); sfFormatIter++) {
                 D3DFORMAT surfaceFormat = (D3DFORMAT) sfFormatIter->first;
 
+                std::cout << format("  ~ ", sfFormatIter->second, ":") << std::endl;
+
                 HRESULT status = m_device->CreateOffscreenPlainSurface(256, 256, surfaceFormat, D3DPOOL_SCRATCH, &surface, NULL);
 
                 if (FAILED(status)) {
-                    std::cout << format("  - The ", sfFormatIter->second, " format is not supported by CreateOffscreenPlainSurface") << std::endl;
+                    std::cout << "     - The format is not supported by CreateOffscreenPlainSurface" << std::endl;
                 } else {
-                    std::cout << format("  + The ", sfFormatIter->second, " format is supported by CreateOffscreenPlainSurface") << std::endl;
+                    std::cout << "     + The format is supported by CreateOffscreenPlainSurface" << std::endl;
                 }
 
                 status = m_device->CreateTexture(256, 256, 1, 0, surfaceFormat, D3DPOOL_DEFAULT, &texture, NULL);
 
                 if (FAILED(status)) {
-                    std::cout << format("  - The ", sfFormatIter->second, " format is not supported by CreateTexture") << std::endl;
+                    std::cout << "     - The format is not supported by CreateTexture" << std::endl;
                 } else {
-                    std::cout << format("  + The ", sfFormatIter->second, " format is supported by CreateTexture") << std::endl;
+                    std::cout << "     + The format is supported by CreateTexture" << std::endl;
+                }
+
+                status = m_device->CreateCubeTexture(256, 1, 0, surfaceFormat, D3DPOOL_DEFAULT, &cubeTexture, NULL);
+
+                if (FAILED(status)) {
+                    std::cout << "     - The format is not supported by CreateCubeTexture" << std::endl;
+                } else {
+                    std::cout << "     + The format is supported by CreateCubeTexture" << std::endl;
+                    cubeTexture = nullptr;
                 }
             }
         }
@@ -573,8 +585,76 @@ class RGBTriangle {
             }
         }
 
+        // Various surface format tests
+        void testSurfaceFormats() {
+            resetOrRecreateDevice();
+
+            std::map<D3DFORMAT, char const*> sfFormats = { {D3DFMT_R8G8B8, "D3DFMT_R8G8B8"},
+                                                           {D3DFMT_R3G3B2, "D3DFMT_R3G3B2"},
+                                                           {D3DFMT_A8R3G3B2, "D3DFMT_A8R3G3B2"},
+                                                           {D3DFMT_A8P8, "D3DFMT_A8P8"},
+                                                           {D3DFMT_P8, "D3DFMT_P8"},
+                                                           {D3DFMT_L6V5U5, "D3DFMT_L6V5U5"},
+                                                           {D3DFMT_X8L8V8U8, "D3DFMT_X8L8V8U8"},
+                                                           {D3DFMT_A2W10V10U10, "D3DFMT_A2W10V10U10"} };
+
+            std::map<D3DFORMAT, char const*>::iterator sfFormatIter;
+
+            Com<IDirect3DSurface9> surface;
+            Com<IDirect3DTexture9> texture;
+            Com<IDirect3DCubeTexture9> cubeTexture;
+
+            std::cout << std::endl << "Running surface format tests:" << std::endl;
+
+            for (sfFormatIter = sfFormats.begin(); sfFormatIter != sfFormats.end(); sfFormatIter++) {
+                D3DFORMAT surfaceFormat = sfFormatIter->first;
+
+                std::cout << format("  ~ ", sfFormatIter->second, ":") << std::endl;
+
+                // Calls to CreateOffscreenPlainSurface using D3DPOOL_SCRATCH should never fail, even with unsupported formats
+                HRESULT status = m_device->CreateOffscreenPlainSurface(256, 256, surfaceFormat, D3DPOOL_SCRATCH, &surface, NULL);
+
+                if (FAILED(status)) {
+                    // Apparently, CreateOffscreenPlainSurface fails with D3DFMT_A2W10V10U10 on Windows 98 SE
+                    if (surfaceFormat == D3DFMT_A2W10V10U10) {
+                        std::cout << "     ~ Format is not supported by CreateOffscreenPlainSurface" << std::endl;
+                    } else {
+                        m_totalTests++;
+                        std::cout << "     - The CreateOffscreenPlainSurface test has failed" << std::endl;
+                    }
+                } else {
+                    m_totalTests++;
+                    m_passedTests++;
+                    std::cout << "     + The CreateOffscreenPlainSurface test has passed" << std::endl;
+                    surface = nullptr;
+                }
+
+                status = m_device->CreateTexture(256, 256, 1, 0, surfaceFormat, D3DPOOL_DEFAULT, &texture, NULL);
+
+                if (FAILED(status)) {
+                    std::cout << "     ~ The format is not supported by CreateTexture" << std::endl;
+                } else {
+                    m_totalTests++;
+                    m_passedTests++;
+                    std::cout << "     + The CreateTexture test has passed" << std::endl;
+                    texture = nullptr;
+                }
+
+                status = m_device->CreateCubeTexture(256, 1, 0, surfaceFormat, D3DPOOL_DEFAULT, &cubeTexture, NULL);
+
+                if (FAILED(status)) {
+                    std::cout << "     ~ The format is not supported by CreateCubeTexture" << std::endl;
+                } else {
+                    m_totalTests++;
+                    m_passedTests++;
+                    std::cout << "     + The CreateCubeTexture test has passed" << std::endl;
+                    cubeTexture = nullptr;
+                }
+            }
+        }
+
         void printTestResults() {
-            std::cout << format("Passed ", m_passedTests, "/", m_totalTests, " tests") << std::endl;
+            std::cout << std::endl << format("Passed ", m_passedTests, "/", m_totalTests, " tests") << std::endl;
         }
 
         void prepare() {
@@ -736,6 +816,7 @@ int main(int, char**) {
         rgbTriangle.testPureDeviceOnlyWithHWVP();
         rgbTriangle.testDefaultPoolAllocationReset();
         rgbTriangle.testCreateStateBlockAndReset();
+        rgbTriangle.testSurfaceFormats();
         rgbTriangle.printTestResults();
 
         // D3D9 triangle
