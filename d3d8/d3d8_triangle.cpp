@@ -221,28 +221,40 @@ class RGBTriangle {
 
             Com<IDirect3DSurface8> surface;
             Com<IDirect3DTexture8> texture;
+            Com<IDirect3DCubeTexture8> cubeTexture;
 
             std::cout << std::endl << "Obscure FOURCC surface format support:" << std::endl;
 
             for (sfFormatIter = sfFormats.begin(); sfFormatIter != sfFormats.end(); sfFormatIter++) {
                 D3DFORMAT surfaceFormat = (D3DFORMAT) sfFormatIter->first;
 
+                std::cout << format("  ~ ", sfFormatIter->second, ":") << std::endl;
+
                 HRESULT status = m_device->CreateImageSurface(256, 256, surfaceFormat, &surface);
 
                 if (FAILED(status)) {
-                    std::cout << format("  - The ", sfFormatIter->second, " format is not supported by CreateImageSurface") << std::endl;
+                    std::cout << "     - The format is not supported by CreateImageSurface" << std::endl;
                 } else {
-                    std::cout << format("  + The ", sfFormatIter->second, " format is supported by CreateImageSurface") << std::endl;
+                    std::cout << "     + The format is supported by CreateImageSurface" << std::endl;
                     surface = nullptr;
                 }
 
                 status = m_device->CreateTexture(256, 256, 1, 0, surfaceFormat, D3DPOOL_DEFAULT, &texture);
 
                 if (FAILED(status)) {
-                    std::cout << format("  - The ", sfFormatIter->second, " format is not supported by CreateTexture") << std::endl;
+                    std::cout << "     - The format is not supported by CreateTexture" << std::endl;
                 } else {
-                    std::cout << format("  + The ", sfFormatIter->second, " format is supported by CreateTexture") << std::endl;
+                    std::cout << "     + The format is supported by CreateTexture" << std::endl;
                     texture = nullptr;
+                }
+
+                status = m_device->CreateCubeTexture(256, 1, 0, surfaceFormat, D3DPOOL_DEFAULT, &cubeTexture);
+
+                if (FAILED(status)) {
+                    std::cout << "     - The format is not supported by CreateCubeTexture" << std::endl;
+                } else {
+                    std::cout << "     + The format is supported by CreateCubeTexture" << std::endl;
+                    cubeTexture = nullptr;
                 }
             }
         }
@@ -999,7 +1011,7 @@ class RGBTriangle {
             m_device->GetDeviceCaps(&caps8SWVP);
             m_d3d->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &caps8);
 
-            std::cout << "Running device capabilities tests:" << std::endl;
+            std::cout << std::endl << "Running device capabilities tests:" << std::endl;
 
             m_totalTests++;
             // Some D3D8 UE2.x games only enable character shadows if this capability is supported
@@ -1071,12 +1083,15 @@ class RGBTriangle {
 
             Com<IDirect3DSurface8> surface;
             Com<IDirect3DTexture8> texture;
+            Com<IDirect3DCubeTexture8> cubeTexture;
 
             // Note: CreateImageSurface calls should never fail, even with unsupported surface formats
-            std::cout << "Running surface format tests:" << std::endl;
+            std::cout << std::endl << "Running surface format tests:" << std::endl;
 
             for (sfFormatIter = sfFormats.begin(); sfFormatIter != sfFormats.end(); sfFormatIter++) {
                 D3DFORMAT surfaceFormat = sfFormatIter->first;
+
+                std::cout << format("  ~ ", sfFormatIter->second, ":") << std::endl;
 
                 // D3DFMT_R8G8B8 is used in Hidden & Dangerous Deluxe;
                 // D3DFMT_P8 (8-bit palleted textures) are required by some early d3d8 games
@@ -1085,15 +1100,15 @@ class RGBTriangle {
                 if (FAILED(status)) {
                     // Apparently, CreateImageSurface fails with D3DFMT_A2W10V10U10 on Windows 98 SE
                     if (surfaceFormat == D3DFMT_A2W10V10U10) {
-                        std::cout << format("  ~ The D3DFMT_A2W10V10U10 format is not supported by CreateImageSurface") << std::endl;
+                        std::cout << "     ~ Format is not supported by CreateImageSurface" << std::endl;
                     } else {
                         m_totalTests++;
-                        std::cout << format("  - The CreateImageSurface with ", sfFormatIter->second, " test has failed") << std::endl;
+                        std::cout << "     - The CreateImageSurface test has failed" << std::endl;
                     }
                 } else {
                     m_totalTests++;
                     m_passedTests++;
-                    std::cout << format("  + The CreateImageSurface with ", sfFormatIter->second, " test has passed") << std::endl;
+                    std::cout << "     + The CreateImageSurface test has passed" << std::endl;
                     surface = nullptr;
                 }
 
@@ -1102,12 +1117,23 @@ class RGBTriangle {
                 status = m_device->CreateTexture(256, 256, 1, 0, surfaceFormat, D3DPOOL_DEFAULT, &texture);
 
                 if (FAILED(status)) {
-                    std::cout << format("  ~ The ", sfFormatIter->second, " format is not supported by CreateTexture") << std::endl;
+                    std::cout << "     ~ The format is not supported by CreateTexture" << std::endl;
                 } else {
                     m_totalTests++;
                     m_passedTests++;
-                    std::cout << format("  + The CreateTexture with ", sfFormatIter->second, " test has passed") << std::endl;
+                    std::cout << "     + The CreateTexture test has passed" << std::endl;
                     texture = nullptr;
+                }
+
+                status = m_device->CreateCubeTexture(256, 1, 0, surfaceFormat, D3DPOOL_DEFAULT, &cubeTexture);
+
+                if (FAILED(status)) {
+                    std::cout << "     ~ The format is not supported by CreateCubeTexture" << std::endl;
+                } else {
+                    m_totalTests++;
+                    m_passedTests++;
+                    std::cout << "     + The CreateCubeTexture test has passed" << std::endl;
+                    cubeTexture = nullptr;
                 }
             }
         }
@@ -1132,7 +1158,7 @@ class RGBTriangle {
 
             std::map<D3DFORMAT, char const*>::iterator dsFormatIter;
 
-            std::cout << "Running depth stencil format tests:" << std::endl;
+            std::cout << std::endl << "Running depth stencil format tests:" << std::endl;
             
             for (dsFormatIter = dsFormats.begin(); dsFormatIter != dsFormats.end(); dsFormatIter++) {
                 dsPP.AutoDepthStencilFormat = dsFormatIter->first;
@@ -1157,7 +1183,7 @@ class RGBTriangle {
         }
 
         void printTestResults() {
-            std::cout << format("Passed ", m_passedTests, "/", m_totalTests, " tests") << std::endl;
+            std::cout << std::endl << format("Passed ", m_passedTests, "/", m_totalTests, " tests") << std::endl;
         }
 
         void prepare() {
