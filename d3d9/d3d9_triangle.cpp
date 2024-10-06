@@ -585,6 +585,64 @@ class RGBTriangle {
             }
         }
 
+        // Various CheckDeviceMultiSampleType validation tests
+        void testCheckDeviceMultiSampleTypeValidation() {
+            resetOrRecreateDevice();
+
+            m_totalTests++;
+
+            // The call will fail with anything above D3DMULTISAMPLE_16_SAMPLES
+            HRESULT statusSample = m_d3d->CheckDeviceMultiSampleType(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, FALSE,
+                                                                    (D3DMULTISAMPLE_TYPE) ((UINT) D3DMULTISAMPLE_16_SAMPLES * 2), 0);
+
+            // The call will fail with D3DFMT_UNKNOWN
+            HRESULT statusUnknown = m_d3d->CheckDeviceMultiSampleType(0, D3DDEVTYPE_HAL, D3DFMT_UNKNOWN,
+                                                                      FALSE, D3DMULTISAMPLE_NONE, 0);
+
+            if (FAILED(statusSample) && FAILED(statusUnknown)) {
+                m_passedTests++;
+                std::cout << "  + The CheckDeviceMultiSampleType validation test has passed" << std::endl;
+            } else {
+                std::cout << "  - The CheckDeviceMultiSampleType validation test has failed" << std::endl;
+            }
+        }
+
+        // Various CheckDeviceMultiSampleType formats test
+        void testCheckDeviceMultiSampleTypeFormats() {
+            resetOrRecreateDevice();
+
+            std::map<D3DFORMAT, char const*> sfFormats = { {D3DFMT_D32_LOCKABLE, "D3DFMT_D32_LOCKABLE"},
+                                                           {D3DFMT_D32F_LOCKABLE, "D3DFMT_D32F_LOCKABLE"},
+                                                           {D3DFMT_D16_LOCKABLE, "D3DFMT_D16_LOCKABLE"},
+                                                           {(D3DFORMAT) MAKEFOURCC('I', 'N', 'T', 'Z'), "D3DFMT_INTZ"},
+                                                           {D3DFMT_DXT1, "D3DFMT_DXT1"},
+                                                           {D3DFMT_DXT2, "D3DFMT_DXT2"},
+                                                           {D3DFMT_DXT3, "D3DFMT_DXT3"},
+                                                           {D3DFMT_DXT4, "D3DFMT_DXT4"},
+                                                           {D3DFMT_DXT5, "D3DFMT_DXT5"} };
+
+            std::map<D3DFORMAT, char const*>::iterator sfFormatIter;
+
+            std::cout << std::endl << "Running CheckDeviceMultiSampleType formats tests:" << std::endl;
+
+            for (sfFormatIter = sfFormats.begin(); sfFormatIter != sfFormats.end(); sfFormatIter++) {
+                D3DFORMAT surfaceFormat = sfFormatIter->first;
+
+                m_totalTests++;
+
+                // None of the above textures are supported with anything beside D3DMULTISAMPLE_NONE
+                HRESULT status = m_d3d->CheckDeviceMultiSampleType(0, D3DDEVTYPE_HAL, surfaceFormat,
+                                                                   FALSE, D3DMULTISAMPLE_2_SAMPLES, 0);
+
+                if (SUCCEEDED(status)) {
+                    std::cout << format("  - The ", sfFormatIter->second , " format test has failed") << std::endl;
+                } else {
+                    m_passedTests++;
+                    std::cout << format("  + The ", sfFormatIter->second ," format test has passed") << std::endl;
+                }
+            }
+        }
+
         // Various surface format tests
         void testSurfaceFormats() {
             resetOrRecreateDevice();
@@ -816,6 +874,8 @@ int main(int, char**) {
         rgbTriangle.testPureDeviceOnlyWithHWVP();
         rgbTriangle.testDefaultPoolAllocationReset();
         rgbTriangle.testCreateStateBlockAndReset();
+        rgbTriangle.testCheckDeviceMultiSampleTypeValidation();
+        rgbTriangle.testCheckDeviceMultiSampleTypeFormats();
         rgbTriangle.testSurfaceFormats();
         rgbTriangle.printTestResults();
 
