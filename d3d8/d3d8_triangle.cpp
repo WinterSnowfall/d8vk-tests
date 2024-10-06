@@ -222,6 +222,7 @@ class RGBTriangle {
             Com<IDirect3DSurface8> surface;
             Com<IDirect3DTexture8> texture;
             Com<IDirect3DCubeTexture8> cubeTexture;
+            Com<IDirect3DVolumeTexture8> volumeTexture;
 
             std::cout << std::endl << "Obscure FOURCC surface format support:" << std::endl;
 
@@ -255,6 +256,15 @@ class RGBTriangle {
                 } else {
                     std::cout << "     + The format is supported by CreateCubeTexture" << std::endl;
                     cubeTexture = nullptr;
+                }
+
+                status = m_device->CreateVolumeTexture(256, 256, 256, 1, 0, surfaceFormat, D3DPOOL_DEFAULT, &volumeTexture);
+
+                if (FAILED(status)) {
+                    std::cout << "     - The format is not supported by CreateVolumeTexture" << std::endl;
+                } else {
+                    std::cout << "     + The format is supported by CreateVolumeTexture" << std::endl;
+                    volumeTexture = nullptr;
                 }
             }
         }
@@ -1139,6 +1149,7 @@ class RGBTriangle {
             Com<IDirect3DSurface8> surface;
             Com<IDirect3DTexture8> texture;
             Com<IDirect3DCubeTexture8> cubeTexture;
+            Com<IDirect3DVolumeTexture8> volumeTexture;
 
             // Note: CreateImageSurface calls should never fail, even with unsupported surface formats
             std::cout << std::endl << "Running surface format tests:" << std::endl;
@@ -1189,6 +1200,17 @@ class RGBTriangle {
                     m_passedTests++;
                     std::cout << "     + The CreateCubeTexture test has passed" << std::endl;
                     cubeTexture = nullptr;
+                }
+
+                status = m_device->CreateVolumeTexture(256, 256, 256, 1, 0, surfaceFormat, D3DPOOL_DEFAULT, &volumeTexture);
+
+                if (FAILED(status)) {
+                    std::cout << "     ~ The format is not supported by CreateVolumeTexture" << std::endl;
+                } else {
+                    m_totalTests++;
+                    m_passedTests++;
+                    std::cout << "     + The CreateVolumeTexture test has passed" << std::endl;
+                    volumeTexture = nullptr;
                 }
             }
         }
