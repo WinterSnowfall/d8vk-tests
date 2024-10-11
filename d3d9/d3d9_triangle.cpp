@@ -595,6 +595,39 @@ class RGBTriangle {
             }
         }
 
+        // Cursor HotSpot coordinates test
+        void testCursorHotSpotCoordinates() {
+            resetOrRecreateDevice();
+
+            Com<IDirect3DSurface9> surface;
+            D3DLOCKED_RECT rect;
+
+            std::vector<uint8_t> bitmap(256 * 256 * 4, 1);
+
+            HRESULT status = m_device->CreateOffscreenPlainSurface(256, 256, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &surface, NULL);
+
+            if (SUCCEEDED(status)) {
+                m_totalTests++;
+
+                surface->LockRect(&rect, NULL, 0);
+                uint8_t* data  = reinterpret_cast<uint8_t*>(rect.pBits);
+                memcpy(&data[0], &bitmap[0], 256 * 256 * 4);
+                surface->UnlockRect();
+
+                // HotSpot coordinates outside of the cursor bitmap will cause this call to fail
+                HRESULT statusCursor = m_device->SetCursorProperties(256, 256, surface.ptr());
+
+                if (FAILED(statusCursor)) {
+                    m_passedTests++;
+                    std::cout << "  + The Cursor HotSpot coordinates test has passed" << std::endl;
+                } else {
+                    std::cout << "  - The Cursor HotSpot coordinates test has failed" << std::endl;
+                }
+            } else {
+                std::cout << "  ~ The Cursor HotSpot coordinates test has not run" << std::endl;
+            }
+        }
+
         // Various CheckDeviceMultiSampleType validation tests
         void testCheckDeviceMultiSampleTypeValidation() {
             resetOrRecreateDevice();
@@ -897,6 +930,7 @@ int main(int, char**) {
         rgbTriangle.testPureDeviceOnlyWithHWVP();
         rgbTriangle.testDefaultPoolAllocationReset();
         rgbTriangle.testCreateStateBlockAndReset();
+        rgbTriangle.testCursorHotSpotCoordinates();
         rgbTriangle.testCheckDeviceMultiSampleTypeValidation();
         rgbTriangle.testCheckDeviceMultiSampleTypeFormats();
         rgbTriangle.testSurfaceFormats();
