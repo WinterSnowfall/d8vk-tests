@@ -772,6 +772,36 @@ class RGBTriangle {
             }
         }
 
+        // BeginStateBlock & other state block calls test
+        void testBeginStateBlockCalls() {
+            resetOrRecreateDevice();
+
+            // create a temporary state block
+            DWORD deleteStateBlockToken = 0;
+            DWORD endStateBlockToken = 0;
+            m_device->CreateStateBlock(D3DSBT_ALL, &deleteStateBlockToken);
+            m_device->BeginStateBlock();
+
+            m_totalTests++;
+            // no other calls except EndStateBlock() will succeed insides of a BeginStateBlock()
+            HRESULT statusDelete = m_device->DeleteStateBlock(deleteStateBlockToken);
+            HRESULT statusBegin = m_device->BeginStateBlock();
+            HRESULT statusApply = m_device->ApplyStateBlock(deleteStateBlockToken);
+            HRESULT statusCapture = m_device->CaptureStateBlock(deleteStateBlockToken);
+            HRESULT statusCreate = m_device->CreateStateBlock(D3DSBT_ALL, &deleteStateBlockToken);
+            HRESULT statusEnd = m_device->EndStateBlock(&endStateBlockToken);
+            
+            if (FAILED(statusDelete) && FAILED(statusBegin) && FAILED(statusApply)
+             && FAILED(statusCapture) && FAILED(statusCreate) && SUCCEEDED(statusEnd)) {
+                m_passedTests++;
+                std::cout << "  + The BeginStateBlock & other state block calls test has passed" << std::endl;
+            } else {
+                std::cout << "  - The BeginStateBlock & other state block calls test has failed" << std::endl;
+            }
+
+            m_device->DeleteStateBlock(endStateBlockToken);
+        }
+
         // StateBlock calls with an invalid token test
         void testStateBlockWithInvalidToken() {
             resetOrRecreateDevice();
@@ -1427,6 +1457,7 @@ int main(int, char**) {
         rgbTriangle.testCreateVertexShaderHandleGeneration();
         rgbTriangle.testCreateStateBlockAndReset();
         rgbTriangle.testCreateStateBlockMonotonicTokens(100);
+        rgbTriangle.testBeginStateBlockCalls();
         // native drivers don't appear to validate tokens at
         // all, and will straight-up crash in these situations
         //rgbTriangle.testStateBlockWithInvalidToken();
