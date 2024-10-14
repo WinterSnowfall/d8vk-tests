@@ -810,7 +810,6 @@ class RGBTriangle {
         void testBeginStateBlockCalls() {
             resetOrRecreateDevice();
 
-            // create a temporary state block
             DWORD deleteStateBlockToken = 0;
             DWORD endStateBlockToken = 0;
             m_device->CreateStateBlock(D3DSBT_ALL, &deleteStateBlockToken);
@@ -834,6 +833,61 @@ class RGBTriangle {
             }
 
             m_device->DeleteStateBlock(endStateBlockToken);
+        }
+
+        // MultiplyTransform with state blocks test
+        void testMultiplyTransformRecordingAndCapture() {
+            resetOrRecreateDevice();
+
+            D3DMATRIX idMatrix =
+            {{{
+                1.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 1.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 1.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, 1.0f,
+            }}};
+            D3DMATRIX dblMatrix =
+            {{{
+                2.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 2.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 2.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, 2.0f,
+            }}};
+
+            DWORD endStateBlockToken = 0;
+            DWORD captureStateBlockToken = 0;
+
+            m_totalTests++;
+
+            m_device->CreateStateBlock(D3DSBT_ALL, &captureStateBlockToken);
+
+            m_device->SetTransform(D3DTS_WORLDMATRIX(0), &idMatrix);
+            m_device->BeginStateBlock();
+            m_device->MultiplyTransform(D3DTS_WORLDMATRIX(0), &dblMatrix);
+            m_device->EndStateBlock(&endStateBlockToken);
+            D3DMATRIX checkMatrix1;
+            m_device->GetTransform(D3DTS_WORLDMATRIX(0), &checkMatrix1);
+
+            m_device->SetTransform(D3DTS_WORLDMATRIX(0), &idMatrix);
+            m_device->CaptureStateBlock(captureStateBlockToken);
+            m_device->MultiplyTransform(D3DTS_WORLDMATRIX(0), &dblMatrix);
+            m_device->ApplyStateBlock(captureStateBlockToken);
+            D3DMATRIX checkMatrix2;
+            m_device->GetTransform(D3DTS_WORLDMATRIX(0), &checkMatrix2);
+
+            bool firstCheck  = !memcmp(&checkMatrix1, &dblMatrix, sizeof(dblMatrix));
+            bool secondCheck = !memcmp(&checkMatrix2, &idMatrix,  sizeof(idMatrix));
+
+            // Calls to MultiplyTransform are not recorded in state blocks, but are captured
+            if (firstCheck && secondCheck) {
+                m_passedTests++;
+                std::cout << "  + The MultiplyTransform with state blocks test has passed" << std::endl;
+            } else {
+                std::cout << "  - The MultiplyTransform with state blocks test has failed" << std::endl;
+            }
+
+            m_device->DeleteStateBlock(endStateBlockToken);
+            m_device->DeleteStateBlock(captureStateBlockToken);
         }
 
         // StateBlock calls with an invalid token test
@@ -1492,6 +1546,7 @@ int main(int, char**) {
         rgbTriangle.testCreateStateBlockAndReset();
         rgbTriangle.testCreateStateBlockMonotonicTokens(100);
         rgbTriangle.testBeginStateBlockCalls();
+        rgbTriangle.testMultiplyTransformRecordingAndCapture();
         // native drivers don't appear to validate tokens at
         // all, and will straight-up crash in these situations
         //rgbTriangle.testStateBlockWithInvalidToken();
