@@ -38,8 +38,12 @@ struct RGBVERTEX {
 #define D3DLINECAPS_ANTIALIAS                   0x00000020L
 #define D3DSTENCILCAPS_TWOSIDED                 0x00000100L
 #define D3DPMISCCAPS_POSTBLENDSRGBCONVERT       0x00200000L
+#define D3DPBLENDCAPS_BLENDFACTOR               0x00002000L
 #define D3DPBLENDCAPS_SRCCOLOR2                 0x00004000L
 #define D3DPBLENDCAPS_INVSRCCOLOR2              0x00008000L
+
+#define D3DVTXPCAPS_TEXGEN_SPHEREMAP            0x00000100L
+#define D3DVTXPCAPS_NO_TEXGEN_NONLOCALVIEWER    0x00000200L
 #endif
 
 class RGBTriangle {
@@ -375,15 +379,35 @@ class RGBTriangle {
             else
                 std::cout << "  - D3DPRASTERCAPS_MULTISAMPLE_TOGGLE is not supported" << std::endl;
 
-            if (caps9.SrcBlendCaps & D3DPBLENDCAPS_INVSRCCOLOR2)
-                std::cout << "  + D3DPBLENDCAPS_INVSRCCOLOR2 is supported" << std::endl;
+            if (caps9.SrcBlendCaps & D3DPBLENDCAPS_BLENDFACTOR)
+                std::cout << "  + D3DPBLENDCAPS_BLENDFACTOR (Src) is supported" << std::endl;
             else
-                std::cout << "  - D3DPBLENDCAPS_INVSRCCOLOR2 is not supported" << std::endl;
+                std::cout << "  - D3DPBLENDCAPS_BLENDFACTOR (Src) is not supported" << std::endl;
+
+            if (caps9.SrcBlendCaps & D3DPBLENDCAPS_INVSRCCOLOR2)
+                std::cout << "  + D3DPBLENDCAPS_INVSRCCOLOR2 (Src) is supported" << std::endl;
+            else
+                std::cout << "  - D3DPBLENDCAPS_INVSRCCOLOR2 (Src) is not supported" << std::endl;
 
             if (caps9.SrcBlendCaps & D3DPBLENDCAPS_SRCCOLOR2)
-                std::cout << "  + D3DPBLENDCAPS_SRCCOLOR2 is supported" << std::endl;
+                std::cout << "  + D3DPBLENDCAPS_SRCCOLOR2 (Src) is supported" << std::endl;
             else
-                std::cout << "  - D3DPBLENDCAPS_SRCCOLOR2 is not supported" << std::endl;
+                std::cout << "  - D3DPBLENDCAPS_SRCCOLOR2 (Src) is not supported" << std::endl;
+
+            if (caps9.DestBlendCaps & D3DPBLENDCAPS_BLENDFACTOR)
+                std::cout << "  + D3DPBLENDCAPS_BLENDFACTOR (Dest) is supported" << std::endl;
+            else
+                std::cout << "  - D3DPBLENDCAPS_BLENDFACTOR (Dest) is not supported" << std::endl;
+
+            if (caps9.DestBlendCaps & D3DPBLENDCAPS_INVSRCCOLOR2)
+                std::cout << "  + D3DPBLENDCAPS_INVSRCCOLOR2 (Dest) is supported" << std::endl;
+            else
+                std::cout << "  - D3DPBLENDCAPS_INVSRCCOLOR2 (Dest) is not supported" << std::endl;
+
+            if (caps9.DestBlendCaps & D3DPBLENDCAPS_SRCCOLOR2)
+                std::cout << "  + D3DPBLENDCAPS_SRCCOLOR2 (Dest) is supported" << std::endl;
+            else
+                std::cout << "  - D3DPBLENDCAPS_SRCCOLOR2 (Dest) is not supported" << std::endl;
 
             if (caps9.LineCaps & D3DLINECAPS_ANTIALIAS)
                 std::cout << "  + D3DLINECAPS_ANTIALIAS is supported" << std::endl;
@@ -394,6 +418,16 @@ class RGBTriangle {
                 std::cout << "  + D3DSTENCILCAPS_TWOSIDED is supported" << std::endl;
             else
                 std::cout << "  - D3DSTENCILCAPS_TWOSIDED is not supported" << std::endl;
+
+            if (caps9.VertexProcessingCaps & D3DVTXPCAPS_TEXGEN_SPHEREMAP)
+                std::cout << "  + D3DVTXPCAPS_TEXGEN_SPHEREMAP is supported" << std::endl;
+            else
+                std::cout << "  - D3DVTXPCAPS_TEXGEN_SPHEREMAP is not supported" << std::endl;
+
+            if (caps9.VertexProcessingCaps & D3DVTXPCAPS_NO_TEXGEN_NONLOCALVIEWER)
+                std::cout << "  + D3DVTXPCAPS_NO_TEXGEN_NONLOCALVIEWER is supported" << std::endl;
+            else
+                std::cout << "  - D3DVTXPCAPS_NO_TEXGEN_NONLOCALVIEWER is not supported" << std::endl;
 
             std::cout << std::endl << "Listing device capability limits:" << std::endl;
 
