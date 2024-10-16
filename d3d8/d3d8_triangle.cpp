@@ -15,6 +15,7 @@ struct RGBVERTEX {
 };
 
 #define RGBT_FVF_CODES (D3DFVF_XYZRHW | D3DFVF_DIFFUSE)
+#define PTRCLEARED(ptr) (ptr == nullptr)
 
 // D3D9 caps
 #ifdef _MSC_VER
@@ -1129,6 +1130,40 @@ class RGBTriangle {
             }
         }
 
+        // D3DFMT_UNKNOWN object creation test
+        void testUnknownFormatObjectCreation() {
+            resetOrRecreateDevice();
+
+            IDirect3DTexture8* texture = (IDirect3DTexture8*) 0xabcdabcd;
+            IDirect3DVolumeTexture8* volumeTexture = (IDirect3DVolumeTexture8*) 0xabcdabcd;
+            IDirect3DCubeTexture8* cubeTexture = (IDirect3DCubeTexture8*) 0xabcdabcd;
+            IDirect3DSurface8* renderTarget = (IDirect3DSurface8*) 0xabcdabcd;
+            IDirect3DSurface8* depthStencil = (IDirect3DSurface8*) 0xabcdabcd;
+            IDirect3DSurface8* imageSurface = (IDirect3DSurface8*) 0xabcdabcd;
+
+            m_totalTests++;
+
+            HRESULT statusTexture = m_device->CreateTexture(256, 256, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, &texture);
+            HRESULT statusVolumeTexture = m_device->CreateVolumeTexture(256, 256, 256, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, &volumeTexture);
+            HRESULT statusCubeTexture = m_device->CreateCubeTexture(256, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, &cubeTexture);
+            HRESULT statusRenderTarget = m_device->CreateRenderTarget(256, 256, D3DFMT_UNKNOWN, D3DMULTISAMPLE_NONE, TRUE, &renderTarget);
+            HRESULT statusDepthStencil = m_device->CreateDepthStencilSurface(256, 256, D3DFMT_UNKNOWN, D3DMULTISAMPLE_NONE, &depthStencil);
+            HRESULT statusImageSurface = m_device->CreateImageSurface(256, 256, D3DFMT_UNKNOWN, &imageSurface);
+
+            if (FAILED(statusTexture)       && !PTRCLEARED(texture)
+             && FAILED(statusVolumeTexture) && !PTRCLEARED(volumeTexture)
+             && FAILED(statusCubeTexture)   && !PTRCLEARED(cubeTexture)
+             && FAILED(statusRenderTarget)  && !PTRCLEARED(renderTarget)
+             && FAILED(statusDepthStencil)  && !PTRCLEARED(depthStencil)
+             // CreateImageSurface clears the content of imageSurface before checking for D3DFMT_UNKNOWN
+             && FAILED(statusImageSurface)  &&  PTRCLEARED(imageSurface)) {
+                m_passedTests++;
+                std::cout << "  + The D3DFMT_UNKNOWN object creation test has passed" << std::endl;
+            } else {
+                std::cout << "  - The D3DFMT_UNKNOWN object creation test has failed" << std::endl;
+            }
+        }
+
         // Various CheckDeviceMultiSampleType validation tests
         void testCheckDeviceMultiSampleTypeValidation() {
             resetOrRecreateDevice();
@@ -1562,6 +1597,7 @@ int main(int, char**) {
         rgbTriangle.testViewportAdjustmentWithSmallerRT();
         rgbTriangle.testGetRenderTargetWithoutEADS();
         rgbTriangle.testPointSizeMinRSDefaultValue();
+        rgbTriangle.testUnknownFormatObjectCreation();
         rgbTriangle.testCheckDeviceMultiSampleTypeValidation();
         rgbTriangle.testCheckDeviceMultiSampleTypeFormats();
         rgbTriangle.testDeviceCapabilities();
