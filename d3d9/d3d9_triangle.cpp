@@ -720,6 +720,52 @@ class RGBTriangle {
             }
         }
 
+        // CreateVolumeTexture formats test
+        void testCreateVolumeTextureFormats() {
+            resetOrRecreateDevice();
+
+            std::map<D3DFORMAT, char const*> texFormats = { {D3DFMT_A8R8G8B8, "D3DFMT_A8R8G8B8"},
+                                                            {D3DFMT_DXT1, "D3DFMT_DXT1"},
+                                                            {D3DFMT_DXT2, "D3DFMT_DXT2"},
+                                                            {D3DFMT_DXT3, "D3DFMT_DXT3"},
+                                                            {D3DFMT_DXT4, "D3DFMT_DXT4"},
+                                                            {D3DFMT_DXT5, "D3DFMT_DXT5"},
+                                                            {(D3DFORMAT) MAKEFOURCC('A', 'T', 'I', '1'), "ATI1"},
+                                                            {(D3DFORMAT) MAKEFOURCC('A', 'T', 'I', '2'), "ATI2"},
+                                                            {(D3DFORMAT) MAKEFOURCC('Y', 'U', 'Y', '2'), "YUY2"} };
+
+            std::map<D3DFORMAT, char const*>::iterator texFormatIter;
+
+            Com<IDirect3DVolumeTexture9> volumeTexture;
+
+            std::cout << std::endl << "Running CreateVolumeTexture formats tests:" << std::endl;
+
+            for (texFormatIter = texFormats.begin(); texFormatIter != texFormats.end(); texFormatIter++) {
+                D3DFORMAT texFormat = texFormatIter->first;
+
+                HRESULT createStatus = m_device->CreateVolumeTexture(256, 256, 256, 1, 0, texFormat, D3DPOOL_DEFAULT, &volumeTexture, NULL);
+
+                if (SUCCEEDED(createStatus)) {
+                    D3DLOCKED_BOX lockBox;
+
+                    m_totalTests++;
+
+                    HRESULT lockStatus = volumeTexture->LockBox(0, &lockBox, NULL, 0);
+
+                    if (FAILED(lockStatus)) {
+                        m_passedTests++;
+                        std::cout << format("  + The ", texFormatIter->second , " format test has passed") << std::endl;
+                    } else {
+                        std::cout << format("  - The ", texFormatIter->second , " format test has failed") << std::endl;
+                    }
+
+                    volumeTexture = nullptr;
+                } else {
+                    std::cout << format("  ~ The ", texFormatIter->second ," format is not supported") << std::endl;
+                }
+            }
+        }
+
         // Various surface format tests
         void testSurfaceFormats() {
             resetOrRecreateDevice();
@@ -967,6 +1013,7 @@ int main(int, char**) {
         rgbTriangle.testCursorHotSpotCoordinates();
         rgbTriangle.testCheckDeviceMultiSampleTypeValidation();
         rgbTriangle.testCheckDeviceMultiSampleTypeFormats();
+        rgbTriangle.testCreateVolumeTextureFormats();
         rgbTriangle.testSurfaceFormats();
         rgbTriangle.printTestResults();
 
