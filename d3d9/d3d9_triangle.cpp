@@ -82,9 +82,14 @@ class RGBTriangle {
 
             // NVIDIA stores the driver version in the lower half of the lower DWORD
             if (adapterId.VendorId == uint32_t(0x10de)) {
-                DWORD driverVersion = LOWORD(adapterId.DriverVersion.LowPart);
-                DWORD majorVersion = driverVersion / 100;
-                DWORD minorVersion = driverVersion % 100;
+                // Newer drivers will also spill over into the upper half
+                DWORD driverVersionHigh = HIWORD(adapterId.DriverVersion.LowPart);
+                DWORD driverVersionLow  = LOWORD(adapterId.DriverVersion.LowPart);
+                DWORD majorVersion = driverVersionLow / 100;
+                // Might want to revisit this cursed logic, but it should work fine for now
+                if (driverVersionHigh >= 15 && driverVersionLow < 10000)
+                    majorVersion += (driverVersionHigh % 10) * 100;
+                DWORD minorVersion = driverVersionLow % 100;
                 std::cout << format("  ~ Version: ", majorVersion, ".", minorVersion) << std::endl;
             }
             // for other vendors simply list the entire DriverVersion long int
