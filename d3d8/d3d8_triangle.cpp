@@ -1169,6 +1169,48 @@ class RGBTriangle {
             }
         }
 
+        // Create and use a device with a NULL HWND
+        void testDeviceWithoutHWND() {
+            // use a separate device for this test
+            Com<IDirect3DDevice8> device;
+            Com<IDirect3DSurface8> surface;
+
+            D3DPRESENT_PARAMETERS presentParams;
+            ZeroMemory(&presentParams, sizeof(presentParams));
+
+            presentParams.Windowed = TRUE;
+            presentParams.hDeviceWindow = NULL;
+            // set to D3DSWAPEFFECT_COPY or D3DSWAPEFFECT_FLIP for no VSync
+            presentParams.SwapEffect = D3DSWAPEFFECT_COPY;
+            // according to D3D9 spec "0 is treated as 1" here
+            presentParams.BackBufferCount = 0;
+            presentParams.BackBufferWidth = WINDOW_WIDTH;
+            presentParams.BackBufferHeight = WINDOW_HEIGHT;
+            presentParams.BackBufferFormat = m_pp.BackBufferFormat;
+
+            DWORD behaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+
+            m_totalTests++;
+
+            HRESULT status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, NULL,
+                                                 behaviorFlags, &presentParams, &device);
+
+            if(FAILED(status)) {
+                std::cout << "  - The device with NULL HWND test has failed" << std::endl;
+            } else {
+
+                HRESULT statusBB      = device->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &surface);
+                HRESULT statusPresent = device->Present(NULL, NULL, NULL, NULL);
+
+                if (FAILED(statusBB) || FAILED(statusPresent)) {
+                    std::cout << "  - The device with NULL HWND test has failed" << std::endl;
+                } else {
+                    m_passedTests++;
+                    std::cout << "  + The device with NULL HWND test has passed" << std::endl;
+                }
+            }
+        }
+
         // Various CheckDeviceMultiSampleType validation tests
         void testCheckDeviceMultiSampleTypeValidation() {
             resetOrRecreateDevice();
@@ -1649,6 +1691,7 @@ int main(int, char**) {
         rgbTriangle.testGetRenderTargetWithoutEADS();
         rgbTriangle.testPointSizeMinRSDefaultValue();
         rgbTriangle.testUnknownFormatObjectCreation();
+        rgbTriangle.testDeviceWithoutHWND();
         rgbTriangle.testCheckDeviceMultiSampleTypeValidation();
         rgbTriangle.testCheckDeviceMultiSampleTypeFormats();
         rgbTriangle.testDeviceCapabilities();
