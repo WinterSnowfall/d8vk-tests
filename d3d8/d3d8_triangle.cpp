@@ -1174,6 +1174,15 @@ class RGBTriangle {
             // use a separate device for this test
             Com<IDirect3DDevice8> device;
             Com<IDirect3DSurface8> surface;
+            Com<IDirect3DVertexBuffer8> vertexBuffer;
+
+            // create a temporary vertex buffer and fill it with 1s
+            m_device->CreateVertexBuffer(800, 0, RGBT_FVF_CODES,
+                                         D3DPOOL_DEFAULT, &vertexBuffer);
+            void* vertices;
+            vertexBuffer->Lock(0, 800, (byte**)&vertices, 0);
+            memset(vertices, 1, 800);
+            vertexBuffer->Unlock();
 
             D3DPRESENT_PARAMETERS presentParams;
             ZeroMemory(&presentParams, sizeof(presentParams));
@@ -1190,19 +1199,29 @@ class RGBTriangle {
 
             DWORD behaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 
-            m_totalTests++;
-
             HRESULT status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, NULL,
                                                  behaviorFlags, &presentParams, &device);
 
             if(FAILED(status)) {
-                std::cout << "  - The device with NULL HWND test has failed" << std::endl;
+                std::cout << "  ~ The device does not support creation with a NULL HWND" << std::endl;
             } else {
+                m_totalTests++;
 
                 HRESULT statusBB      = device->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &surface);
+
+                /*D3DSURFACE_DESC desc;
+                surface->GetDesc(&desc);
+                std::cout << format("  ~ Back buffer width: ",  desc.Width)  << std::endl;
+                std::cout << format("  ~ Back buffer height: ", desc.Height) << std::endl;*/
+
+                device->BeginScene();
+                device->SetStreamSource(0, vertexBuffer.ptr(), 100);
+                device->SetVertexShader(D3DFVF_XYZ);
+                HRESULT statusDraw    = device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 1);
+                device->EndScene();
                 HRESULT statusPresent = device->Present(NULL, NULL, NULL, NULL);
 
-                if (FAILED(statusBB) || FAILED(statusPresent)) {
+                if (FAILED(statusBB) || FAILED(statusDraw) || FAILED(statusPresent)) {
                     std::cout << "  - The device with NULL HWND test has failed" << std::endl;
                 } else {
                     m_passedTests++;
