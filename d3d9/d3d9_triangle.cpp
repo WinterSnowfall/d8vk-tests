@@ -634,6 +634,73 @@ class RGBTriangle {
             }
         }
 
+        // MultiplyTransform with state blocks test
+        void testMultiplyTransformRecordingAndCapture() {
+            resetOrRecreateDevice();
+
+            D3DMATRIX idMatrix =
+            {{{
+                1.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 1.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 1.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, 1.0f,
+            }}};
+            D3DMATRIX dblMatrix =
+            {{{
+                2.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 2.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 2.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, 2.0f,
+            }}};
+
+            Com<IDirect3DStateBlock9> endStateBlock;
+            Com<IDirect3DStateBlock9> endStateBlock2;
+            Com<IDirect3DStateBlock9> captureStateBlock;
+
+            m_totalTests++;
+
+            m_device->CreateStateBlock(D3DSBT_ALL, &captureStateBlock);
+
+            m_device->SetTransform(D3DTS_WORLDMATRIX(0), &idMatrix);
+            m_device->BeginStateBlock();
+            m_device->MultiplyTransform(D3DTS_WORLDMATRIX(0), &dblMatrix);
+            m_device->EndStateBlock(&endStateBlock);
+            D3DMATRIX checkMatrix1;
+            m_device->GetTransform(D3DTS_WORLDMATRIX(0), &checkMatrix1);
+
+            m_device->SetTransform(D3DTS_WORLDMATRIX(0), &idMatrix);
+            endStateBlock->Apply();
+            D3DMATRIX checkMatrix2;
+            m_device->GetTransform(D3DTS_WORLDMATRIX(0), &checkMatrix2);
+
+            m_device->SetTransform(D3DTS_WORLDMATRIX(0), &idMatrix);
+            m_device->BeginStateBlock();
+            m_device->SetTransform(D3DTS_WORLDMATRIX(0), &dblMatrix);
+            m_device->EndStateBlock(&endStateBlock2);
+            D3DMATRIX checkMatrix3;
+            m_device->GetTransform(D3DTS_WORLDMATRIX(0), &checkMatrix3);
+
+            m_device->SetTransform(D3DTS_WORLDMATRIX(0), &idMatrix);
+            captureStateBlock->Capture();
+            m_device->MultiplyTransform(D3DTS_WORLDMATRIX(0), &dblMatrix);
+            captureStateBlock->Apply();
+            D3DMATRIX checkMatrix4;
+            m_device->GetTransform(D3DTS_WORLDMATRIX(0), &checkMatrix4);
+
+            bool firstCheck  = !memcmp(&checkMatrix1, &dblMatrix, sizeof(dblMatrix));
+            bool secondCheck = !memcmp(&checkMatrix2, &idMatrix,  sizeof(idMatrix));
+            bool thirdCheck  = !memcmp(&checkMatrix3, &idMatrix,  sizeof(idMatrix));
+            bool fourthCheck = !memcmp(&checkMatrix4, &idMatrix,  sizeof(idMatrix));
+
+            // Calls to MultiplyTransform are not recorded in state blocks, but are applied directly
+            if (firstCheck && secondCheck && thirdCheck && fourthCheck) {
+                m_passedTests++;
+                std::cout << "  + The MultiplyTransform with state blocks test has passed" << std::endl;
+            } else {
+                std::cout << "  - The MultiplyTransform with state blocks test has failed" << std::endl;
+            }
+        }
+
         // Cursor HotSpot coordinates test
         void testCursorHotSpotCoordinates() {
             resetOrRecreateDevice();
@@ -1076,6 +1143,7 @@ int main(int, char**) {
         rgbTriangle.testPureDeviceOnlyWithHWVP();
         rgbTriangle.testDefaultPoolAllocationReset();
         rgbTriangle.testCreateStateBlockAndReset();
+        rgbTriangle.testMultiplyTransformRecordingAndCapture();
         rgbTriangle.testCursorHotSpotCoordinates();
         rgbTriangle.testDeviceWithoutHWND();
         rgbTriangle.testCheckDeviceMultiSampleTypeValidation();

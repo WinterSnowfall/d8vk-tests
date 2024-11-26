@@ -861,6 +861,7 @@ class RGBTriangle {
             }}};
 
             DWORD endStateBlockToken = 0;
+            DWORD endStateBlockToken2 = 0;
             DWORD captureStateBlockToken = 0;
 
             m_totalTests++;
@@ -875,17 +876,31 @@ class RGBTriangle {
             m_device->GetTransform(D3DTS_WORLDMATRIX(0), &checkMatrix1);
 
             m_device->SetTransform(D3DTS_WORLDMATRIX(0), &idMatrix);
-            m_device->CaptureStateBlock(captureStateBlockToken);
-            m_device->MultiplyTransform(D3DTS_WORLDMATRIX(0), &dblMatrix);
-            m_device->ApplyStateBlock(captureStateBlockToken);
+            m_device->ApplyStateBlock(endStateBlockToken);
             D3DMATRIX checkMatrix2;
             m_device->GetTransform(D3DTS_WORLDMATRIX(0), &checkMatrix2);
 
+            m_device->SetTransform(D3DTS_WORLDMATRIX(0), &idMatrix);
+            m_device->BeginStateBlock();
+            m_device->SetTransform(D3DTS_WORLDMATRIX(0), &dblMatrix);
+            m_device->EndStateBlock(&endStateBlockToken2);
+            D3DMATRIX checkMatrix3;
+            m_device->GetTransform(D3DTS_WORLDMATRIX(0), &checkMatrix3);
+
+            m_device->SetTransform(D3DTS_WORLDMATRIX(0), &idMatrix);
+            m_device->CaptureStateBlock(captureStateBlockToken);
+            m_device->MultiplyTransform(D3DTS_WORLDMATRIX(0), &dblMatrix);
+            m_device->ApplyStateBlock(captureStateBlockToken);
+            D3DMATRIX checkMatrix4;
+            m_device->GetTransform(D3DTS_WORLDMATRIX(0), &checkMatrix4);
+
             bool firstCheck  = !memcmp(&checkMatrix1, &dblMatrix, sizeof(dblMatrix));
             bool secondCheck = !memcmp(&checkMatrix2, &idMatrix,  sizeof(idMatrix));
+            bool thirdCheck  = !memcmp(&checkMatrix3, &idMatrix,  sizeof(idMatrix));
+            bool fourthCheck = !memcmp(&checkMatrix4, &idMatrix,  sizeof(idMatrix));
 
-            // Calls to MultiplyTransform are not recorded in state blocks, but are captured
-            if (firstCheck && secondCheck) {
+            // Calls to MultiplyTransform are not recorded in state blocks, but are applied directly
+            if (firstCheck && secondCheck && thirdCheck && fourthCheck) {
                 m_passedTests++;
                 std::cout << "  + The MultiplyTransform with state blocks test has passed" << std::endl;
             } else {
