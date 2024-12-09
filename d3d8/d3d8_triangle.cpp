@@ -1245,6 +1245,33 @@ class RGBTriangle {
             }
         }
 
+        // Clear with unbound depth stencil test
+        void testClearWithUnboundDepthStencil() {
+            resetOrRecreateDevice();
+
+            Com<IDirect3DSurface8> renderTarget;
+
+            m_device->CreateRenderTarget(256, 256, m_pp.BackBufferFormat, D3DMULTISAMPLE_NONE, TRUE, &renderTarget);
+            HRESULT status = m_device->SetRenderTarget(renderTarget.ptr(), NULL);
+
+            if (SUCCEEDED(status)) {
+                m_totalTests++;
+
+                // D3DCLEAR_ZBUFFER or D3DCLEAR_STENCIL will fail if a depth stencil isn't bound
+                HRESULT clearZStatus = m_device->Clear(0, NULL, D3DCLEAR_ZBUFFER, D3DCOLOR_RGBA(0, 0, 0, 0), 1.0f, 0);
+                HRESULT clearSStatus = m_device->Clear(0, NULL, D3DCLEAR_STENCIL, D3DCOLOR_RGBA(0, 0, 0, 0), 1.0f, 0);
+
+                if (FAILED(clearZStatus) && FAILED(clearSStatus)) {
+                    m_passedTests++;
+                    std::cout << "  + The D3DCLEAR_ZBUFFER with bound depth stencil test has passed" << std::endl;
+                } else {
+                    std::cout << "  - The D3DCLEAR_ZBUFFER with bound depth stencil test has failed" << std::endl;
+                }
+            } else {
+                std::cout << "  ~ The D3DCLEAR_ZBUFFER with bound depth stencil test did not run" << std::endl;
+            }
+        }
+
         // Various CheckDeviceMultiSampleType validation tests
         void testCheckDeviceMultiSampleTypeValidation() {
             resetOrRecreateDevice();
@@ -1726,6 +1753,7 @@ int main(int, char**) {
         rgbTriangle.testPointSizeMinRSDefaultValue();
         rgbTriangle.testUnknownFormatObjectCreation();
         rgbTriangle.testDeviceWithoutHWND();
+        rgbTriangle.testClearWithUnboundDepthStencil();
         rgbTriangle.testCheckDeviceMultiSampleTypeValidation();
         rgbTriangle.testCheckDeviceMultiSampleTypeFormats();
         rgbTriangle.testDeviceCapabilities();
