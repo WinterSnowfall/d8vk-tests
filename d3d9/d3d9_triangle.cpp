@@ -823,6 +823,129 @@ class RGBTriangle {
             }
         }
 
+        // Rect/Box clearing behavior on lock test
+        void testRectBoxClearingOnLock() {
+            resetOrRecreateDevice();
+
+            Com<IDirect3DSurface9> surface;
+            Com<IDirect3DSurface9> sysmemSurface;
+            Com<IDirect3DTexture9> texture;
+            Com<IDirect3DTexture9> sysmemTexture;
+            Com<IDirect3DCubeTexture9> cubeTexture;
+            Com<IDirect3DCubeTexture9> sysmemCubeTexture;
+            Com<IDirect3DVolumeTexture9> volumeTexture;
+            Com<IDirect3DVolumeTexture9> sysmemVolumeTexture;
+
+            D3DLOCKED_RECT surfaceRect;
+            D3DLOCKED_RECT sysmemSurfaceRect;
+            D3DLOCKED_RECT textureRect;
+            D3DLOCKED_RECT sysmemTextureRect;
+            D3DLOCKED_RECT cubeTextureRect;
+            D3DLOCKED_RECT sysmemCubeTextureRect;
+            D3DLOCKED_BOX volumeTextureBox;
+            D3DLOCKED_BOX sysmemVolumeTextureBox;
+
+            m_totalTests++;
+
+            m_device->CreateOffscreenPlainSurface(256, 256, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &surface, NULL);
+            m_device->CreateOffscreenPlainSurface(256, 256, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &sysmemSurface, NULL);
+            m_device->CreateTexture(256, 256, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &texture, NULL);
+            m_device->CreateTexture(256, 256, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &sysmemTexture, NULL);
+            m_device->CreateVolumeTexture(256, 256, 256, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &volumeTexture, NULL);
+            m_device->CreateVolumeTexture(256, 256, 256, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &sysmemVolumeTexture, NULL);
+            m_device->CreateCubeTexture(256, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &cubeTexture, NULL);
+            m_device->CreateCubeTexture(256, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &sysmemCubeTexture, NULL);
+
+            // the second lock will fail, but the LockRect contents
+            // should be cleared for everything outside of D3DPOOL_DEFAULT.
+            // LockBox clears the content universally.
+            surface->LockRect(&surfaceRect, NULL, 0);
+            surfaceRect.pBits = (void*) 0xABCDABCD;
+            surfaceRect.Pitch = 10;
+            HRESULT surfaceStatus = surface->LockRect(&surfaceRect, NULL, 0);
+            surface->UnlockRect();
+            sysmemSurface->LockRect(&sysmemSurfaceRect, NULL, 0);
+            sysmemSurfaceRect.pBits = (void*) 0xABCDABCD;
+            sysmemSurfaceRect.Pitch = 10;
+            HRESULT sysmemSurfaceStatus = sysmemSurface->LockRect(&sysmemSurfaceRect, NULL, 0);
+            sysmemSurface->UnlockRect();
+            texture->LockRect(0, &textureRect, NULL, 0);
+            textureRect.pBits = (void*) 0xABCDABCD;
+            textureRect.Pitch = 10;
+            HRESULT textureStatus = texture->LockRect(0, &textureRect, NULL, 0);
+            texture->UnlockRect(0);
+            sysmemTexture->LockRect(0, &sysmemTextureRect, NULL, 0);
+            sysmemTextureRect.pBits = (void*) 0xABCDABCD;
+            sysmemTextureRect.Pitch = 10;
+            HRESULT sysmemTextureStatus = sysmemTexture->LockRect(0, &sysmemTextureRect, NULL, 0);
+            sysmemTexture->UnlockRect(0);
+            cubeTexture->LockRect(D3DCUBEMAP_FACE_POSITIVE_X, 0, &cubeTextureRect, NULL, 0);
+            cubeTextureRect.pBits = (void*) 0xABCDABCD;
+            cubeTextureRect.Pitch = 10;
+            HRESULT cubeTextureStatus = cubeTexture->LockRect(D3DCUBEMAP_FACE_POSITIVE_X, 0, &cubeTextureRect, NULL, 0);
+            cubeTexture->UnlockRect(D3DCUBEMAP_FACE_POSITIVE_X, 0);
+            sysmemCubeTexture->LockRect(D3DCUBEMAP_FACE_POSITIVE_X, 0, &sysmemCubeTextureRect, NULL, 0);
+            sysmemCubeTextureRect.pBits = (void*) 0xABCDABCD;
+            sysmemCubeTextureRect.Pitch = 10;
+            HRESULT sysmemCubeTextureStatus = sysmemCubeTexture->LockRect(D3DCUBEMAP_FACE_POSITIVE_X, 0, &sysmemCubeTextureRect, NULL, 0);
+            sysmemCubeTexture->UnlockRect(D3DCUBEMAP_FACE_POSITIVE_X, 0);
+            volumeTexture->LockBox(0, &volumeTextureBox, NULL, 0);
+            volumeTextureBox.pBits = (void*) 0xABCDABCD;
+            volumeTextureBox.RowPitch = 10;
+            volumeTextureBox.SlicePitch = 10;
+            HRESULT volumeTextureStatus = volumeTexture->LockBox(0, &volumeTextureBox, NULL, 0);
+            volumeTexture->UnlockBox(0);
+            sysmemVolumeTexture->LockBox(0, &sysmemVolumeTextureBox, NULL, 0);
+            sysmemVolumeTextureBox.pBits = (void*) 0xABCDABCD;
+            sysmemVolumeTextureBox.RowPitch = 10;
+            sysmemVolumeTextureBox.SlicePitch = 10;
+            HRESULT sysmemVolumeTextureStatus = volumeTexture->LockBox(0, &sysmemVolumeTextureBox, NULL, 0);
+            sysmemVolumeTexture->UnlockBox(0);
+
+            //std::cout << format("  * surfaceRect pBits: ", surfaceRect.pBits, " Pitch: ", surfaceRect.Pitch) << std::endl;
+            //std::cout << format("  * sysmemSurfaceRect pBits: ", sysmemSurfaceRect.pBits, " Pitch: ", sysmemSurfaceRect.Pitch) << std::endl;
+            //std::cout << format("  * textureRect pBits: ", textureRect.pBits, " Pitch: ", textureRect.Pitch) << std::endl;
+            //std::cout << format("  * sysmemTextureRect pBits: ", sysmemTextureRect.pBits, " Pitch: ", sysmemTextureRect.Pitch) << std::endl;
+            //std::cout << format("  * cubeTextureRect pBits: ", cubeTextureRect.pBits, " Pitch: ", cubeTextureRect.Pitch) << std::endl;
+            //std::cout << format("  * sysmemCubeTextureRect pBits: ", sysmemCubeTextureRect.pBits, " Pitch: ", sysmemCubeTextureRect.Pitch) << std::endl;
+            //std::cout << format("  * volumeTextureBox pBits: ", volumeTextureBox.pBits, " RowPitch: ", volumeTextureBox.RowPitch,
+            //                    " SlicePitch: ", volumeTextureBox.SlicePitch) << std::endl;
+            //std::cout << format("  * sysmemVolumeTextureBox pBits: ", sysmemVolumeTextureBox.pBits, " RowPitch: ", sysmemVolumeTextureBox.RowPitch,
+            //                    " SlicePitch: ", sysmemVolumeTextureBox.SlicePitch) << std::endl;
+
+            if (SUCCEEDED(surfaceStatus) ||
+                SUCCEEDED(sysmemSurfaceStatus) ||
+                SUCCEEDED(textureStatus) ||
+                SUCCEEDED(sysmemTextureStatus) ||
+                SUCCEEDED(cubeTextureStatus) ||
+                SUCCEEDED(sysmemCubeTextureStatus) ||
+                SUCCEEDED(volumeTextureStatus) ||
+                SUCCEEDED(sysmemVolumeTextureStatus) ||
+                surfaceRect.pBits != nullptr ||
+                surfaceRect.Pitch != 0 ||
+                sysmemSurfaceRect.pBits != (void*) 0xABCDABCD ||
+                sysmemSurfaceRect.Pitch != 10 ||
+                textureRect.pBits != nullptr ||
+                textureRect.Pitch != 0 ||
+                sysmemTextureRect.pBits != (void*) 0xABCDABCD ||
+                sysmemTextureRect.Pitch != 10 ||
+                cubeTextureRect.pBits != nullptr ||
+                cubeTextureRect.Pitch != 0 ||
+                sysmemCubeTextureRect.pBits != (void*) 0xABCDABCD ||
+                sysmemCubeTextureRect.Pitch != 10 ||
+                volumeTextureBox.pBits != nullptr ||
+                volumeTextureBox.RowPitch != 0 ||
+                volumeTextureBox.SlicePitch != 0 ||
+                sysmemVolumeTextureBox.pBits != nullptr ||
+                sysmemVolumeTextureBox.RowPitch != 0 ||
+                sysmemVolumeTextureBox.SlicePitch != 0) {
+                std::cout << "  - The Rect/Box clearing on lock test has failed" << std::endl;
+            } else {
+                m_passedTests++;
+                std::cout << "  + The Rect/Box clearing on lock test has passed" << std::endl;
+            }
+        }
+
         // Various CheckDeviceMultiSampleType validation tests
         void testCheckDeviceMultiSampleTypeValidation() {
             resetOrRecreateDevice();
@@ -891,6 +1014,7 @@ class RGBTriangle {
                                                             {D3DFMT_DXT3, "D3DFMT_DXT3"},
                                                             {D3DFMT_DXT4, "D3DFMT_DXT4"},
                                                             {D3DFMT_DXT5, "D3DFMT_DXT5"},
+                                                            // locking ATI1/2 volume textures is unsupported on most modern drivers
                                                             {(D3DFORMAT) MAKEFOURCC('A', 'T', 'I', '1'), "ATI1"},
                                                             {(D3DFORMAT) MAKEFOURCC('A', 'T', 'I', '2'), "ATI2"},
                                                             {(D3DFORMAT) MAKEFOURCC('Y', 'U', 'Y', '2'), "YUY2"} };
@@ -1175,6 +1299,7 @@ int main(int, char**) {
         rgbTriangle.testCursorHotSpotCoordinates();
         rgbTriangle.testDeviceWithoutHWND();
         rgbTriangle.testClearWithUnboundDepthStencil();
+        rgbTriangle.testRectBoxClearingOnLock();
         rgbTriangle.testCheckDeviceMultiSampleTypeValidation();
         rgbTriangle.testCheckDeviceMultiSampleTypeFormats();
         rgbTriangle.testCreateVolumeTextureFormats();
