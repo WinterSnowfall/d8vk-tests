@@ -461,7 +461,7 @@ class RGBTriangle {
                                 " (SWVP), ", caps9HWVP.MaxVertexBlendMatrices, " (HWVP)") << std::endl;
             // may vary between interface and device modes (SWVP or HWVP)
             std::cout << format("  ~ MaxVertexBlendMatrixIndex: ", caps9.MaxVertexBlendMatrixIndex, " (I), ", caps9SWVP.MaxVertexBlendMatrixIndex,
-                                " (SWVP), ", caps9HWVP.MaxVertexBlendMatrixIndex, " (HWVP)") << std::endl;                         
+                                " (SWVP), ", caps9HWVP.MaxVertexBlendMatrixIndex, " (HWVP)") << std::endl;
             std::cout << format("  ~ MaxPointSize: ", caps9.MaxPointSize) << std::endl;
             std::cout << format("  ~ MaxPrimitiveCount: ", caps9.MaxPrimitiveCount) << std::endl;
             std::cout << format("  ~ MaxVertexIndex: ", caps9.MaxVertexIndex) << std::endl;
@@ -533,6 +533,52 @@ class RGBTriangle {
             m_passedTests = 0;
 
             std::cout << std::endl << "Running D3D9 tests:" << std::endl;
+        }
+
+        // GetBackBuffer test (this shouldn't fail even with BackBufferCount set to 0)
+        void testZeroBackBufferCount() {
+            resetOrRecreateDevice();
+
+            Com<IDirect3DSurface9> bbSurface;
+
+            m_totalTests++;
+
+            HRESULT status = m_device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &bbSurface);
+            if (FAILED(status)) {
+                std::cout << "  - The GetBackBuffer test has failed" << std::endl;
+            } else {
+                m_passedTests++;
+                std::cout << "  + The GetBackBuffer test has passed" << std::endl;
+            }
+        }
+
+        // Invalid presentation interval test on a windowed swapchain
+        void testInvalidPresentationInterval() {
+            D3DPRESENT_PARAMETERS piPP;
+
+            m_totalTests++;
+
+            memcpy(&piPP, &m_pp, sizeof(m_pp));
+            piPP.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+
+            HRESULT statusImmediate = createDeviceWithFlags(&piPP, D3DCREATE_HARDWARE_VERTEXPROCESSING, false);
+
+            memcpy(&piPP, &m_pp, sizeof(m_pp));
+            piPP.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+
+            HRESULT statusOne = createDeviceWithFlags(&piPP, D3DCREATE_HARDWARE_VERTEXPROCESSING, false);
+
+            memcpy(&piPP, &m_pp, sizeof(m_pp));
+            piPP.PresentationInterval = D3DPRESENT_INTERVAL_TWO;
+
+            HRESULT statusTwo = createDeviceWithFlags(&piPP, D3DCREATE_HARDWARE_VERTEXPROCESSING, false);
+
+            if (SUCCEEDED(statusImmediate) && SUCCEEDED(statusOne) && FAILED(statusTwo)) {
+                m_passedTests++;
+                std::cout << "  + The invalid presentation interval test has passed" << std::endl;
+            } else {
+                std::cout << "  - The invalid presentation interval test has failed" << std::endl;
+            }
         }
 
         // BeginScene & Reset test
@@ -1291,6 +1337,8 @@ int main(int, char**) {
 
         // run D3D Device tests
         rgbTriangle.startTests();
+        rgbTriangle.testZeroBackBufferCount();
+        rgbTriangle.testInvalidPresentationInterval();
         rgbTriangle.testBeginSceneReset();
         rgbTriangle.testPureDeviceOnlyWithHWVP();
         rgbTriangle.testDefaultPoolAllocationReset();

@@ -33,7 +33,7 @@ struct RGBVERTEX {
 
 #define D3DPRASTERCAPS_SCISSORTEST              0x01000000L
 #define D3DPRASTERCAPS_SLOPESCALEDEPTHBIAS      0x02000000L
-#define D3DPRASTERCAPS_DEPTHBIAS                0x04000000L 
+#define D3DPRASTERCAPS_DEPTHBIAS                0x04000000L
 #define D3DPRASTERCAPS_MULTISAMPLE_TOGGLE       0x08000000L
 
 #define D3DLINECAPS_ANTIALIAS                   0x00000020L
@@ -59,7 +59,7 @@ typedef struct _D3DDEVINFO_VCACHE {
 } D3DDEVINFO_VCACHE, *LPD3DDEVINFO_VCACHE;
 
 class RGBTriangle {
-    
+
     public:
 
         static const UINT WINDOW_WIDTH  = 700;
@@ -148,8 +148,8 @@ class RGBTriangle {
                 throw Error("Failed to query for D3D8 adapter display modes");
 
             // these are all the possible adapter display formats, at least in theory
-            std::map<D3DFORMAT, char const*> amDMFormats = { {D3DFMT_X8R8G8B8, "D3DFMT_X8R8G8B8"}, 
-                                                             {D3DFMT_X1R5G5B5, "D3DFMT_X1R5G5B5"}, 
+            std::map<D3DFORMAT, char const*> amDMFormats = { {D3DFMT_X8R8G8B8, "D3DFMT_X8R8G8B8"},
+                                                             {D3DFMT_X1R5G5B5, "D3DFMT_X1R5G5B5"},
                                                              {D3DFMT_R5G6B5, "D3DFMT_R5G6B5"} };
 
             std::cout << std::endl << "Enumerating supported adapter display modes:" << std::endl;
@@ -159,7 +159,7 @@ class RGBTriangle {
                 if (FAILED(status)) {
                     std::cout << format("    Failed to get adapter display mode ", i) << std::endl;
                 } else {
-                    std::cout << format("    ", amDMFormats[amDM.Format], " ", amDM.Width, 
+                    std::cout << format("    ", amDMFormats[amDM.Format], " ", amDM.Width,
                                         " x ", amDM.Height, " @ ", amDM.RefreshRate, " Hz") << std::endl;
                 }
             }
@@ -378,7 +378,7 @@ class RGBTriangle {
                                 " (SWVP), ", caps8HWVP.MaxVertexBlendMatrices, " (HWVP)") << std::endl;
             // may vary between interface and device modes (SWVP or HWVP)
             std::cout << format("  ~ MaxVertexBlendMatrixIndex: ", caps8.MaxVertexBlendMatrixIndex, " (I), ", caps8SWVP.MaxVertexBlendMatrixIndex,
-                                " (SWVP), ", caps8HWVP.MaxVertexBlendMatrixIndex, " (HWVP)") << std::endl;                         
+                                " (SWVP), ", caps8HWVP.MaxVertexBlendMatrixIndex, " (HWVP)") << std::endl;
             std::cout << format("  ~ MaxPointSize: ", caps8.MaxPointSize) << std::endl;
             std::cout << format("  ~ MaxPrimitiveCount: ", caps8.MaxPrimitiveCount) << std::endl;
             std::cout << format("  ~ MaxVertexIndex: ", caps8.MaxVertexIndex) << std::endl;
@@ -507,7 +507,7 @@ class RGBTriangle {
                 std::cout << "  + D3DPBLENDCAPS_SRCCOLOR2 (Dest) is supported" << std::endl;
             else
                 std::cout << "  - D3DPBLENDCAPS_SRCCOLOR2 (Dest) is not supported" << std::endl;
-            
+
             if (caps8.LineCaps & D3DLINECAPS_ANTIALIAS)
                 std::cout << "  + D3DLINECAPS_ANTIALIAS is supported" << std::endl;
             else
@@ -602,6 +602,35 @@ class RGBTriangle {
             }
         }
 
+        // Invalid presentation interval test on a windowed swapchain
+        void testInvalidPresentationInterval() {
+            D3DPRESENT_PARAMETERS piPP;
+
+            m_totalTests++;
+
+            memcpy(&piPP, &m_pp, sizeof(m_pp));
+            piPP.FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+
+            HRESULT statusImmediate = createDeviceWithFlags(&piPP, D3DCREATE_HARDWARE_VERTEXPROCESSING, false);
+
+            memcpy(&piPP, &m_pp, sizeof(m_pp));
+            piPP.FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+
+            HRESULT statusOne = createDeviceWithFlags(&piPP, D3DCREATE_HARDWARE_VERTEXPROCESSING, false);
+
+            memcpy(&piPP, &m_pp, sizeof(m_pp));
+            piPP.FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+
+            HRESULT statusTwo = createDeviceWithFlags(&piPP, D3DCREATE_HARDWARE_VERTEXPROCESSING, false);
+
+            if (FAILED(statusImmediate) && FAILED(statusOne) && FAILED(statusTwo)) {
+                m_passedTests++;
+                std::cout << "  + The invalid presentation interval test has passed" << std::endl;
+            } else {
+                std::cout << "  - The invalid presentation interval test has failed" << std::endl;
+            }
+        }
+
         // BeginScene & Reset test
         void testBeginSceneReset() {
             resetOrRecreateDevice();
@@ -674,12 +703,12 @@ class RGBTriangle {
 
             // create a temporary DS surface
             Com<IDirect3DSurface8> tempDS;
-            m_device->CreateDepthStencilSurface(RGBTriangle::WINDOW_WIDTH, RGBTriangle::WINDOW_HEIGHT, 
+            m_device->CreateDepthStencilSurface(RGBTriangle::WINDOW_WIDTH, RGBTriangle::WINDOW_HEIGHT,
                                                 D3DFMT_D24X8, D3DMULTISAMPLE_NONE, &tempDS);
 
             m_totalTests++;
-            // according to D3D8 docs, I quote: "Reset will fail unless the application releases all resources 
-            // that are allocated in D3DPOOL_DEFAULT, including those created by the IDirect3DDevice8::CreateRenderTarget 
+            // according to D3D8 docs, I quote: "Reset will fail unless the application releases all resources
+            // that are allocated in D3DPOOL_DEFAULT, including those created by the IDirect3DDevice8::CreateRenderTarget
             // and IDirect3DDevice8::CreateDepthStencilSurface methods.", so this call should fail
             HRESULT status = m_device->Reset(&m_pp);
             if (FAILED(status)) {
@@ -829,7 +858,7 @@ class RGBTriangle {
             HRESULT statusCapture = m_device->CaptureStateBlock(deleteStateBlockToken);
             HRESULT statusCreate = m_device->CreateStateBlock(D3DSBT_ALL, &deleteStateBlockToken);
             HRESULT statusEnd = m_device->EndStateBlock(&endStateBlockToken);
-            
+
             if (FAILED(statusDelete) && FAILED(statusBegin) && FAILED(statusApply)
              && FAILED(statusCapture) && FAILED(statusCreate) && SUCCEEDED(statusEnd)) {
                 m_passedTests++;
@@ -1437,11 +1466,11 @@ class RGBTriangle {
             // MaxVertexBlendMatrixIndex should be 0 when queried from the D3D8 interface
             // and 255 when queried from the device in SWVP mode
             if (caps8.MaxVertexBlendMatrixIndex == 0u && caps8SWVP.MaxVertexBlendMatrixIndex == 255u) {
-                std::cout << format("  + The MaxVertexBlendMatrixIndex INTF and SWVP test has passed (", caps8.MaxVertexBlendMatrixIndex, 
+                std::cout << format("  + The MaxVertexBlendMatrixIndex INTF and SWVP test has passed (", caps8.MaxVertexBlendMatrixIndex,
                                     ", ", caps8SWVP.MaxVertexBlendMatrixIndex, ")") << std::endl;
                 m_passedTests++;
             } else {
-                std::cout << format("  - The MaxVertexBlendMatrixIndex INTF and SWVP test has failed (", caps8.MaxVertexBlendMatrixIndex, 
+                std::cout << format("  - The MaxVertexBlendMatrixIndex INTF and SWVP test has failed (", caps8.MaxVertexBlendMatrixIndex,
                                     ", ", caps8SWVP.MaxVertexBlendMatrixIndex, ")") << std::endl;
             }
 
@@ -1464,7 +1493,7 @@ class RGBTriangle {
             } else {
                 std::cout << format("  - The MaxVertexShaderConst test has failed (", caps8.MaxVertexShaderConst, ")") << std::endl;
             }
-            
+
             m_totalTests++;
             // PS 1.4 is the latest version supported in D3D8
             UINT majorPSVersion = static_cast<UINT>((caps8.PixelShaderVersion & 0x0000FF00) >> 8);
@@ -1528,12 +1557,12 @@ class RGBTriangle {
         void testSurfaceFormats() {
             resetOrRecreateDevice();
 
-            std::map<D3DFORMAT, char const*> sfFormats = { {D3DFMT_R8G8B8, "D3DFMT_R8G8B8"}, 
-                                                           {D3DFMT_R3G3B2, "D3DFMT_R3G3B2"}, 
-                                                           {D3DFMT_A8R3G3B2, "D3DFMT_A8R3G3B2"}, 
-                                                           {D3DFMT_A8P8, "D3DFMT_A8P8"}, 
+            std::map<D3DFORMAT, char const*> sfFormats = { {D3DFMT_R8G8B8, "D3DFMT_R8G8B8"},
+                                                           {D3DFMT_R3G3B2, "D3DFMT_R3G3B2"},
+                                                           {D3DFMT_A8R3G3B2, "D3DFMT_A8R3G3B2"},
+                                                           {D3DFMT_A8P8, "D3DFMT_A8P8"},
                                                            {D3DFMT_P8, "D3DFMT_P8"},
-                                                           {D3DFMT_L6V5U5, "D3DFMT_L6V5U5"}, 
+                                                           {D3DFMT_L6V5U5, "D3DFMT_L6V5U5"},
                                                            {D3DFMT_X8L8V8U8, "D3DFMT_X8L8V8U8"},
                                                            {D3DFMT_A2W10V10U10, "D3DFMT_A2W10V10U10"} };
 
@@ -1618,18 +1647,18 @@ class RGBTriangle {
             memcpy(&dsPP, &m_pp, sizeof(m_pp));
             dsPP.EnableAutoDepthStencil = TRUE;
 
-            std::map<D3DFORMAT, char const*> dsFormats = { {D3DFMT_D16_LOCKABLE, "D3DFMT_D16_LOCKABLE"}, 
-                                                           {D3DFMT_D32, "D3DFMT_D32"}, 
-                                                           {D3DFMT_D15S1, "D3DFMT_D15S1"}, 
-                                                           {D3DFMT_D24S8, "D3DFMT_D24S8"}, 
+            std::map<D3DFORMAT, char const*> dsFormats = { {D3DFMT_D16_LOCKABLE, "D3DFMT_D16_LOCKABLE"},
+                                                           {D3DFMT_D32, "D3DFMT_D32"},
+                                                           {D3DFMT_D15S1, "D3DFMT_D15S1"},
+                                                           {D3DFMT_D24S8, "D3DFMT_D24S8"},
                                                            {D3DFMT_D16, "D3DFMT_D16"},
-                                                           {D3DFMT_D24X8, "D3DFMT_D24X8"}, 
+                                                           {D3DFMT_D24X8, "D3DFMT_D24X8"},
                                                            {D3DFMT_D24X4S4, "D3DFMT_D24X4S4"} };
 
             std::map<D3DFORMAT, char const*>::iterator dsFormatIter;
 
             std::cout << std::endl << "Running depth stencil format tests:" << std::endl;
-            
+
             for (dsFormatIter = dsFormats.begin(); dsFormatIter != dsFormats.end(); dsFormatIter++) {
                 dsPP.AutoDepthStencilFormat = dsFormatIter->first;
 
@@ -1672,7 +1701,7 @@ class RGBTriangle {
 
             // Vertex Buffer
             void* vertices = nullptr;
-            
+
             // tailored for 1024x768 and the appearance of being centered
             std::array<RGBVERTEX, 3> rgbVertices = {{
                 { 60.0f, 625.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(255, 0, 0),},
@@ -1720,11 +1749,11 @@ class RGBTriangle {
                 throw Error("Failed to begin D3D8 scene");
             }
         }
-    
+
     private:
 
-        HRESULT createDeviceWithFlags(D3DPRESENT_PARAMETERS* presentParams, 
-                                      DWORD behaviorFlags, 
+        HRESULT createDeviceWithFlags(D3DPRESENT_PARAMETERS* presentParams,
+                                      DWORD behaviorFlags,
                                       bool throwErrorOnFail) {
             if (m_d3d == nullptr)
                 throw Error("The D3D8 interface hasn't been initialized");
@@ -1755,7 +1784,7 @@ class RGBTriangle {
             }
 
             status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd,
-                                         D3DCREATE_HARDWARE_VERTEXPROCESSING, 
+                                         D3DCREATE_HARDWARE_VERTEXPROCESSING,
                                          &m_pp, &m_device);
             if (FAILED(status))
                 throw Error("Failed to create D3D8 device");
@@ -1768,7 +1797,7 @@ class RGBTriangle {
         Com<IDirect3D8>               m_d3d;
         Com<IDirect3DDevice8>         m_device;
         Com<IDirect3DVertexBuffer8>   m_vb;
-        
+
         D3DPRESENT_PARAMETERS         m_pp;
 
         UINT                          m_totalTests;
@@ -1791,9 +1820,9 @@ int main(int, char**) {
                      "D3D8_Triangle", NULL};
     RegisterClassEx(&wc);
 
-    HWND hWnd = CreateWindow("D3D8_Triangle", "D3D8 Triangle - Blisto Retro Testing Edition", 
-                              WS_OVERLAPPEDWINDOW, 50, 50, 
-                              RGBTriangle::WINDOW_WIDTH, RGBTriangle::WINDOW_HEIGHT, 
+    HWND hWnd = CreateWindow("D3D8_Triangle", "D3D8 Triangle - Blisto Retro Testing Edition",
+                              WS_OVERLAPPEDWINDOW, 50, 50,
+                              RGBTriangle::WINDOW_WIDTH, RGBTriangle::WINDOW_HEIGHT,
                               GetDesktopWindow(), NULL, wc.hInstance, NULL);
 
     MSG msg;
@@ -1809,10 +1838,11 @@ int main(int, char**) {
         rgbTriangle.listDeviceCapabilities();
         rgbTriangle.listDeviceD3D9Capabilities();
         rgbTriangle.listVCacheQueryResult();
-        
+
         // run D3D Device tests
         rgbTriangle.startTests();
         rgbTriangle.testZeroBackBufferCount();
+        rgbTriangle.testInvalidPresentationInterval();
         rgbTriangle.testBeginSceneReset();
         rgbTriangle.testPureDeviceSetSWVPRenderState();
         rgbTriangle.testPureDeviceOnlyWithHWVP();
@@ -1859,7 +1889,7 @@ int main(int, char**) {
             if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
-                
+
                 if (msg.message == WM_QUIT) {
                     UnregisterClass("D3D8_Triangle", wc.hInstance);
                     return msg.wParam;
