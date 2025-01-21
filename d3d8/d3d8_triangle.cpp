@@ -1870,7 +1870,8 @@ int main(int, char**) {
         rgbTriangle.testUnknownFormatObjectCreation();
         rgbTriangle.testDeviceWithoutHWND();
         rgbTriangle.testClearWithUnboundDepthStencil();
-        rgbTriangle.testRectBoxClearingOnLock();
+        // outright crashes on certain native drivers/hardware
+        //rgbTriangle.testRectBoxClearingOnLock();
         rgbTriangle.testCheckDeviceMultiSampleTypeValidation();
         rgbTriangle.testCheckDeviceMultiSampleTypeFormats();
         rgbTriangle.testDeviceCapabilities();
