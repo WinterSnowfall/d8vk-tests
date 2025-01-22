@@ -416,6 +416,81 @@ class RGBTriangle {
             else
                 std::cout << "  - D3DPBLENDCAPS_SRCCOLOR2 (Dest) is not supported" << std::endl;
 
+            if (caps9.TextureFilterCaps & D3DPTFILTERCAPS_CONVOLUTIONMONO)
+                std::cout << "  + D3DPTFILTERCAPS_CONVOLUTIONMONO is (texture) supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_CONVOLUTIONMONO is (texture) not supported" << std::endl;
+
+            if (caps9.TextureFilterCaps & D3DPTFILTERCAPS_MAGFPYRAMIDALQUAD)
+                std::cout << "  + D3DPTFILTERCAPS_MAGFPYRAMIDALQUAD is (texture) supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MAGFPYRAMIDALQUAD is (texture) not supported" << std::endl;
+
+            if (caps9.TextureFilterCaps & D3DPTFILTERCAPS_MAGFGAUSSIANQUAD)
+                std::cout << "  + D3DPTFILTERCAPS_MAGFGAUSSIANQUAD (texture) is supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MAGFGAUSSIANQUAD (texture) is not supported" << std::endl;
+
+            if (caps9.TextureFilterCaps & D3DPTFILTERCAPS_MINFPYRAMIDALQUAD)
+                std::cout << "  + D3DPTFILTERCAPS_MINFPYRAMIDALQUAD is (texture) supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MINFPYRAMIDALQUAD is (texture) not supported" << std::endl;
+
+            if (caps9.TextureFilterCaps & D3DPTFILTERCAPS_MINFGAUSSIANQUAD)
+                std::cout << "  + D3DPTFILTERCAPS_MINFGAUSSIANQUAD (texture) is supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MINFGAUSSIANQUAD (texture) is not supported" << std::endl;
+
+            if (caps9.CubeTextureFilterCaps & D3DPTFILTERCAPS_CONVOLUTIONMONO)
+                std::cout << "  + D3DPTFILTERCAPS_CONVOLUTIONMONO is (cube texture) supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_CONVOLUTIONMONO is (cube texture) not supported" << std::endl;
+
+            if (caps9.CubeTextureFilterCaps & D3DPTFILTERCAPS_MAGFPYRAMIDALQUAD)
+                std::cout << "  + D3DPTFILTERCAPS_MAGFPYRAMIDALQUAD is (cube texture) supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MAGFPYRAMIDALQUAD is (cube texture) not supported" << std::endl;
+
+            if (caps9.CubeTextureFilterCaps & D3DPTFILTERCAPS_MAGFGAUSSIANQUAD)
+                std::cout << "  + D3DPTFILTERCAPS_MAGFGAUSSIANQUAD (cube texture) is supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MAGFGAUSSIANQUAD (cube texture) is not supported" << std::endl;
+
+            if (caps9.CubeTextureFilterCaps & D3DPTFILTERCAPS_MINFPYRAMIDALQUAD)
+                std::cout << "  + D3DPTFILTERCAPS_MINFPYRAMIDALQUAD is (cube texture) supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MINFPYRAMIDALQUAD is (cube texture) not supported" << std::endl;
+
+            if (caps9.CubeTextureFilterCaps & D3DPTFILTERCAPS_MINFGAUSSIANQUAD)
+                std::cout << "  + D3DPTFILTERCAPS_MINFGAUSSIANQUAD (cube texture) is supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MINFGAUSSIANQUAD (cube texture) is not supported" << std::endl;
+
+            if (caps9.VolumeTextureFilterCaps & D3DPTFILTERCAPS_CONVOLUTIONMONO)
+                std::cout << "  + D3DPTFILTERCAPS_CONVOLUTIONMONO is (volume texture) supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_CONVOLUTIONMONO is (volume texture) not supported" << std::endl;
+
+            if (caps9.VolumeTextureFilterCaps & D3DPTFILTERCAPS_MAGFPYRAMIDALQUAD)
+                std::cout << "  + D3DPTFILTERCAPS_MAGFPYRAMIDALQUAD is (volume texture) supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MAGFPYRAMIDALQUAD is (volume texture) not supported" << std::endl;
+
+            if (caps9.VolumeTextureFilterCaps & D3DPTFILTERCAPS_MAGFGAUSSIANQUAD)
+                std::cout << "  + D3DPTFILTERCAPS_MAGFGAUSSIANQUAD (volume texture) is supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MAGFGAUSSIANQUAD (volume texture) is not supported" << std::endl;
+
+            if (caps9.VolumeTextureFilterCaps & D3DPTFILTERCAPS_MINFPYRAMIDALQUAD)
+                std::cout << "  + D3DPTFILTERCAPS_MINFPYRAMIDALQUAD is (volume texture) supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MINFPYRAMIDALQUAD is (volume texture) not supported" << std::endl;
+
+            if (caps9.VolumeTextureFilterCaps & D3DPTFILTERCAPS_MINFGAUSSIANQUAD)
+                std::cout << "  + D3DPTFILTERCAPS_MINFGAUSSIANQUAD (volume texture) is supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MINFGAUSSIANQUAD (volume texture) is not supported" << std::endl;
+
             if (caps9.LineCaps & D3DLINECAPS_ANTIALIAS)
                 std::cout << "  + D3DLINECAPS_ANTIALIAS is supported" << std::endl;
             else
