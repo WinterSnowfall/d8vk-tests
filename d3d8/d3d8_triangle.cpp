@@ -1511,7 +1511,7 @@ class RGBTriangle {
             // PS 1.4 is the latest version supported in D3D8
             UINT majorPSVersion = static_cast<UINT>((caps8.PixelShaderVersion & 0x0000FF00) >> 8);
             UINT minorPSVersion = static_cast<UINT>(caps8.PixelShaderVersion & 0x000000FF);
-            if (majorVSVersion <= 1u && minorVSVersion <= 4u) {
+            if (majorPSVersion <= 1u && minorPSVersion <= 4u) {
                 std::cout << format("  + The PixelShaderVersion test has passed (", majorPSVersion, ".", minorPSVersion, ")") << std::endl;
                 m_passedTests++;
             } else {
