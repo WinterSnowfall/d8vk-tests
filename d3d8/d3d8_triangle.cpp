@@ -1478,7 +1478,7 @@ class RGBTriangle {
             // VS 1.1 is the latest version supported in D3D8
             UINT majorVSVersion = static_cast<UINT>((caps8.VertexShaderVersion & 0x0000FF00) >> 8);
             UINT minorVSVersion = static_cast<UINT>(caps8.VertexShaderVersion & 0x000000FF);
-            if (majorVSVersion == 1u && minorVSVersion <= 1u) {
+            if (majorVSVersion <= 1u && minorVSVersion <= 1u) {
                 std::cout << format("  + The VertexShaderVersion test has passed (", majorVSVersion, ".", minorVSVersion, ")") << std::endl;
                 m_passedTests++;
             } else {
@@ -1498,7 +1498,7 @@ class RGBTriangle {
             // PS 1.4 is the latest version supported in D3D8
             UINT majorPSVersion = static_cast<UINT>((caps8.PixelShaderVersion & 0x0000FF00) >> 8);
             UINT minorPSVersion = static_cast<UINT>(caps8.PixelShaderVersion & 0x000000FF);
-            if (majorVSVersion == 1u && minorVSVersion <= 4u) {
+            if (majorVSVersion <= 1u && minorVSVersion <= 4u) {
                 std::cout << format("  + The PixelShaderVersion test has passed (", majorPSVersion, ".", minorPSVersion, ")") << std::endl;
                 m_passedTests++;
             } else {
