@@ -619,7 +619,7 @@ class RGBTriangle {
             HRESULT statusOne = createDeviceWithFlags(&piPP, D3DCREATE_HARDWARE_VERTEXPROCESSING, false);
 
             memcpy(&piPP, &m_pp, sizeof(m_pp));
-            piPP.FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+            piPP.FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_TWO;
 
             HRESULT statusTwo = createDeviceWithFlags(&piPP, D3DCREATE_HARDWARE_VERTEXPROCESSING, false);
 
