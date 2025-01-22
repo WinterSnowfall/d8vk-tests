@@ -285,6 +285,17 @@ class RGBTriangle {
             D3DCAPS8 caps8HWVP;
             D3DCAPS8 caps8;
 
+            // these are all the possible D3D8 VS versions
+            std::map<DWORD, char const*> vsVersion = { {D3DVS_VERSION(0,0), "0.0"},
+                                                       {D3DVS_VERSION(1,1), "1.1"} };
+
+            // these are all the possible D3D8 PS versions
+            std::map<DWORD, char const*> psVersion = { {D3DPS_VERSION(0,0), "0.0"},
+                                                       {D3DPS_VERSION(1,1), "1.1"},
+                                                       {D3DPS_VERSION(1,2), "1.2"},
+                                                       {D3DPS_VERSION(1,3), "1.3"},
+                                                       {D3DPS_VERSION(1,4), "1.4"} };
+
             // get the capabilities from the D3D device in SWVP mode
             createDeviceWithFlags(&m_pp, D3DCREATE_SOFTWARE_VERTEXPROCESSING, true);
             m_device->GetDeviceCaps(&caps8SWVP);
@@ -384,7 +395,9 @@ class RGBTriangle {
             std::cout << format("  ~ MaxVertexIndex: ", caps8.MaxVertexIndex) << std::endl;
             std::cout << format("  ~ MaxStreams: ", caps8.MaxStreams) << std::endl;
             std::cout << format("  ~ MaxStreamStride: ", caps8.MaxStreamStride) << std::endl;
+            std::cout << format("  ~ VertexShaderVersion: ", vsVersion[caps8.VertexShaderVersion]) << std::endl;
             std::cout << format("  ~ MaxVertexShaderConst: ", caps8.MaxVertexShaderConst) << std::endl;
+            std::cout << format("  ~ PixelShaderVersion: ", psVersion[caps8.PixelShaderVersion]) << std::endl;
             // typically FLT_MAX
             std::cout << format("  ~ MaxPixelShaderValue: ", caps8.MaxPixelShaderValue) << std::endl;
         }
