@@ -287,10 +287,12 @@ class RGBTriangle {
 
             // these are all the possible D3D8 VS versions
             std::map<DWORD, char const*> vsVersion = { {D3DVS_VERSION(0,0), "0.0"},
+                                                       {D3DVS_VERSION(1,0), "1.0"},
                                                        {D3DVS_VERSION(1,1), "1.1"} };
 
             // these are all the possible D3D8 PS versions
             std::map<DWORD, char const*> psVersion = { {D3DPS_VERSION(0,0), "0.0"},
+                                                       {D3DPS_VERSION(1,0), "1.0"},
                                                        {D3DPS_VERSION(1,1), "1.1"},
                                                        {D3DPS_VERSION(1,2), "1.2"},
                                                        {D3DPS_VERSION(1,3), "1.3"},
