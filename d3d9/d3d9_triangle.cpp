@@ -513,6 +513,103 @@ class RGBTriangle {
             else
                 std::cout << "  - D3DVTXPCAPS_NO_TEXGEN_NONLOCALVIEWER is not supported" << std::endl;
 
+            if (caps9.VS20Caps.Caps & D3DVS20CAPS_PREDICATION)
+                std::cout << "  + D3DVS20CAPS_PREDICATION is supported" << std::endl;
+            else
+                std::cout << "  - D3DVS20CAPS_PREDICATION is not supported" << std::endl;
+
+            if (caps9.PS20Caps.Caps & D3DPS20CAPS_ARBITRARYSWIZZLE)
+                std::cout << "  + D3DPS20CAPS_ARBITRARYSWIZZLE is supported" << std::endl;
+            else
+                std::cout << "  - D3DPS20CAPS_ARBITRARYSWIZZLE is not supported" << std::endl;
+
+            if (caps9.PS20Caps.Caps & D3DPS20CAPS_GRADIENTINSTRUCTIONS)
+                std::cout << "  + D3DPS20CAPS_GRADIENTINSTRUCTIONS is supported" << std::endl;
+            else
+                std::cout << "  - D3DPS20CAPS_GRADIENTINSTRUCTIONS is not supported" << std::endl;
+
+            if (caps9.PS20Caps.Caps & D3DPS20CAPS_PREDICATION)
+                std::cout << "  + D3DPS20CAPS_PREDICATION is supported" << std::endl;
+            else
+                std::cout << "  - D3DPS20CAPS_PREDICATION is not supported" << std::endl;
+
+            if (caps9.PS20Caps.Caps & D3DPS20CAPS_NODEPENDENTREADLIMIT)
+                std::cout << "  + D3DPS20CAPS_NODEPENDENTREADLIMIT is supported" << std::endl;
+            else
+                std::cout << "  - D3DPS20CAPS_NODEPENDENTREADLIMIT is not supported" << std::endl;
+
+            if (caps9.PS20Caps.Caps & D3DPS20CAPS_NOTEXINSTRUCTIONLIMIT)
+                std::cout << "  + D3DPS20CAPS_NOTEXINSTRUCTIONLIMIT is supported" << std::endl;
+            else
+                std::cout << "  - D3DPS20CAPS_NOTEXINSTRUCTIONLIMIT is not supported" << std::endl;
+
+            std::cout << std::endl << "Listing VertexTextureFilterCaps support:" << std::endl;
+
+            if (caps9.VertexTextureFilterCaps & D3DPTFILTERCAPS_CONVOLUTIONMONO)
+                std::cout << "  + D3DPTFILTERCAPS_CONVOLUTIONMONO is supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_CONVOLUTIONMONO is not supported" << std::endl;
+
+            if (caps9.VertexTextureFilterCaps & D3DPTFILTERCAPS_MAGFPOINT)
+                std::cout << "  + D3DPTFILTERCAPS_MAGFPOINT is supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MAGFPOINT is not supported" << std::endl;
+
+            if (caps9.VertexTextureFilterCaps & D3DPTFILTERCAPS_MAGFLINEAR)
+                std::cout << "  + D3DPTFILTERCAPS_MAGFLINEAR is supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MAGFLINEAR is not supported" << std::endl;
+
+            if (caps9.VertexTextureFilterCaps & D3DPTFILTERCAPS_MAGFANISOTROPIC)
+                std::cout << "  + D3DPTFILTERCAPS_MAGFANISOTROPIC is supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MAGFANISOTROPIC is not supported" << std::endl;
+
+            if (caps9.VertexTextureFilterCaps & D3DPTFILTERCAPS_MAGFPYRAMIDALQUAD)
+                std::cout << "  + D3DPTFILTERCAPS_MAGFPYRAMIDALQUAD is supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MAGFPYRAMIDALQUAD is not supported" << std::endl;
+
+            if (caps9.VertexTextureFilterCaps & D3DPTFILTERCAPS_MAGFGAUSSIANQUAD)
+                std::cout << "  + D3DPTFILTERCAPS_MAGFGAUSSIANQUAD is supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MAGFGAUSSIANQUAD is not supported" << std::endl;
+
+            if (caps9.VertexTextureFilterCaps & D3DPTFILTERCAPS_MINFPOINT)
+                std::cout << "  + D3DPTFILTERCAPS_MINFPOINT is supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MINFPOINT is not supported" << std::endl;
+
+            if (caps9.VertexTextureFilterCaps & D3DPTFILTERCAPS_MINFLINEAR)
+                std::cout << "  + D3DPTFILTERCAPS_MINFLINEAR is supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MINFLINEAR is not supported" << std::endl;
+
+            if (caps9.VertexTextureFilterCaps & D3DPTFILTERCAPS_MINFANISOTROPIC)
+                std::cout << "  + D3DPTFILTERCAPS_MINFANISOTROPIC is supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MINFANISOTROPIC is not supported" << std::endl;
+
+            if (caps9.VertexTextureFilterCaps & D3DPTFILTERCAPS_MINFPYRAMIDALQUAD)
+                std::cout << "  + D3DPTFILTERCAPS_MINFPYRAMIDALQUAD is supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MINFPYRAMIDALQUAD is not supported" << std::endl;
+
+            if (caps9.VertexTextureFilterCaps & D3DPTFILTERCAPS_MINFGAUSSIANQUAD)
+                std::cout << "  + D3DPTFILTERCAPS_MINFGAUSSIANQUAD is supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MINFGAUSSIANQUAD is not supported" << std::endl;
+
+            if (caps9.VertexTextureFilterCaps & D3DPTFILTERCAPS_MIPFPOINT)
+                std::cout << "  + D3DPTFILTERCAPS_MIPFPOINT is supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MIPFPOINT is not supported" << std::endl;
+
+            if (caps9.VertexTextureFilterCaps & D3DPTFILTERCAPS_MIPFLINEAR)
+                std::cout << "  + D3DPTFILTERCAPS_MIPFLINEAR is supported" << std::endl;
+            else
+                std::cout << "  - D3DPTFILTERCAPS_MIPFLINEAR is not supported" << std::endl;
+
             std::cout << std::endl << "Listing device capability limits:" << std::endl;
 
             std::cout << format("  ~ MaxTextureWidth: ", caps9.MaxTextureWidth) << std::endl;
@@ -553,6 +650,13 @@ class RGBTriangle {
             std::cout << format("  ~ PixelShader1xMaxValue: ", caps9.PixelShader1xMaxValue) << std::endl;
             std::cout << format("  ~ MaxNpatchTessellationLevel: ", caps9.MaxNpatchTessellationLevel) << std::endl;
             std::cout << format("  ~ NumSimultaneousRTs: ", caps9.NumSimultaneousRTs) << std::endl;
+            std::cout << format("  ~ VS20Caps.DynamicFlowControlDepth: ", caps9.VS20Caps.DynamicFlowControlDepth) << std::endl;
+            std::cout << format("  ~ VS20Caps.NumTemps: ", caps9.VS20Caps.NumTemps) << std::endl;
+            std::cout << format("  ~ VS20Caps.StaticFlowControlDepth: ", caps9.VS20Caps.StaticFlowControlDepth) << std::endl;
+            std::cout << format("  ~ PS20Caps.DynamicFlowControlDepth: ", caps9.PS20Caps.DynamicFlowControlDepth) << std::endl;
+            std::cout << format("  ~ PS20Caps.NumTemps: ", caps9.PS20Caps.NumTemps) << std::endl;
+            std::cout << format("  ~ PS20Caps.StaticFlowControlDepth: ", caps9.PS20Caps.StaticFlowControlDepth) << std::endl;
+            std::cout << format("  ~ PS20Caps.NumInstructionSlots: ", caps9.PS20Caps.NumInstructionSlots) << std::endl;
             std::cout << format("  ~ MaxVShaderInstructionsExecuted: ", caps9.MaxVShaderInstructionsExecuted) << std::endl;
             std::cout << format("  ~ MaxPShaderInstructionsExecuted: ", caps9.MaxPShaderInstructionsExecuted) << std::endl;
             std::cout << format("  ~ MaxVertexShader30InstructionSlots: ", caps9.MaxVertexShader30InstructionSlots) << std::endl;
