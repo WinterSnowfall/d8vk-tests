@@ -68,6 +68,8 @@ class RGBTriangle {
             if (FAILED(status))
                 throw Error("Failed to get D3D9 adapter identifier");
 
+            m_vendorID = adapterId.VendorId;
+
             std::cout << format("Using adapter: ", adapterId.Description) << std::endl;
 
             // DWORD to hex printout
@@ -81,7 +83,7 @@ class RGBTriangle {
             std::cout << format("  ~ Driver: ", adapterId.Driver) << std::endl;
 
             // NVIDIA stores the driver version in the lower half of the lower DWORD
-            if (adapterId.VendorId == uint32_t(0x10de)) {
+            if (m_vendorID == uint32_t(0x10de)) {
                 // Newer drivers will also spill over into the upper half
                 DWORD driverVersionHigh = HIWORD(adapterId.DriverVersion.LowPart);
                 DWORD driverVersionLow  = LOWORD(adapterId.DriverVersion.LowPart);
@@ -1257,25 +1259,31 @@ class RGBTriangle {
             for (texFormatIter = texFormats.begin(); texFormatIter != texFormats.end(); texFormatIter++) {
                 D3DFORMAT texFormat = texFormatIter->first;
 
-                HRESULT createStatus = m_device->CreateVolumeTexture(256, 256, 256, 1, 0, texFormat, D3DPOOL_DEFAULT, &volumeTexture, NULL);
-
-                if (SUCCEEDED(createStatus)) {
-                    D3DLOCKED_BOX lockBox;
-
-                    m_totalTests++;
-
-                    HRESULT lockStatus = volumeTexture->LockBox(0, &lockBox, NULL, 0);
-
-                    if (FAILED(lockStatus)) {
-                        m_passedTests++;
-                        std::cout << format("  + The ", texFormatIter->second , " format test has passed") << std::endl;
-                    } else {
-                        std::cout << format("  - The ", texFormatIter->second , " format test has failed") << std::endl;
-                    }
-
-                    volumeTexture = nullptr;
+                // Ironically, ATI/AMD will fail to lock ATI1/2 volume textures even on modern drivers, so skip this test
+                if (m_vendorID == uint32_t(0x1002) && (texFormat == (D3DFORMAT) MAKEFOURCC('A', 'T', 'I', '1') ||
+                                                       texFormat == (D3DFORMAT) MAKEFOURCC('A', 'T', 'I', '2'))) {
+                    std::cout << format("  ~ The ", texFormatIter->second ," format test was skipped") << std::endl;
                 } else {
-                    std::cout << format("  ~ The ", texFormatIter->second ," format is not supported") << std::endl;
+                    HRESULT createStatus = m_device->CreateVolumeTexture(256, 256, 256, 1, 0, texFormat, D3DPOOL_DEFAULT, &volumeTexture, NULL);
+
+                    if (SUCCEEDED(createStatus)) {
+                        D3DLOCKED_BOX lockBox;
+
+                        m_totalTests++;
+
+                        HRESULT lockStatus = volumeTexture->LockBox(0, &lockBox, NULL, 0);
+
+                        if (FAILED(lockStatus)) {
+                            m_passedTests++;
+                            std::cout << format("  + The ", texFormatIter->second , " format test has passed") << std::endl;
+                        } else {
+                            std::cout << format("  - The ", texFormatIter->second , " format test has failed") << std::endl;
+                        }
+
+                        volumeTexture = nullptr;
+                    } else {
+                        std::cout << format("  ~ The ", texFormatIter->second ," format is not supported") << std::endl;
+                    }
                 }
             }
         }
@@ -1473,6 +1481,8 @@ class RGBTriangle {
         }
 
         HWND                          m_hWnd;
+
+        DWORD                         m_vendorID;
 
         Com<IDirect3D9>               m_d3d;
         Com<IDirect3DDevice9>         m_device;
