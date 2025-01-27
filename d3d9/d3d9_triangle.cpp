@@ -315,6 +315,26 @@ class RGBTriangle {
             else
                 std::cout << "  - D3DCAPS2_CANAUTOGENMIPMAP is not supported" << std::endl;
 
+            if (caps9.DevCaps & D3DDEVCAPS_QUINTICRTPATCHES)
+                std::cout << "  + D3DDEVCAPS_QUINTICRTPATCHES is supported" << std::endl;
+            else
+                std::cout << "  - D3DDEVCAPS_QUINTICRTPATCHES is not supported" << std::endl;
+
+            if (caps9.DevCaps & D3DDEVCAPS_RTPATCHES)
+                std::cout << "  + D3DDEVCAPS_RTPATCHES is supported" << std::endl;
+            else
+                std::cout << "  - D3DDEVCAPS_RTPATCHES is not supported" << std::endl;
+
+            if (caps9.DevCaps & D3DDEVCAPS_RTPATCHHANDLEZERO)
+                std::cout << "  + D3DDEVCAPS_RTPATCHHANDLEZERO is supported" << std::endl;
+            else
+                std::cout << "  - D3DDEVCAPS_RTPATCHHANDLEZERO is not supported" << std::endl;
+
+            if (caps9.DevCaps & D3DDEVCAPS_NPATCHES)
+                std::cout << "  + D3DDEVCAPS_NPATCHES is supported" << std::endl;
+            else
+                std::cout << "  - D3DDEVCAPS_NPATCHES is not supported" << std::endl;
+
             if (caps9.Caps3 & D3DCAPS3_LINEAR_TO_SRGB_PRESENTATION)
                 std::cout << "  + D3DCAPS3_LINEAR_TO_SRGB_PRESENTATION is supported" << std::endl;
             else
