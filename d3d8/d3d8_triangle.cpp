@@ -5,6 +5,7 @@
 #include <d3d8.h>
 #include <d3d9caps.h>
 
+#include "../common/bit.h"
 #include "../common/com.h"
 #include "../common/error.h"
 #include "../common/str.h"
@@ -721,6 +722,47 @@ class RGBTriangle {
             } else {
                 m_passedTests++;
                 std::cout << "  + The GetBackBuffer test has passed" << std::endl;
+            }
+        }
+
+        void testRSValues() {
+            resetOrRecreateDevice();
+
+            D3DLINEPATTERN linePatternTwo = { 2, 2 };
+            float patchSegmentsTwo = 2.0f;
+
+            D3DLINEPATTERN linePattern = { 0, 0 };
+            DWORD zVisible = 0;
+            DWORD zBias = 0;
+            float patchSegments = 0;
+
+            m_totalTests++;
+
+            m_device->SetRenderState(D3DRS_LINEPATTERN, bit::cast<DWORD>(linePatternTwo));
+            // ZVISIBLE is not supported, but set values are saved apparently
+            m_device->SetRenderState(D3DRS_ZVISIBLE, 2);
+            // Integer value between 0 and 16
+            m_device->SetRenderState(D3DRS_ZBIAS, 2);
+            m_device->SetRenderState(D3DRS_PATCHSEGMENTS, bit::cast<DWORD>(patchSegmentsTwo));
+
+            m_device->GetRenderState(D3DRS_LINEPATTERN, (DWORD*) (&linePattern));
+            //std::cout << format("  * D3DRS_LINEPATTERN: ", linePattern.wRepeatFactor, " ", linePattern.wLinePattern) << std::endl;
+            m_device->GetRenderState(D3DRS_ZVISIBLE, &zVisible);
+            //std::cout << format("  * D3DRS_ZVISIBLE: ", zVisible) << std::endl;
+            m_device->GetRenderState(D3DRS_ZBIAS, &zBias);
+            //std::cout << format("  * D3DRS_ZBIAS: ", zBias) << std::endl;
+            m_device->GetRenderState(D3DRS_PATCHSEGMENTS, (DWORD*) (&patchSegments));
+            //std::cout << format("  * D3DRS_PATCHSEGMENTS: ", patchSegments) << std::endl;
+
+            if (linePattern.wRepeatFactor == 2
+             && linePattern.wLinePattern  == 2
+             && zVisible == 2
+             && zBias == 2
+             && patchSegments == 2.0f) {
+                m_passedTests++;
+                std::cout << "  + The render state values test has passed" << std::endl;
+            } else {
+                std::cout << "  - The render state values test has failed" << std::endl;
             }
         }
 
@@ -1972,6 +2014,7 @@ int main(int, char**) {
         // run D3D Device tests
         rgbTriangle.startTests();
         rgbTriangle.testZeroBackBufferCount();
+        rgbTriangle.testRSValues();
         rgbTriangle.testInvalidPresentationInterval();
         rgbTriangle.testBeginSceneReset();
         rgbTriangle.testPureDeviceSetSWVPRenderState();
