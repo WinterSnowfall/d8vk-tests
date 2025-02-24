@@ -1694,9 +1694,10 @@ class RGBTriangle {
             for (texFormatIter = texFormats.begin(); texFormatIter != texFormats.end(); texFormatIter++) {
                 D3DFORMAT texFormat = texFormatIter->first;
 
-                // Ironically, ATI/AMD will fail to lock ATI1/2 volume textures even on modern drivers, so skip this test
-                if (m_vendorID == uint32_t(0x1002) && (texFormat == (D3DFORMAT) MAKEFOURCC('A', 'T', 'I', '1') ||
-                                                       texFormat == (D3DFORMAT) MAKEFOURCC('A', 'T', 'I', '2'))) {
+                // Ironically, ATI/AMD and Intel will fail to lock ATI1/2 volume textures even on modern drivers, so skip this test
+                if ((m_vendorID == uint32_t(0x1002) || m_vendorID == uint32_t(0x8086))
+                 && (texFormat == (D3DFORMAT) MAKEFOURCC('A', 'T', 'I', '1') ||
+                     texFormat == (D3DFORMAT) MAKEFOURCC('A', 'T', 'I', '2'))) {
                     std::cout << format("  ~ The ", texFormatIter->second ," format test was skipped") << std::endl;
                 } else {
                     HRESULT createStatus = m_device->CreateVolumeTexture(256, 256, 256, 1, 0, texFormat, D3DPOOL_DEFAULT, &volumeTexture);
