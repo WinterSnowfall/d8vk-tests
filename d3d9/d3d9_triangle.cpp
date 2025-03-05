@@ -1046,6 +1046,28 @@ class RGBTriangle {
             }
         }
 
+        void testCheckDeviceFormatWithBuffers() {
+            resetOrRecreateDevice();
+
+            m_totalTests++;
+
+            HRESULT resVB = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, 0, D3DRTYPE_VERTEXBUFFER, D3DFMT_VERTEXDATA);
+            HRESULT resIB = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, 0, D3DRTYPE_INDEXBUFFER, D3DFMT_INDEX16);
+
+            HRESULT resVB2 = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, 0, D3DRTYPE_VERTEXBUFFER, m_pp.BackBufferFormat);
+            HRESULT resIB2 = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, 0, D3DRTYPE_INDEXBUFFER, m_pp.BackBufferFormat);
+
+            if (resVB  != D3DERR_INVALIDCALL ||
+                resIB  != D3DERR_INVALIDCALL ||
+                resVB2 != D3DERR_INVALIDCALL ||
+                resIB2 != D3DERR_INVALIDCALL) {
+                std::cout << "  - The CheckDeviceFormat with index/vertex buffers test has failed" << std::endl;
+            } else {
+                m_passedTests++;
+                std::cout << "  + The CheckDeviceFormat with index/vertex buffers test has passed" << std::endl;
+            }
+        }
+
         // Clear with unbound depth stencil test
         void testClearWithUnboundDepthStencil() {
             resetOrRecreateDevice();
@@ -1071,6 +1093,24 @@ class RGBTriangle {
                 }
             } else {
                 std::cout << "  ~ The D3DCLEAR_ZBUFFER with bound depth stencil test did not run" << std::endl;
+            }
+        }
+
+        // Test return pointer initialization in CreateVertexShader
+        void testCreateVertexShaderInit() {
+            resetOrRecreateDevice();
+
+            m_totalTests++;
+
+            DWORD function = 0;
+            IDirect3DVertexShader9* vs = (IDirect3DVertexShader9*) 0xffffffff;
+            m_device->CreateVertexShader(&function, &vs);
+
+            if (vs == (IDirect3DVertexShader9*) 0xffffffff) {
+                m_passedTests++;
+                std::cout << "  + The CreateVertexShader initialization test has passed" << std::endl;
+            } else {
+                std::cout << "  - The CreateVertexShader initialization test has failed" << std::endl;
             }
         }
 
@@ -1560,7 +1600,9 @@ int main(int, char**) {
         rgbTriangle.testMultiplyTransformRecordingAndCapture();
         rgbTriangle.testCursorHotSpotCoordinates();
         rgbTriangle.testDeviceWithoutHWND();
+        rgbTriangle.testCheckDeviceFormatWithBuffers();
         rgbTriangle.testClearWithUnboundDepthStencil();
+        rgbTriangle.testCreateVertexShaderInit();
         // outright crashes on certain native drivers/hardware
         //rgbTriangle.testRectBoxClearingOnLock();
         rgbTriangle.testCheckDeviceMultiSampleTypeValidation();
