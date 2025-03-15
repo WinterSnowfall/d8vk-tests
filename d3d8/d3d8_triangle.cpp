@@ -194,7 +194,7 @@ class RGBTriangle {
             else
                 std::cout << "Device back buffer format support (full screen):" << std::endl;
 
-            for (bbFormatIter = bbFormats.begin(); bbFormatIter != bbFormats.end(); bbFormatIter++) {
+            for (bbFormatIter = bbFormats.begin(); bbFormatIter != bbFormats.end(); ++bbFormatIter) {
                 status = m_d3d->CheckDeviceType(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
                                                 bbFormatIter->first, bbFormatIter->first,
                                                 windowed);
@@ -239,7 +239,7 @@ class RGBTriangle {
 
             std::cout << std::endl << "Obscure FOURCC surface format support:" << std::endl;
 
-            for (sfFormatIter = sfFormats.begin(); sfFormatIter != sfFormats.end(); sfFormatIter++) {
+            for (sfFormatIter = sfFormats.begin(); sfFormatIter != sfFormats.end(); ++sfFormatIter) {
                 D3DFORMAT surfaceFormat = (D3DFORMAT) sfFormatIter->first;
 
                 std::cout << format("  ~ ", sfFormatIter->second, ":") << std::endl;
@@ -731,11 +731,6 @@ class RGBTriangle {
             D3DLINEPATTERN linePatternTwo = { 2, 2 };
             float patchSegmentsTwo = 2.0f;
 
-            D3DLINEPATTERN linePattern = { 0, 0 };
-            DWORD zVisible = 0;
-            DWORD zBias = 0;
-            float patchSegments = 0;
-
             m_totalTests++;
 
             m_device->SetRenderState(D3DRS_LINEPATTERN, bit::cast<DWORD>(linePatternTwo));
@@ -744,14 +739,20 @@ class RGBTriangle {
             // Integer value between 0 and 16
             m_device->SetRenderState(D3DRS_ZBIAS, 2);
             m_device->SetRenderState(D3DRS_PATCHSEGMENTS, bit::cast<DWORD>(patchSegmentsTwo));
-
-            m_device->GetRenderState(D3DRS_LINEPATTERN, (DWORD*) (&linePattern));
+            DWORD linePatternWord;
+            m_device->GetRenderState(D3DRS_LINEPATTERN, &linePatternWord);
+            D3DLINEPATTERN linePattern = bit::cast<D3DLINEPATTERN>(linePatternWord);
             //std::cout << format("  * D3DRS_LINEPATTERN: ", linePattern.wRepeatFactor, " ", linePattern.wLinePattern) << std::endl;
+            DWORD zVisible = 0;
             m_device->GetRenderState(D3DRS_ZVISIBLE, &zVisible);
             //std::cout << format("  * D3DRS_ZVISIBLE: ", zVisible) << std::endl;
+            DWORD zBias = 0;
             m_device->GetRenderState(D3DRS_ZBIAS, &zBias);
             //std::cout << format("  * D3DRS_ZBIAS: ", zBias) << std::endl;
-            m_device->GetRenderState(D3DRS_PATCHSEGMENTS, (DWORD*) (&patchSegments));
+            float patchSegments = 0;
+            DWORD patchSegmentsWord;
+            m_device->GetRenderState(D3DRS_PATCHSEGMENTS, &patchSegmentsWord);
+            patchSegments = bit::cast<float>(patchSegmentsWord);
             //std::cout << format("  * D3DRS_PATCHSEGMENTS: ", patchSegments) << std::endl;
 
             if (linePattern.wRepeatFactor == 2
@@ -1395,12 +1396,12 @@ class RGBTriangle {
         void testUnknownFormatObjectCreation() {
             resetOrRecreateDevice();
 
-            IDirect3DTexture8* texture = (IDirect3DTexture8*) 0xabcdabcd;
-            IDirect3DVolumeTexture8* volumeTexture = (IDirect3DVolumeTexture8*) 0xabcdabcd;
-            IDirect3DCubeTexture8* cubeTexture = (IDirect3DCubeTexture8*) 0xabcdabcd;
-            IDirect3DSurface8* renderTarget = (IDirect3DSurface8*) 0xabcdabcd;
-            IDirect3DSurface8* depthStencil = (IDirect3DSurface8*) 0xabcdabcd;
-            IDirect3DSurface8* imageSurface = (IDirect3DSurface8*) 0xabcdabcd;
+            IDirect3DTexture8* texture = reinterpret_cast<IDirect3DTexture8*>(0xABCDABCD);
+            IDirect3DVolumeTexture8* volumeTexture = reinterpret_cast<IDirect3DVolumeTexture8*>(0xABCDABCD);
+            IDirect3DCubeTexture8* cubeTexture = reinterpret_cast<IDirect3DCubeTexture8*>(0xABCDABCD);
+            IDirect3DSurface8* renderTarget = reinterpret_cast<IDirect3DSurface8*>(0xABCDABCD);
+            IDirect3DSurface8* depthStencil = reinterpret_cast<IDirect3DSurface8*>(0xABCDABCD);
+            IDirect3DSurface8* imageSurface = reinterpret_cast<IDirect3DSurface8*>(0xABCDABCD);
 
             m_totalTests++;
 
@@ -1436,7 +1437,7 @@ class RGBTriangle {
             m_device->CreateVertexBuffer(800, 0, RGBT_FVF_CODES,
                                          D3DPOOL_DEFAULT, &vertexBuffer);
             void* vertices;
-            vertexBuffer->Lock(0, 800, (byte**)&vertices, 0);
+            vertexBuffer->Lock(0, 800, reinterpret_cast<byte**>(&vertices), 0);
             memset(vertices, 1, 800);
             vertexBuffer->Unlock();
 
@@ -1564,27 +1565,27 @@ class RGBTriangle {
             // except for surface types equal to D3DRTYPE_TEXTURE.
             // LockBox clears the content universally.
             surface->LockRect(&surfaceRect, NULL, 0);
-            surfaceRect.pBits = (void*) 0xABCDABCD;
+            surfaceRect.pBits = reinterpret_cast<void*>(0xABCDABCD);
             surfaceRect.Pitch = 10;
             HRESULT surfaceStatus = surface->LockRect(&surfaceRect, NULL, 0);
             surface->UnlockRect();
             texture->LockRect(0, &textureRect, NULL, 0);
-            textureRect.pBits = (void*) 0xABCDABCD;
+            textureRect.pBits = reinterpret_cast<void*>(0xABCDABCD);
             textureRect.Pitch = 10;
             HRESULT textureStatus = texture->LockRect(0, &textureRect, NULL, 0);
             texture->UnlockRect(0);
             sysmemTexture->LockRect(0, &sysmemTextureRect, NULL, 0);
-            sysmemTextureRect.pBits = (void*) 0xABCDABCD;
+            sysmemTextureRect.pBits = reinterpret_cast<void*>(0xABCDABCD);
             sysmemTextureRect.Pitch = 10;
             HRESULT sysmemTextureStatus = sysmemTexture->LockRect(0, &sysmemTextureRect, NULL, 0);
             sysmemTexture->UnlockRect(0);
             cubeTexture->LockRect(D3DCUBEMAP_FACE_POSITIVE_X, 0, &cubeTextureRect, NULL, 0);
-            cubeTextureRect.pBits = (void*) 0xABCDABCD;
+            cubeTextureRect.pBits = reinterpret_cast<void*>(0xABCDABCD);
             cubeTextureRect.Pitch = 10;
             HRESULT cubeTextureStatus = cubeTexture->LockRect(D3DCUBEMAP_FACE_POSITIVE_X, 0, &cubeTextureRect, NULL, 0);
             cubeTexture->UnlockRect(D3DCUBEMAP_FACE_POSITIVE_X, 0);
             volumeTexture->LockBox(0, &volumeTextureBox, NULL, 0);
-            volumeTextureBox.pBits = (void*) 0xABCDABCD;
+            volumeTextureBox.pBits = reinterpret_cast<void*>(0xABCDABCD);
             volumeTextureBox.RowPitch = 10;
             volumeTextureBox.SlicePitch = 10;
             HRESULT volumeTextureStatus = volumeTexture->LockBox(0, &volumeTextureBox, NULL, 0);
@@ -1606,7 +1607,7 @@ class RGBTriangle {
                 surfaceRect.Pitch != 0 ||
                 textureRect.pBits != nullptr ||
                 textureRect.Pitch != 0 ||
-                sysmemTextureRect.pBits != (void*) 0xABCDABCD ||
+                sysmemTextureRect.pBits != reinterpret_cast<void*>(0xABCDABCD) ||
                 sysmemTextureRect.Pitch != 10 ||
                 cubeTextureRect.pBits != nullptr ||
                 cubeTextureRect.Pitch != 0 ||
@@ -1657,7 +1658,7 @@ class RGBTriangle {
 
             std::cout << std::endl << "Running CheckDeviceMultiSampleType formats tests:" << std::endl;
 
-            for (sfFormatIter = sfFormats.begin(); sfFormatIter != sfFormats.end(); sfFormatIter++) {
+            for (sfFormatIter = sfFormats.begin(); sfFormatIter != sfFormats.end(); ++sfFormatIter) {
                 D3DFORMAT surfaceFormat = sfFormatIter->first;
 
                 m_totalTests++;
@@ -1761,7 +1762,7 @@ class RGBTriangle {
 
             std::cout << std::endl << "Running CreateVolumeTexture formats tests:" << std::endl;
 
-            for (texFormatIter = texFormats.begin(); texFormatIter != texFormats.end(); texFormatIter++) {
+            for (texFormatIter = texFormats.begin(); texFormatIter != texFormats.end(); ++texFormatIter) {
                 D3DFORMAT texFormat = texFormatIter->first;
 
                 // Ironically, ATI/AMD and Intel will fail to lock ATI1/2 volume textures even on modern drivers, so skip this test
@@ -1817,7 +1818,7 @@ class RGBTriangle {
             // Note: CreateImageSurface calls should never fail, even with unsupported surface formats
             std::cout << std::endl << "Running surface format tests:" << std::endl;
 
-            for (sfFormatIter = sfFormats.begin(); sfFormatIter != sfFormats.end(); sfFormatIter++) {
+            for (sfFormatIter = sfFormats.begin(); sfFormatIter != sfFormats.end(); ++sfFormatIter) {
                 D3DFORMAT surfaceFormat = sfFormatIter->first;
 
                 std::cout << format("  ~ ", sfFormatIter->second, ":") << std::endl;
@@ -1900,7 +1901,7 @@ class RGBTriangle {
 
             std::cout << std::endl << "Running depth stencil format tests:" << std::endl;
 
-            for (dsFormatIter = dsFormats.begin(); dsFormatIter != dsFormats.end(); dsFormatIter++) {
+            for (dsFormatIter = dsFormats.begin(); dsFormatIter != dsFormats.end(); ++dsFormatIter) {
                 dsPP.AutoDepthStencilFormat = dsFormatIter->first;
 
                 status = m_d3d->CheckDepthStencilMatch(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
@@ -1956,7 +1957,7 @@ class RGBTriangle {
             if (FAILED(status))
                 throw Error("Failed to create D3D8 vertex buffer");
 
-            status = m_vb->Lock(0, rgbVerticesSize, (BYTE**)&vertices, 0);
+            status = m_vb->Lock(0, rgbVerticesSize, reinterpret_cast<BYTE**>(&vertices), 0);
             if (FAILED(status))
                 throw Error("Failed to lock D3D8 vertex buffer");
             memcpy(vertices, rgbVertices.data(), rgbVerticesSize);
@@ -2000,8 +2001,7 @@ class RGBTriangle {
             if (m_d3d == nullptr)
                 throw Error("The D3D8 interface hasn't been initialized");
 
-            if (m_device != nullptr)
-                m_device = nullptr;
+            m_device = nullptr;
 
             HRESULT status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, deviceType, m_hWnd,
                                                  behaviorFlags, presentParams, &m_device);

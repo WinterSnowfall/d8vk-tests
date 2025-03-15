@@ -188,7 +188,7 @@ class RGBTriangle {
             else
                 std::cout << "Device back buffer format support (full screen):" << std::endl;
 
-            for (bbFormatIter = bbFormats.begin(); bbFormatIter != bbFormats.end(); bbFormatIter++) {
+            for (bbFormatIter = bbFormats.begin(); bbFormatIter != bbFormats.end(); ++bbFormatIter) {
                 status = m_d3d->CheckDeviceType(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
                                                 bbFormatIter->first, bbFormatIter->first,
                                                 windowed);
@@ -233,7 +233,7 @@ class RGBTriangle {
 
             std::cout << std::endl << "Obscure FOURCC surface format support:" << std::endl;
 
-            for (sfFormatIter = sfFormats.begin(); sfFormatIter != sfFormats.end(); sfFormatIter++) {
+            for (sfFormatIter = sfFormats.begin(); sfFormatIter != sfFormats.end(); ++sfFormatIter) {
                 D3DFORMAT surfaceFormat = (D3DFORMAT) sfFormatIter->first;
 
                 std::cout << format("  ~ ", sfFormatIter->second, ":") << std::endl;
@@ -1050,7 +1050,7 @@ class RGBTriangle {
             m_device->CreateVertexBuffer(800, 0, RGBT_FVF_CODES,
                                          D3DPOOL_DEFAULT, &vertexBuffer, NULL);
             void* vertices;
-            vertexBuffer->Lock(0, 800, (void**)&vertices, 0);
+            vertexBuffer->Lock(0, 800, reinterpret_cast<void**>(&vertices), 0);
             memset(vertices, 1, 800);
             vertexBuffer->Unlock();
 
@@ -1157,10 +1157,10 @@ class RGBTriangle {
             m_totalTests++;
 
             DWORD function = 0;
-            IDirect3DVertexShader9* vs = (IDirect3DVertexShader9*) 0xffffffff;
+            IDirect3DVertexShader9* vs = reinterpret_cast<IDirect3DVertexShader9*>(0xFFFFFFFF);
             m_device->CreateVertexShader(&function, &vs);
 
-            if (vs == (IDirect3DVertexShader9*) 0xffffffff) {
+            if (vs == reinterpret_cast<IDirect3DVertexShader9*>(0xFFFFFFFF)) {
                 m_passedTests++;
                 std::cout << "  + The CreateVertexShader initialization test has passed" << std::endl;
             } else {
@@ -1205,43 +1205,43 @@ class RGBTriangle {
             // should be cleared for everything outside of D3DPOOL_DEFAULT.
             // LockBox clears the content universally.
             surface->LockRect(&surfaceRect, NULL, 0);
-            surfaceRect.pBits = (void*) 0xABCDABCD;
+            surfaceRect.pBits = reinterpret_cast<void*>(0xABCDABCD);
             surfaceRect.Pitch = 10;
             HRESULT surfaceStatus = surface->LockRect(&surfaceRect, NULL, 0);
             surface->UnlockRect();
             sysmemSurface->LockRect(&sysmemSurfaceRect, NULL, 0);
-            sysmemSurfaceRect.pBits = (void*) 0xABCDABCD;
+            sysmemSurfaceRect.pBits = reinterpret_cast<void*>(0xABCDABCD);
             sysmemSurfaceRect.Pitch = 10;
             HRESULT sysmemSurfaceStatus = sysmemSurface->LockRect(&sysmemSurfaceRect, NULL, 0);
             sysmemSurface->UnlockRect();
             texture->LockRect(0, &textureRect, NULL, 0);
-            textureRect.pBits = (void*) 0xABCDABCD;
+            textureRect.pBits = reinterpret_cast<void*>(0xABCDABCD);
             textureRect.Pitch = 10;
             HRESULT textureStatus = texture->LockRect(0, &textureRect, NULL, 0);
             texture->UnlockRect(0);
             sysmemTexture->LockRect(0, &sysmemTextureRect, NULL, 0);
-            sysmemTextureRect.pBits = (void*) 0xABCDABCD;
+            sysmemTextureRect.pBits = reinterpret_cast<void*>(0xABCDABCD);
             sysmemTextureRect.Pitch = 10;
             HRESULT sysmemTextureStatus = sysmemTexture->LockRect(0, &sysmemTextureRect, NULL, 0);
             sysmemTexture->UnlockRect(0);
             cubeTexture->LockRect(D3DCUBEMAP_FACE_POSITIVE_X, 0, &cubeTextureRect, NULL, 0);
-            cubeTextureRect.pBits = (void*) 0xABCDABCD;
+            cubeTextureRect.pBits = reinterpret_cast<void*>(0xABCDABCD);
             cubeTextureRect.Pitch = 10;
             HRESULT cubeTextureStatus = cubeTexture->LockRect(D3DCUBEMAP_FACE_POSITIVE_X, 0, &cubeTextureRect, NULL, 0);
             cubeTexture->UnlockRect(D3DCUBEMAP_FACE_POSITIVE_X, 0);
             sysmemCubeTexture->LockRect(D3DCUBEMAP_FACE_POSITIVE_X, 0, &sysmemCubeTextureRect, NULL, 0);
-            sysmemCubeTextureRect.pBits = (void*) 0xABCDABCD;
+            sysmemCubeTextureRect.pBits = reinterpret_cast<void*>(0xABCDABCD);
             sysmemCubeTextureRect.Pitch = 10;
             HRESULT sysmemCubeTextureStatus = sysmemCubeTexture->LockRect(D3DCUBEMAP_FACE_POSITIVE_X, 0, &sysmemCubeTextureRect, NULL, 0);
             sysmemCubeTexture->UnlockRect(D3DCUBEMAP_FACE_POSITIVE_X, 0);
             volumeTexture->LockBox(0, &volumeTextureBox, NULL, 0);
-            volumeTextureBox.pBits = (void*) 0xABCDABCD;
+            volumeTextureBox.pBits = reinterpret_cast<void*>(0xABCDABCD);
             volumeTextureBox.RowPitch = 10;
             volumeTextureBox.SlicePitch = 10;
             HRESULT volumeTextureStatus = volumeTexture->LockBox(0, &volumeTextureBox, NULL, 0);
             volumeTexture->UnlockBox(0);
             sysmemVolumeTexture->LockBox(0, &sysmemVolumeTextureBox, NULL, 0);
-            sysmemVolumeTextureBox.pBits = (void*) 0xABCDABCD;
+            sysmemVolumeTextureBox.pBits = reinterpret_cast<void*>(0xABCDABCD);
             sysmemVolumeTextureBox.RowPitch = 10;
             sysmemVolumeTextureBox.SlicePitch = 10;
             HRESULT sysmemVolumeTextureStatus = volumeTexture->LockBox(0, &sysmemVolumeTextureBox, NULL, 0);
@@ -1268,15 +1268,15 @@ class RGBTriangle {
                 SUCCEEDED(sysmemVolumeTextureStatus) ||
                 surfaceRect.pBits != nullptr ||
                 surfaceRect.Pitch != 0 ||
-                sysmemSurfaceRect.pBits != (void*) 0xABCDABCD ||
+                sysmemSurfaceRect.pBits != reinterpret_cast<void*>(0xABCDABCD) ||
                 sysmemSurfaceRect.Pitch != 10 ||
                 textureRect.pBits != nullptr ||
                 textureRect.Pitch != 0 ||
-                sysmemTextureRect.pBits != (void*) 0xABCDABCD ||
+                sysmemTextureRect.pBits != reinterpret_cast<void*>(0xABCDABCD) ||
                 sysmemTextureRect.Pitch != 10 ||
                 cubeTextureRect.pBits != nullptr ||
                 cubeTextureRect.Pitch != 0 ||
-                sysmemCubeTextureRect.pBits != (void*) 0xABCDABCD ||
+                sysmemCubeTextureRect.pBits != reinterpret_cast<void*>(0xABCDABCD) ||
                 sysmemCubeTextureRect.Pitch != 10 ||
                 volumeTextureBox.pBits != nullptr ||
                 volumeTextureBox.RowPitch != 0 ||
@@ -1331,7 +1331,7 @@ class RGBTriangle {
 
             std::cout << std::endl << "Running CheckDeviceMultiSampleType formats tests:" << std::endl;
 
-            for (sfFormatIter = sfFormats.begin(); sfFormatIter != sfFormats.end(); sfFormatIter++) {
+            for (sfFormatIter = sfFormats.begin(); sfFormatIter != sfFormats.end(); ++sfFormatIter) {
                 D3DFORMAT surfaceFormat = sfFormatIter->first;
 
                 m_totalTests++;
@@ -1370,7 +1370,7 @@ class RGBTriangle {
 
             std::cout << std::endl << "Running CreateVolumeTexture formats tests:" << std::endl;
 
-            for (texFormatIter = texFormats.begin(); texFormatIter != texFormats.end(); texFormatIter++) {
+            for (texFormatIter = texFormats.begin(); texFormatIter != texFormats.end(); ++texFormatIter) {
                 D3DFORMAT texFormat = texFormatIter->first;
 
                 // Ironically, ATI/AMD and Intel will fail to lock ATI1/2 volume textures even on modern drivers, so skip this test
@@ -1425,7 +1425,7 @@ class RGBTriangle {
 
             std::cout << std::endl << "Running surface format tests:" << std::endl;
 
-            for (sfFormatIter = sfFormats.begin(); sfFormatIter != sfFormats.end(); sfFormatIter++) {
+            for (sfFormatIter = sfFormats.begin(); sfFormatIter != sfFormats.end(); ++sfFormatIter) {
                 D3DFORMAT surfaceFormat = sfFormatIter->first;
 
                 std::cout << format("  ~ ", sfFormatIter->second, ":") << std::endl;
@@ -1518,7 +1518,7 @@ class RGBTriangle {
             if (FAILED(status))
                 throw Error("Failed to create D3D9 vertex buffer");
 
-            status = m_vb->Lock(0, rgbVerticesSize, (void**)&vertices, 0);
+            status = m_vb->Lock(0, rgbVerticesSize, reinterpret_cast<void**>(&vertices), 0);
             if (FAILED(status))
                 throw Error("Failed to lock D3D9 vertex buffer");
             memcpy(vertices, rgbVertices.data(), rgbVerticesSize);
@@ -1562,8 +1562,7 @@ class RGBTriangle {
             if (m_d3d == nullptr)
                 throw Error("The D3D9 interface hasn't been initialized");
 
-            if (m_device != nullptr)
-                m_device = nullptr;
+            m_device = nullptr;
 
             HRESULT status = m_d3d->CreateDevice(D3DADAPTER_DEFAULT, deviceType, m_hWnd,
                                                  behaviorFlags, presentParams, &m_device);
