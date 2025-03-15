@@ -701,6 +701,16 @@ class RGBTriangle {
             }
         }
 
+        void listAvailableTextureMemory() {
+            resetOrRecreateDevice();
+
+            std::cout << std::endl << "Listing available texture memory:" << std::endl;
+
+            uint32_t availableMemory = m_device->GetAvailableTextureMem();
+            
+            std::cout << format("  ~ Bytes: ", availableMemory) << std::endl;
+        }
+
         void startTests() {
             m_totalTests  = 0;
             m_passedTests = 0;
@@ -862,30 +872,22 @@ class RGBTriangle {
             }
         }
 
-        // CreateDevice with various devices types using HWVP test
-        void testDeviceTypesWithHWVP() {
-            HRESULT statusHAL = createDeviceWithFlags(&m_pp, D3DCREATE_HARDWARE_VERTEXPROCESSING, D3DDEVTYPE_HAL, false);
-            //std::cout << format("  ~ statusHAL: ", statusHAL) << std::endl;;
-            HRESULT statusREF = createDeviceWithFlags(&m_pp, D3DCREATE_HARDWARE_VERTEXPROCESSING, D3DDEVTYPE_REF, false);
-            //std::cout << format("  ~ statusREF: ", statusREF) << std::endl;;
-            HRESULT statusSW = createDeviceWithFlags(&m_pp, D3DCREATE_HARDWARE_VERTEXPROCESSING, D3DDEVTYPE_SW, false);
-            //std::cout << format("  ~ statusSW: ", statusSW) << std::endl;;
-
+        // CreateDevice with various devices types test
+        void testDeviceTypes() {
+            // D3DDEVTYPE_REF is available on Windows 8 and above
+            HRESULT statusHHAL = createDeviceWithFlags(&m_pp, D3DCREATE_HARDWARE_VERTEXPROCESSING, D3DDEVTYPE_HAL, false);
+            HRESULT statusHSW = createDeviceWithFlags(&m_pp, D3DCREATE_HARDWARE_VERTEXPROCESSING, D3DDEVTYPE_SW, false);
             HRESULT statusSHAL = createDeviceWithFlags(&m_pp, D3DCREATE_SOFTWARE_VERTEXPROCESSING, D3DDEVTYPE_HAL, false);
-            //std::cout << format("  ~ statusSHAL: ", statusSHAL) << std::endl;;
-            HRESULT statusSREF = createDeviceWithFlags(&m_pp, D3DCREATE_SOFTWARE_VERTEXPROCESSING, D3DDEVTYPE_REF, false);
-            //std::cout << format("  ~ statusSREF: ", statusSREF) << std::endl;;
             HRESULT statusSSW = createDeviceWithFlags(&m_pp, D3DCREATE_SOFTWARE_VERTEXPROCESSING, D3DDEVTYPE_SW, false);
-            //std::cout << format("  ~ statusSSW: ", statusSSW) << std::endl;;
 
             m_totalTests++;
 
-            if (SUCCEEDED(statusHAL) && SUCCEEDED(statusREF) && FAILED(statusSW)
-             && SUCCEEDED(statusSHAL) && SUCCEEDED(statusSREF) && FAILED(statusSSW)) {
+            if (SUCCEEDED(statusHHAL) && statusHSW == D3DERR_INVALIDCALL
+             && SUCCEEDED(statusSHAL) && statusSSW == D3DERR_INVALIDCALL) {
                 m_passedTests++;
-                std::cout << "  + The device types with HWVP test has passed" << std::endl;
+                std::cout << "  + The device types test has passed" << std::endl;
             } else {
-                std::cout << "  - The device types with HWVP test has failed" << std::endl;
+                std::cout << "  - The device types test has failed" << std::endl;
             }
         }
 
@@ -893,16 +895,13 @@ class RGBTriangle {
         void testGetDeviceCapsWithDeviceTypes() {
             D3DCAPS8 caps8;
 
+            // D3DDEVTYPE_REF is available on Windows 8 and above
             HRESULT statusHAL = m_d3d->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &caps8);
-            //std::cout << format("  ~ statusHAL: ", statusHAL) << std::endl;
-            HRESULT statusREF = m_d3d->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_REF, &caps8);
-            //std::cout << format("  ~ statusREF: ", statusREF) << std::endl;;
             HRESULT statusSW = m_d3d->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_SW, &caps8);
-            //std::cout << format("  ~ statusSW: ", statusSW) << std::endl;;
 
             m_totalTests++;
 
-            if (SUCCEEDED(statusHAL) && SUCCEEDED(statusREF) && FAILED(statusSW)) {
+            if (SUCCEEDED(statusHAL) && statusSW == D3DERR_INVALIDCALL) {
                 m_passedTests++;
                 std::cout << "  + The GetDeviceCaps with device types test has passed" << std::endl;
             } else {
@@ -2082,6 +2081,7 @@ int main(int, char**) {
         rgbTriangle.listDeviceCapabilities();
         rgbTriangle.listDeviceD3D9Capabilities();
         rgbTriangle.listVCacheQueryResult();
+        rgbTriangle.listAvailableTextureMemory();
 
         // run D3D Device tests
         rgbTriangle.startTests();
@@ -2091,7 +2091,7 @@ int main(int, char**) {
         rgbTriangle.testBeginSceneReset();
         rgbTriangle.testPureDeviceSetSWVPRenderState();
         rgbTriangle.testPureDeviceOnlyWithHWVP();
-        rgbTriangle.testDeviceTypesWithHWVP();
+        rgbTriangle.testDeviceTypes();
         rgbTriangle.testGetDeviceCapsWithDeviceTypes();
         rgbTriangle.testDefaultPoolAllocationReset();
         rgbTriangle.testCreateVertexShaderHandleGeneration();
