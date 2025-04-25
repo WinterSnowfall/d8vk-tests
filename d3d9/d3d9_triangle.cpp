@@ -1284,6 +1284,23 @@ class RGBTriangle {
             }
         }
 
+        // DF formats CheckDeviceFormat tests
+        void testDFFormatsCheckDeviceFormat() {
+            resetOrRecreateDevice();
+
+            HRESULT statusDF16 = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, 0, D3DRTYPE_SURFACE, (D3DFORMAT) MAKEFOURCC('D', 'F', '1', '6'));
+            HRESULT statusDF24 = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, 0, D3DRTYPE_SURFACE, (D3DFORMAT) MAKEFOURCC('D', 'F', '2', '4'));
+
+            // DF formats will not be supported on Nvidia, but should work on AMD/Intel
+            if (FAILED(statusDF16) && FAILED(statusDF24)) {
+                std::cout << "  ~ The DF formats test was skipped" << std::endl;
+            } else {
+                m_totalTests++;
+                m_passedTests++;
+                std::cout << "  + The DF formats test has passed" << std::endl;
+            }
+        }
+
         // Various CheckDeviceMultiSampleType validation tests
         void testCheckDeviceMultiSampleTypeValidation() {
             resetOrRecreateDevice();
@@ -1655,6 +1672,7 @@ int main(int, char**) {
         rgbTriangle.testCreateVertexShaderInit();
         // outright crashes on certain native drivers/hardware
         //rgbTriangle.testRectBoxClearingOnLock();
+        rgbTriangle.testDFFormatsCheckDeviceFormat();
         rgbTriangle.testCheckDeviceMultiSampleTypeValidation();
         rgbTriangle.testCheckDeviceMultiSampleTypeFormats();
         rgbTriangle.testCreateVolumeTextureFormats();
