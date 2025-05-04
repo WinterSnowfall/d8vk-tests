@@ -207,14 +207,56 @@ class RGBTriangle {
             }
         }
 
+        // Multisample support check
+        void listMultisampleSupport(BOOL windowed) {
+            std::map<D3DMULTISAMPLE_TYPE, char const*> msTypes = { {D3DMULTISAMPLE_NONE,        "D3DMULTISAMPLE_NONE"},
+                                                                   {D3DMULTISAMPLE_NONMASKABLE, "D3DMULTISAMPLE_NONMASKABLE"},
+                                                                   {D3DMULTISAMPLE_2_SAMPLES,   "D3DMULTISAMPLE_2_SAMPLES"},
+                                                                   {D3DMULTISAMPLE_3_SAMPLES,   "D3DMULTISAMPLE_3_SAMPLES"},
+                                                                   {D3DMULTISAMPLE_4_SAMPLES,   "D3DMULTISAMPLE_4_SAMPLES"},
+                                                                   {D3DMULTISAMPLE_5_SAMPLES,   "D3DMULTISAMPLE_5_SAMPLES"},
+                                                                   {D3DMULTISAMPLE_6_SAMPLES,   "D3DMULTISAMPLE_6_SAMPLES"},
+                                                                   {D3DMULTISAMPLE_7_SAMPLES,   "D3DMULTISAMPLE_7_SAMPLES"},
+                                                                   {D3DMULTISAMPLE_8_SAMPLES,   "D3DMULTISAMPLE_8_SAMPLES"},
+                                                                   {D3DMULTISAMPLE_9_SAMPLES,   "D3DMULTISAMPLE_9_SAMPLES"},
+                                                                   {D3DMULTISAMPLE_10_SAMPLES,  "D3DMULTISAMPLE_10_SAMPLES"},
+                                                                   {D3DMULTISAMPLE_11_SAMPLES,  "D3DMULTISAMPLE_11_SAMPLES"},
+                                                                   {D3DMULTISAMPLE_12_SAMPLES,  "D3DMULTISAMPLE_12_SAMPLES"},
+                                                                   {D3DMULTISAMPLE_13_SAMPLES,  "D3DMULTISAMPLE_13_SAMPLES"},
+                                                                   {D3DMULTISAMPLE_14_SAMPLES,  "D3DMULTISAMPLE_14_SAMPLES"},
+                                                                   {D3DMULTISAMPLE_15_SAMPLES,  "D3DMULTISAMPLE_15_SAMPLES"},
+                                                                   {D3DMULTISAMPLE_16_SAMPLES,  "D3DMULTISAMPLE_16_SAMPLES"} };
+
+            std::map<D3DMULTISAMPLE_TYPE, char const*>::iterator msTypesIter;
+            DWORD qualityLevels;
+
+            std::cout << std::endl;
+            if (windowed)
+                std::cout << "Multisample type support (windowed):" << std::endl;
+            else
+                std::cout << "Multisample type support (full screen):" << std::endl;
+
+            for (msTypesIter = msTypes.begin(); msTypesIter != msTypes.end(); ++msTypesIter) {
+                qualityLevels = 0;
+
+                HRESULT status = m_d3d->CheckDeviceMultiSampleType(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, windowed, msTypesIter->first, &qualityLevels);
+
+                if (FAILED(status)) {
+                    std::cout << format("  - ", msTypesIter->second ," is not supported") << std::endl;
+                } else {
+                    std::cout << format("  + ", msTypesIter->second ," is supported") << std::endl;
+                    std::cout << format("     ~ Quality levels: ", qualityLevels) << std::endl;
+                }
+            }
+        }
+
         // Obscure FOURCC surface format check
         void listObscureFOURCCSurfaceFormats() {
             resetOrRecreateDevice();
 
             std::map<uint32_t, char const*> sfFormats = { {MAKEFOURCC('A', 'I', '4', '4'), "AI44"},
                                                           {MAKEFOURCC('I', 'A', '4', '4'), "IA44"},
-                                                          {MAKEFOURCC('R', '2', 'V', 'B'), "R2VB"},
-                                                          {MAKEFOURCC('C', 'O', 'P', 'M'), "COPM"},
+                                                          // Nvidia specific super-sampled ATOC
                                                           {MAKEFOURCC('S', 'S', 'A', 'A'), "SSAA"},
                                                           // following 2 formats are used by a lot of games
                                                           {MAKEFOURCC('A', 'L', '1', '6'), "AL16"},
@@ -271,6 +313,75 @@ class RGBTriangle {
                     std::cout << "     + The format is supported by CreateVolumeTexture" << std::endl;
                     volumeTexture = nullptr;
                 }
+            }
+        }
+
+        // Vendor format hacks support check
+        void listVendorFormatHacksSupport() {
+            D3DFORMAT fmtNULL = (D3DFORMAT) MAKEFOURCC('N', 'U', 'L', 'L');
+            D3DFORMAT fmtRESZ = (D3DFORMAT) MAKEFOURCC('R', 'E', 'S', 'Z');
+            D3DFORMAT fmtATOC = (D3DFORMAT) MAKEFOURCC('A', 'T', 'O', 'C');
+            D3DFORMAT fmtSSAA = (D3DFORMAT) MAKEFOURCC('S', 'S', 'A', 'A');
+            D3DFORMAT fmtNVDB = (D3DFORMAT) MAKEFOURCC('N', 'V', 'D', 'B');
+            D3DFORMAT fmtR2VB = (D3DFORMAT) MAKEFOURCC('R', '2', 'V', 'B');
+            D3DFORMAT fmtINST = (D3DFORMAT) MAKEFOURCC('I', 'N', 'S', 'T');
+
+            std::cout << std::endl << "Vendor hack format support:" << std::endl;
+
+            HRESULT statusNULL = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, D3DUSAGE_RENDERTARGET, D3DRTYPE_SURFACE, fmtNULL);
+
+            if (FAILED(statusNULL)) {
+                std::cout << "  - The NULL render target format is not supported" << std::endl;
+            } else {
+                std::cout << "  + The NULL render target format is supported" << std::endl;
+            }
+
+            HRESULT statusRESZ = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, D3DUSAGE_RENDERTARGET, D3DRTYPE_SURFACE, fmtRESZ);
+
+            if (FAILED(statusRESZ)) {
+                std::cout << "  - The RESZ render target format is not supported" << std::endl;
+            } else {
+                std::cout << "  + The RESZ render target format is supported" << std::endl;
+            }
+
+            HRESULT statusATOC = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, 0, D3DRTYPE_SURFACE, fmtATOC);
+
+            if (FAILED(statusATOC)) {
+                std::cout << "  - The ATOC format is not supported" << std::endl;
+            } else {
+                std::cout << "  + The ATOC format is supported" << std::endl;
+            }
+
+            HRESULT statusSSAA = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, 0, D3DRTYPE_SURFACE, fmtSSAA);
+
+            if (FAILED(statusSSAA)) {
+                std::cout << "  - The SSAA format is not supported" << std::endl;
+            } else {
+                std::cout << "  + The SSAA format is supported" << std::endl;
+            }
+
+            HRESULT statusNVDB = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, 0, D3DRTYPE_SURFACE, fmtNVDB);
+
+            if (FAILED(statusNVDB)) {
+                std::cout << "  - The NVDB format is not supported" << std::endl;
+            } else {
+                std::cout << "  + The NVDB format is supported" << std::endl;
+            }
+
+            HRESULT statusR2VB = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, 0, D3DRTYPE_SURFACE, fmtR2VB);
+
+            if (FAILED(statusR2VB)) {
+                std::cout << "  - The R2VB format is not supported" << std::endl;
+            } else {
+                std::cout << "  + The R2VB format is supported" << std::endl;
+            }
+
+            HRESULT statusINST = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, 0, D3DRTYPE_SURFACE, fmtINST);
+
+            if (FAILED(statusINST)) {
+                std::cout << "  - The INST format is not supported" << std::endl;
+            } else {
+                std::cout << "  + The INST format is supported" << std::endl;
             }
         }
 
@@ -1649,7 +1760,10 @@ int main(int, char**) {
         rgbTriangle.listAdapterDisplayModes();
         rgbTriangle.listBackBufferFormats(FALSE);
         rgbTriangle.listBackBufferFormats(TRUE);
+        rgbTriangle.listMultisampleSupport(FALSE);
+        rgbTriangle.listMultisampleSupport(TRUE);
         rgbTriangle.listObscureFOURCCSurfaceFormats();
+        rgbTriangle.listVendorFormatHacksSupport();
         rgbTriangle.listDeviceCapabilities();
         rgbTriangle.listVCacheQueryResult();
         rgbTriangle.listAvailableTextureMemory();
