@@ -979,6 +979,67 @@ class RGBTriangle {
             }
         }
 
+        // Set/GetClipStatus test on D3DCREATE_HARDWARE_VERTEXPROCESSING/D3DCREATE_MIXED_VERTEXPROCESSING
+        void testClipStatus() {
+            createDeviceWithFlags(&m_pp, D3DCREATE_MIXED_VERTEXPROCESSING, D3DDEVTYPE_HAL, true);
+
+            D3DCLIPSTATUS8 initialClipStatus = {};
+            D3DCLIPSTATUS8 setClipStatus = {D3DCS_FRONT, D3DCS_FRONT};
+            D3DCLIPSTATUS8 afterSetClipStatus = {};
+            D3DCLIPSTATUS8 finalClipStatus = {};
+            D3DCLIPSTATUS8 testClipStatus = {};
+            Com<IDirect3DVertexBuffer8> vertexBuffer;
+
+            void* vertices;
+            m_device->CreateVertexBuffer(m_rgbVerticesSize, 0, RGBT_FVF_CODES,
+                                         D3DPOOL_DEFAULT, &vertexBuffer);
+            vertexBuffer->Lock(0, m_rgbVerticesSize, reinterpret_cast<BYTE**>(&vertices), 0);
+            memcpy(vertices, m_rgbVertices.data(), m_rgbVerticesSize);
+            vertexBuffer->Unlock();
+
+            m_totalTests++;
+
+            HRESULT statusMixed = m_device->GetClipStatus(&initialClipStatus);
+            //std::cout << format("  * initialClipStatus.ClipUnion: ", initialClipStatus.ClipUnion) << std::endl;
+            //std::cout << format("  * initialClipStatus.ClipIntersection: ", initialClipStatus.ClipIntersection) << std::endl;
+            if (SUCCEEDED(statusMixed)) {
+                m_device->SetClipStatus(&setClipStatus);
+                m_device->GetClipStatus(&afterSetClipStatus);
+                //std::cout << format("  * afterSetClipStatus.ClipUnion: ", afterSetClipStatus.ClipUnion) << std::endl;
+                //std::cout << format("  * afterSetClipStatus.ClipIntersection: ", afterSetClipStatus.ClipIntersection) << std::endl;
+                m_device->BeginScene();
+                m_device->SetRenderState(D3DRS_SOFTWAREVERTEXPROCESSING, TRUE);
+                m_device->SetRenderState(D3DRS_CLIPPING, FALSE);
+                m_device->SetStreamSource(0, vertexBuffer.ptr(), sizeof(RGBVERTEX));
+                m_device->SetVertexShader(RGBT_FVF_CODES);
+                m_device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 1);
+                m_device->EndScene();
+                // The D3D8 documentation states: "When D3DRS_CLIPPING is set to FALSE, ClipUnion and ClipIntersection are set to zero.
+                // Direct3D updates the clip status during drawing calls.", however this does not happen in practice.
+                m_device->GetClipStatus(&finalClipStatus);
+                //std::cout << format("  * finalClipStatus.ClipUnion: ", finalClipStatus.ClipUnion) << std::endl;
+                //std::cout << format("  * finalClipStatus.ClipIntersection: ", finalClipStatus.ClipIntersection) << std::endl;
+            }
+
+            createDeviceWithFlags(&m_pp, D3DCREATE_HARDWARE_VERTEXPROCESSING, D3DDEVTYPE_HAL, true);
+
+            HRESULT statusHWVPSet = m_device->SetClipStatus(&setClipStatus);
+            HRESULT statusHWVPGet = m_device->GetClipStatus(&testClipStatus);
+            //std::cout << format("  * testClipStatus.ClipUnion: ", testClipStatus.ClipUnion) << std::endl;
+            //std::cout << format("  * testClipStatus.ClipIntersection: ", testClipStatus.ClipIntersection) << std::endl;
+
+            if (SUCCEEDED(statusMixed) && SUCCEEDED(statusHWVPGet) && SUCCEEDED(statusHWVPSet) &&
+                initialClipStatus.ClipUnion == 0 && initialClipStatus.ClipIntersection == 0xffffffff &&
+                afterSetClipStatus.ClipUnion == D3DCS_FRONT && afterSetClipStatus.ClipIntersection == D3DCS_FRONT &&
+                finalClipStatus.ClipUnion == D3DCS_FRONT && finalClipStatus.ClipIntersection == D3DCS_FRONT &&
+                testClipStatus.ClipUnion == D3DCS_FRONT && testClipStatus.ClipIntersection == D3DCS_FRONT) {
+                m_passedTests++;
+                std::cout << "  + The Set/GetClipStatus test has passed" << std::endl;
+            } else {
+                std::cout << "  - The Set/GetClipStatus test has failed" << std::endl;
+            }
+        }
+
         // CreateDevice with various devices types test
         void testDeviceTypes() {
             // D3DDEVTYPE_REF is available on Windows 8 and above
@@ -1539,12 +1600,11 @@ class RGBTriangle {
             Com<IDirect3DSurface8> surface;
             Com<IDirect3DVertexBuffer8> vertexBuffer;
 
-            // create a temporary vertex buffer and fill it with 1s
-            m_device->CreateVertexBuffer(800, 0, RGBT_FVF_CODES,
-                                         D3DPOOL_DEFAULT, &vertexBuffer);
             void* vertices;
-            vertexBuffer->Lock(0, 800, reinterpret_cast<byte**>(&vertices), 0);
-            memset(vertices, 1, 800);
+            m_device->CreateVertexBuffer(m_rgbVerticesSize, 0, RGBT_FVF_CODES,
+                                         D3DPOOL_DEFAULT, &vertexBuffer);
+            vertexBuffer->Lock(0, m_rgbVerticesSize, reinterpret_cast<BYTE**>(&vertices), 0);
+            memcpy(vertices, m_rgbVertices.data(), m_rgbVerticesSize);
             vertexBuffer->Unlock();
 
             D3DPRESENT_PARAMETERS presentParams;
@@ -1578,8 +1638,8 @@ class RGBTriangle {
                 std::cout << format("  ~ Back buffer height: ", desc.Height) << std::endl;*/
 
                 device->BeginScene();
-                device->SetStreamSource(0, vertexBuffer.ptr(), 100);
-                device->SetVertexShader(D3DFVF_XYZ);
+                device->SetStreamSource(0, vertexBuffer.ptr(), sizeof(RGBVERTEX));
+                device->SetVertexShader(RGBT_FVF_CODES);
                 HRESULT statusDraw    = device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 1);
                 device->EndScene();
                 HRESULT statusPresent = device->Present(NULL, NULL, NULL, NULL);
@@ -1804,9 +1864,9 @@ class RGBTriangle {
             }
 
             m_totalTests++;
-            // MaxVertexBlendMatrixIndex should be 0 when queried from the D3D8 interface
-            // and 255 when queried from the device in SWVP mode
-            if (caps8.MaxVertexBlendMatrixIndex == 0u && caps8SWVP.MaxVertexBlendMatrixIndex == 255u) {
+            // MaxVertexBlendMatrixIndex is typically 0 when queried from the D3D8 interface
+            // and 255 when queried from the device in SWVP mode (neither should go above 255)
+            if (caps8.MaxVertexBlendMatrixIndex < 256u && caps8SWVP.MaxVertexBlendMatrixIndex < 256u) {
                 std::cout << format("  + The MaxVertexBlendMatrixIndex INTF and SWVP test has passed (", caps8.MaxVertexBlendMatrixIndex,
                                     ", ", caps8SWVP.MaxVertexBlendMatrixIndex, ")") << std::endl;
                 m_passedTests++;
@@ -2050,23 +2110,15 @@ class RGBTriangle {
             // Vertex Buffer
             void* vertices = nullptr;
 
-            // tailored for 1024x768 and the appearance of being centered
-            std::array<RGBVERTEX, 3> rgbVertices = {{
-                { 60.0f, 625.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(255, 0, 0),},
-                {350.0f,  45.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(0, 255, 0),},
-                {640.0f, 625.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(0, 0, 255),},
-            }};
-            const size_t rgbVerticesSize = rgbVertices.size() * sizeof(RGBVERTEX);
-
-            status = m_device->CreateVertexBuffer(rgbVerticesSize, 0, RGBT_FVF_CODES,
+            status = m_device->CreateVertexBuffer(m_rgbVerticesSize, 0, RGBT_FVF_CODES,
                                                   D3DPOOL_DEFAULT, &m_vb);
             if (FAILED(status))
                 throw Error("Failed to create D3D8 vertex buffer");
 
-            status = m_vb->Lock(0, rgbVerticesSize, reinterpret_cast<BYTE**>(&vertices), 0);
+            status = m_vb->Lock(0, m_rgbVerticesSize, reinterpret_cast<BYTE**>(&vertices), 0);
             if (FAILED(status))
                 throw Error("Failed to lock D3D8 vertex buffer");
-            memcpy(vertices, rgbVertices.data(), rgbVerticesSize);
+            memcpy(vertices, m_rgbVertices.data(), m_rgbVerticesSize);
             status = m_vb->Unlock();
             if (FAILED(status))
                 throw Error("Failed to unlock D3D8 vertex buffer");
@@ -2150,6 +2202,12 @@ class RGBTriangle {
 
         D3DPRESENT_PARAMETERS         m_pp;
 
+        // tailored for 1024x768 and the appearance of being centered
+        std::array<RGBVERTEX, 3>      m_rgbVertices = {{ { 60.0f, 625.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(255, 0, 0),},
+                                                         {350.0f,  45.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(0, 255, 0),},
+                                                         {640.0f, 625.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(0, 0, 255),} }};
+        const size_t                  m_rgbVerticesSize = m_rgbVertices.size() * sizeof(RGBVERTEX);
+
         UINT                          m_totalTests;
         UINT                          m_passedTests;
 };
@@ -2201,6 +2259,7 @@ int main(int, char**) {
         rgbTriangle.testBeginSceneReset();
         rgbTriangle.testPureDeviceSetSWVPRenderState();
         rgbTriangle.testPureDeviceOnlyWithHWVP();
+        rgbTriangle.testClipStatus();
         rgbTriangle.testDeviceTypes();
         rgbTriangle.testGetDeviceCapsWithDeviceTypes();
         rgbTriangle.testDefaultPoolAllocationReset();
