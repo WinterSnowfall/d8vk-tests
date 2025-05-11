@@ -135,10 +135,10 @@ class RGBTriangle {
             ZeroMemory(&amDM, sizeof(amDM));
 
             // these are all the possible adapter display formats, at least in theory
-            std::map<D3DFORMAT, char const*> amDMFormats = { {D3DFMT_A1R5G5B5, "D3DFMT_A1R5G5B5"},
-                                                             {D3DFMT_A2R10G10B10, "D3DFMT_A2R10G10B10"},
+            std::map<D3DFORMAT, char const*> amDMFormats = { {D3DFMT_A2R10G10B10, "D3DFMT_A2R10G10B10"},
                                                              {D3DFMT_A8R8G8B8, "D3DFMT_A8R8G8B8"},
                                                              {D3DFMT_X8R8G8B8, "D3DFMT_X8R8G8B8"},
+                                                             {D3DFMT_A1R5G5B5, "D3DFMT_A1R5G5B5"},
                                                              {D3DFMT_X1R5G5B5, "D3DFMT_X1R5G5B5"},
                                                              {D3DFMT_R5G6B5, "D3DFMT_R5G6B5"} };
 
@@ -172,15 +172,18 @@ class RGBTriangle {
 
             memcpy(&bbPP, &m_pp, sizeof(m_pp));
 
-            // these are all the possible backbuffer formats, at least in theory
-            std::map<D3DFORMAT, char const*> bbFormats = { {D3DFMT_A8R8G8B8, "D3DFMT_A8R8G8B8"},
-                                                           {D3DFMT_X8R8G8B8, "D3DFMT_X8R8G8B8"},
-                                                           {D3DFMT_A1R5G5B5, "D3DFMT_A1R5G5B5"},
-                                                           {D3DFMT_X1R5G5B5, "D3DFMT_X1R5G5B5"},
-                                                           {D3DFMT_R5G6B5, "D3DFMT_R5G6B5"},
-                                                           {D3DFMT_A2R10G10B10, "D3DFMT_A2R10G10B10"} };
+            // these are all the possible adapter format / backbuffer format pairs, at least in theory
+            std::map<std::pair<D3DFORMAT, D3DFORMAT>, char const*> bbFormats = {
+                {{D3DFMT_A2R10G10B10, D3DFMT_A2R10G10B10}, "D3DFMT_A2R10G10B10"},
+                {{D3DFMT_X8R8G8B8, D3DFMT_X8R8G8B8}, "D3DFMT_X8R8G8B8"},
+                {{D3DFMT_X8R8G8B8, D3DFMT_A8R8G8B8}, "D3DFMT_A8R8G8B8"},
+                {{D3DFMT_X1R5G5B5, D3DFMT_X1R5G5B5}, "D3DFMT_X1R5G5B5"},
+                {{D3DFMT_X1R5G5B5, D3DFMT_A1R5G5B5}, "D3DFMT_A1R5G5B5"},
+                {{D3DFMT_R5G6B5, D3DFMT_R5G6B5}, "D3DFMT_R5G6B5"},
+                {{D3DFMT_R5G6B5, D3DFMT_UNKNOWN}, "D3DFMT_UNKNOWN"}
+            };
 
-            std::map<D3DFORMAT, char const*>::iterator bbFormatIter;
+            std::map<std::pair<D3DFORMAT, D3DFORMAT>, char const*>::iterator bbFormatIter;
 
             std::cout << std::endl;
             if (windowed)
@@ -190,12 +193,12 @@ class RGBTriangle {
 
             for (bbFormatIter = bbFormats.begin(); bbFormatIter != bbFormats.end(); ++bbFormatIter) {
                 status = m_d3d->CheckDeviceType(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
-                                                bbFormatIter->first, bbFormatIter->first,
+                                                bbFormatIter->first.first, bbFormatIter->first.second,
                                                 windowed);
                 if (FAILED(status)) {
                     std::cout << format("  - The ", bbFormatIter->second, " format is not supported") << std::endl;
                 } else {
-                    bbPP.BackBufferFormat = bbFormatIter->first;
+                    bbPP.BackBufferFormat = bbFormatIter->first.second;
 
                     status = createDeviceWithFlags(&bbPP, D3DCREATE_HARDWARE_VERTEXPROCESSING, D3DDEVTYPE_HAL, false);
                     if (FAILED(status)) {
@@ -325,6 +328,8 @@ class RGBTriangle {
             D3DFORMAT fmtNVDB = (D3DFORMAT) MAKEFOURCC('N', 'V', 'D', 'B');
             D3DFORMAT fmtR2VB = (D3DFORMAT) MAKEFOURCC('R', '2', 'V', 'B');
             D3DFORMAT fmtINST = (D3DFORMAT) MAKEFOURCC('I', 'N', 'S', 'T');
+            // Alleged (alterate) pixel center hack
+            D3DFORMAT fmtCENT = (D3DFORMAT) MAKEFOURCC('C', 'E', 'N', 'T');
 
             std::cout << std::endl << "Vendor hack format support:" << std::endl;
 
@@ -382,6 +387,14 @@ class RGBTriangle {
                 std::cout << "  - The INST format is not supported" << std::endl;
             } else {
                 std::cout << "  + The INST format is supported" << std::endl;
+            }
+
+            HRESULT statusCENT = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, 0, D3DRTYPE_SURFACE, fmtCENT);
+
+            if (FAILED(statusCENT)) {
+                std::cout << "  - The CENT format is not supported" << std::endl;
+            } else {
+                std::cout << "  + The CENT format is supported" << std::endl;
             }
         }
 
