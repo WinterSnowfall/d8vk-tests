@@ -174,8 +174,6 @@ class RGBTriangle {
 
         // D3D Device back buffer formats check
         void listBackBufferFormats(BOOL windowed) {
-            resetOrRecreateDevice();
-
             HRESULT status;
             D3DPRESENT_PARAMETERS bbPP;
 
@@ -261,17 +259,9 @@ class RGBTriangle {
         void listObscureFOURCCSurfaceFormats() {
             resetOrRecreateDevice();
 
-            std::map<uint32_t, char const*> sfFormats = { {MAKEFOURCC('A', 'I', '4', '4'), "AI44"},
-                                                          {MAKEFOURCC('I', 'A', '4', '4'), "IA44"},
-                                                          // Nvidia specific super-sampled ATOC
-                                                          {MAKEFOURCC('S', 'S', 'A', 'A'), "SSAA"},
-                                                          // following 2 formats are used by a lot of games
+            std::map<uint32_t, char const*> sfFormats = { // following 2 formats are used by a lot of games
                                                           {MAKEFOURCC('A', 'L', '1', '6'), "AL16"},
-                                                          {MAKEFOURCC(' ', 'R', '1', '6'), "R16"},
-                                                          // wierd variant of the regular L16 (used by Scrapland)
-                                                          {MAKEFOURCC(' ', 'L', '1', '6'), "L16"},
-                                                          // undocumented format (used by Scrapland)
-                                                          {MAKEFOURCC('A', 'R', '1', '6'), "AR16"} };
+                                                          {MAKEFOURCC(' ', 'R', '1', '6'), "R16"} };
 
             std::map<uint32_t, char const*>::iterator sfFormatIter;
 
@@ -334,7 +324,7 @@ class RGBTriangle {
             D3DFORMAT fmtNVDB = (D3DFORMAT) MAKEFOURCC('N', 'V', 'D', 'B');
             D3DFORMAT fmtR2VB = (D3DFORMAT) MAKEFOURCC('R', '2', 'V', 'B');
             D3DFORMAT fmtINST = (D3DFORMAT) MAKEFOURCC('I', 'N', 'S', 'T');
-            // Alleged (alterate) pixel center hack
+            // ATI/AMD and possibly Nvidia (alterate) pixel center hack
             D3DFORMAT fmtCENT = (D3DFORMAT) MAKEFOURCC('C', 'E', 'N', 'T');
 
             std::cout << std::endl << "Vendor hack format support:" << std::endl;

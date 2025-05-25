@@ -165,8 +165,6 @@ class RGBTriangle {
 
         // D3D Device back buffer formats check
         void listBackBufferFormats(BOOL windowed) {
-            resetOrRecreateDevice();
-
             HRESULT status;
             D3DPRESENT_PARAMETERS bbPP;
 
@@ -257,17 +255,9 @@ class RGBTriangle {
         void listObscureFOURCCSurfaceFormats() {
             resetOrRecreateDevice();
 
-            std::map<uint32_t, char const*> sfFormats = { {MAKEFOURCC('A', 'I', '4', '4'), "AI44"},
-                                                          {MAKEFOURCC('I', 'A', '4', '4'), "IA44"},
-                                                          // Nvidia specific super-sampled ATOC
-                                                          {MAKEFOURCC('S', 'S', 'A', 'A'), "SSAA"},
-                                                          // following 2 formats are used by a lot of games
+            std::map<uint32_t, char const*> sfFormats = { // following 2 formats are used by a lot of games
                                                           {MAKEFOURCC('A', 'L', '1', '6'), "AL16"},
-                                                          {MAKEFOURCC(' ', 'R', '1', '6'), "R16"},
-                                                          // wierd variant of the regular L16 (used by Scrapland)
-                                                          {MAKEFOURCC(' ', 'L', '1', '6'), "L16"},
-                                                          // undocumented format (used by Scrapland)
-                                                          {MAKEFOURCC('A', 'R', '1', '6'), "AR16"} };
+                                                          {MAKEFOURCC(' ', 'R', '1', '6'), "R16"} };
 
             std::map<uint32_t, char const*>::iterator sfFormatIter;
 
@@ -328,7 +318,7 @@ class RGBTriangle {
             D3DFORMAT fmtNVDB = (D3DFORMAT) MAKEFOURCC('N', 'V', 'D', 'B');
             D3DFORMAT fmtR2VB = (D3DFORMAT) MAKEFOURCC('R', '2', 'V', 'B');
             D3DFORMAT fmtINST = (D3DFORMAT) MAKEFOURCC('I', 'N', 'S', 'T');
-            // Alleged (alterate) pixel center hack
+            // ATI/AMD and possibly Nvidia (alterate) pixel center hack
             D3DFORMAT fmtCENT = (D3DFORMAT) MAKEFOURCC('C', 'E', 'N', 'T');
 
             std::cout << std::endl << "Vendor hack format support:" << std::endl;
@@ -1678,6 +1668,52 @@ class RGBTriangle {
             }
         }
 
+        // Depth Stencil format tests
+        void testDepthStencilFormats() {
+            resetOrRecreateDevice();
+
+            HRESULT status;
+            D3DPRESENT_PARAMETERS dsPP;
+
+            memcpy(&dsPP, &m_pp, sizeof(m_pp));
+            dsPP.EnableAutoDepthStencil = TRUE;
+
+            std::map<D3DFORMAT, char const*> dsFormats = { {D3DFMT_D16_LOCKABLE, "D3DFMT_D16_LOCKABLE"},
+                                                           {D3DFMT_D32, "D3DFMT_D32"},
+                                                           {D3DFMT_D15S1, "D3DFMT_D15S1"},
+                                                           {D3DFMT_D24S8, "D3DFMT_D24S8"},
+                                                           {D3DFMT_D16, "D3DFMT_D16"},
+                                                           {D3DFMT_D24X8, "D3DFMT_D24X8"},
+                                                           {D3DFMT_D24X4S4, "D3DFMT_D24X4S4"},
+                                                           {D3DFMT_D32F_LOCKABLE, "D3DFMT_D32F_LOCKABLE"},
+                                                           {D3DFMT_D24FS8, "D3DFMT_D24FS8"} };
+
+            std::map<D3DFORMAT, char const*>::iterator dsFormatIter;
+
+            std::cout << std::endl << "Running depth stencil format tests:" << std::endl;
+
+            for (dsFormatIter = dsFormats.begin(); dsFormatIter != dsFormats.end(); ++dsFormatIter) {
+                dsPP.AutoDepthStencilFormat = dsFormatIter->first;
+
+                status = m_d3d->CheckDepthStencilMatch(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
+                                                       dsPP.BackBufferFormat, dsPP.BackBufferFormat,
+                                                       dsPP.AutoDepthStencilFormat);
+                if (FAILED(status)) {
+                    std::cout << format("  ~ The ", dsFormatIter->second, " format is not supported") << std::endl;
+                } else {
+                    m_totalTests++;
+
+                    status = createDeviceWithFlags(&dsPP, D3DCREATE_HARDWARE_VERTEXPROCESSING, D3DDEVTYPE_HAL, false);
+                    if (FAILED(status)) {
+                        std::cout << format("  - The ", dsFormatIter->second, " format test has failed") << std::endl;
+                    } else {
+                        m_passedTests++;
+                        std::cout << format("  + The ", dsFormatIter->second, " format test has passed") << std::endl;
+                    }
+                }
+            }
+        }
+
         void printTestResults() {
             std::cout << std::endl << format("Passed ", m_passedTests, "/", m_totalTests, " tests") << std::endl;
         }
@@ -1865,6 +1901,7 @@ int main(int, char**) {
         rgbTriangle.testCheckDeviceMultiSampleTypeFormats();
         rgbTriangle.testCreateVolumeTextureFormats();
         rgbTriangle.testSurfaceFormats();
+        rgbTriangle.testDepthStencilFormats();
         rgbTriangle.printTestResults();
 
         // D3D9 triangle
