@@ -922,8 +922,8 @@ class RGBTriangle {
                     std::cout << "  - The BeginScene & Reset test has failed on Reset()" << std::endl;
                 }
                 else {
-                    // Reset() should have cleared the state so this should work properly
-                    if (SUCCEEDED(m_device->BeginScene())) {
+                    // Reset() will have cleared the state
+                    if (FAILED(m_device->EndScene()) && SUCCEEDED(m_device->BeginScene())) {
                         m_passedTests++;
                         std::cout << "  + The BeginScene & Reset test has passed" << std::endl;
                     } else {
@@ -934,7 +934,7 @@ class RGBTriangle {
                 throw Error("Failed to begin D3D9 scene");
             }
 
-            // this call is expected fail in certain scenarios, but it makes no difference
+            // optimistic, expected to fail if the test fails
             m_device->EndScene();
         }
 
