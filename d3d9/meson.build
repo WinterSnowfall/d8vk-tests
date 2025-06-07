@@ -6,4 +6,5 @@ args = {
 }
 
 executable('d3d9-triangle', files('d3d9_triangle.cpp'), kwargs: args)
+executable('d3d9ex-triangle', files('d3d9ex_triangle.cpp'), kwargs: args)
 

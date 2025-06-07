@@ -5,7 +5,7 @@ args = {
   'install': true
 }
 
-executable('d3d9ex-triangle', files('d3d9ex_triangle.cpp'), kwargs: args)
+#executable('d3d9ex-triangle', files('d3d9ex_triangle.cpp'), kwargs: args)
 executable('d3d9ex-present', files('d3d9ex_present.cpp'), kwargs: args)
 executable('d3d9ex-nv12', files('d3d9ex_nv12.cpp'), kwargs: args)
 executable('d3d9ex-module-refs', files('d3d9ex_module_refs.cpp'), kwargs: args)
