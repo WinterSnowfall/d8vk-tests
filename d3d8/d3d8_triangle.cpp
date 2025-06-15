@@ -216,6 +216,223 @@ class RGBTriangle {
             }
         }
 
+        // D3D Device surface/texture formats check
+        void listSurfaceFormats(DWORD Usage) {
+            resetOrRecreateDevice();
+
+            // D3DFMT_UNKNOWN will fail everywhere, so start with the next format
+            std::map<D3DFORMAT, char const*> formats = { {D3DFMT_R8G8B8,        "D3DFMT_R8G8B8"},
+                                                         {D3DFMT_A8R8G8B8,      "D3DFMT_A8R8G8B8"},
+                                                         {D3DFMT_X8R8G8B8,      "D3DFMT_X8R8G8B8"},
+                                                         {D3DFMT_R5G6B5,        "D3DFMT_R5G6B5"},
+                                                         {D3DFMT_X1R5G5B5,      "D3DFMT_X1R5G5B5"},
+                                                         {D3DFMT_A1R5G5B5,      "D3DFMT_A1R5G5B5"},
+                                                         {D3DFMT_A4R4G4B4,      "D3DFMT_A4R4G4B4"},
+                                                         {D3DFMT_R3G3B2,        "D3DFMT_R3G3B2"},
+                                                         {D3DFMT_A8,            "D3DFMT_A8"},
+                                                         {D3DFMT_A8R3G3B2,      "D3DFMT_A8R3G3B2"},
+                                                         {D3DFMT_X4R4G4B4,      "D3DFMT_X4R4G4B4"},
+                                                         {D3DFMT_A2B10G10R10,   "D3DFMT_A2B10G10R10"},
+                                                         // D3DFMT_A8B8G8R8 and D3DFMT_X8B8G8R8 are not supported by D3D8
+                                                         {(D3DFORMAT) 32,       "D3DFMT_A8B8G8R8"},
+                                                         {(D3DFORMAT) 33,       "D3DFMT_X8B8G8R8"},
+                                                         {D3DFMT_G16R16,        "D3DFMT_G16R16"},
+                                                         // D3DFMT_A2R10G10B10 and D3DFMT_A16B16G16R16 are not supported by D3D8
+                                                         {(D3DFORMAT) 35,       "D3DFMT_A2R10G10B10"},
+                                                         {(D3DFORMAT) 36,       "D3DFMT_A16B16G16R16"},
+                                                         {D3DFMT_A8P8,          "D3DFMT_A8P8"},
+                                                         {D3DFMT_P8,            "D3DFMT_P8"},
+                                                         {D3DFMT_L8,            "D3DFMT_L8"},
+                                                         {D3DFMT_A8L8,          "D3DFMT_A8L8"},
+                                                         {D3DFMT_A4L4,          "D3DFMT_A4L4"},
+                                                         {D3DFMT_V8U8,          "D3DFMT_V8U8"},
+                                                         {D3DFMT_L6V5U5,        "D3DFMT_L6V5U5"},
+                                                         {D3DFMT_X8L8V8U8,      "D3DFMT_X8L8V8U8"},
+                                                         {D3DFMT_Q8W8V8U8,      "D3DFMT_Q8W8V8U8"},
+                                                         {D3DFMT_V16U16,        "D3DFMT_V16U16"},
+                                                         {D3DFMT_W11V11U10,     "D3DFMT_W11V11U10"},
+                                                         {D3DFMT_A2W10V10U10,   "D3DFMT_A2W10V10U10"},
+                                                         {D3DFMT_UYVY,          "D3DFMT_UYVY"},
+                                                         {D3DFMT_YUY2,          "D3DFMT_YUY2"},
+                                                         {D3DFMT_DXT1,          "D3DFMT_DXT1"},
+                                                         {D3DFMT_DXT2,          "D3DFMT_DXT2"},
+                                                         {D3DFMT_DXT3,          "D3DFMT_DXT3"},
+                                                         {D3DFMT_DXT4,          "D3DFMT_DXT4"},
+                                                         {D3DFMT_DXT5,          "D3DFMT_DXT5"},
+                                                         // D3DFMT_MULTI2_ARGB8, D3DFMT_G8R8_G8B8 and D3DFMT_R8G8_B8G8
+                                                         // are not supported by d3d8
+                                                         {(D3DFORMAT) MAKEFOURCC('M', 'E', 'T', '1'), "D3DFMT_MULTI2_ARGB8"},
+                                                         {(D3DFORMAT) MAKEFOURCC('G', 'R', 'G', 'B'), "D3DFMT_G8R8_G8B8"},
+                                                         {(D3DFORMAT) MAKEFOURCC('R', 'G', 'B', 'G'), "D3DFMT_R8G8_B8G8"},
+                                                         {D3DFMT_D16_LOCKABLE,  "D3DFMT_D16_LOCKABLE"},
+                                                         {D3DFMT_D32,           "D3DFMT_D32"},
+                                                         {D3DFMT_D15S1,         "D3DFMT_D15S1"},
+                                                         {D3DFMT_D24S8,         "D3DFMT_D24S8"},
+                                                         {D3DFMT_D24X8,         "D3DFMT_D24X8"},
+                                                         {D3DFMT_D24X4S4,       "D3DFMT_D24X4S4"},
+                                                         {D3DFMT_D16,           "D3DFMT_D16"},
+                                                         // None of the below numbered formats are supported by D3D8
+                                                         {(D3DFORMAT) 81,       "D3DFMT_L16"},
+                                                         {(D3DFORMAT) 82,       "D3DFMT_D32F_LOCKABLE"},
+                                                         {(D3DFORMAT) 83,       "D3DFMT_D24FS8"},
+                                                         {(D3DFORMAT) 84,       "D3DFMT_D32_LOCKABLE"},
+                                                         {(D3DFORMAT) 85,       "D3DFMT_S8_LOCKABLE"},
+                                                         {(D3DFORMAT) 110,      "D3DFMT_Q16W16V16U16"},
+                                                         {(D3DFORMAT) 111,      "D3DFMT_R16F"},
+                                                         {(D3DFORMAT) 112,      "D3DFMT_G16R16F"},
+                                                         {(D3DFORMAT) 113,      "D3DFMT_A16B16G16R16F"},
+                                                         {(D3DFORMAT) 114,      "D3DFMT_R32F"},
+                                                         {(D3DFORMAT) 115,      "D3DFMT_G32R32F"},
+                                                         {(D3DFORMAT) 116,      "D3DFMT_A32B32G32R32F"},
+                                                         {(D3DFORMAT) 117,      "D3DFMT_CxV8U8"},
+                                                         {(D3DFORMAT) 118,      "D3DFMT_A1"},
+                                                         {(D3DFORMAT) 119,      "D3DFMT_A2B10G10R10_XR_BIAS"},
+                                                         // Consacrated (enum) formats end here
+                                                         {(D3DFORMAT) MAKEFOURCC('A', 'T', 'I', '1'), "D3DFMT_ATI1"},
+                                                         {(D3DFORMAT) MAKEFOURCC('A', 'T', 'I', '2'), "D3DFMT_ATI2"},
+                                                         {(D3DFORMAT) MAKEFOURCC('Y', 'U', 'Y', '2'), "D3DFMT_YUY2"},
+                                                         {(D3DFORMAT) MAKEFOURCC('D', 'F', '1', '6'), "D3DFMT_DF16"},
+                                                         {(D3DFORMAT) MAKEFOURCC('D', 'F', '2', '4'), "D3DFMT_DF24"},
+                                                         {(D3DFORMAT) MAKEFOURCC('I', 'N', 'T', 'Z'), "D3DFMT_INTZ"},
+                                                         {(D3DFORMAT) MAKEFOURCC('N', 'U', 'L', 'L'), "D3DFMT_NULL"} };
+
+            std::map<D3DFORMAT, char const*>::iterator formatIter;
+
+            Com<IDirect3DSurface8> surface;
+            Com<IDirect3DTexture8> texture;
+            Com<IDirect3DCubeTexture8> cubeTexture;
+            Com<IDirect3DVolumeTexture8> volumeTexture;
+
+            uint32_t supportedFormats = 0;
+
+            if (!Usage)
+                std::cout << std::endl << "Running texture format tests:" << std::endl;
+            else if (Usage == D3DUSAGE_RENDERTARGET)
+                std::cout << std::endl << "Running render target format tests:" << std::endl;
+            else if (Usage == D3DUSAGE_DEPTHSTENCIL)
+                std::cout << std::endl << "Running depth stencil format tests:" << std::endl;
+
+            for (formatIter = formats.begin(); formatIter != formats.end(); ++formatIter) {
+                D3DFORMAT surfaceFormat = formatIter->first;
+
+                HRESULT statusSurface       = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, Usage, D3DRTYPE_SURFACE, surfaceFormat);
+                HRESULT statusTexture       = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, Usage, D3DRTYPE_TEXTURE, surfaceFormat);
+                HRESULT statusCubeTexture   = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, Usage, D3DRTYPE_CUBETEXTURE, surfaceFormat);
+                HRESULT statusVolumeTexture = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, Usage, D3DRTYPE_VOLUMETEXTURE, surfaceFormat);
+
+                char surfaceSupport = '-';
+                char textureSupport = '-';
+                char cubeTextureSupport = '-';
+                char volumeTextureSupport = '-';
+
+                if (SUCCEEDED(statusSurface))
+                    surfaceSupport = '+';
+                if (SUCCEEDED(statusTexture))
+                    textureSupport = '+';
+                if (SUCCEEDED(statusCubeTexture))
+                    cubeTextureSupport = '+';
+                if (SUCCEEDED(statusVolumeTexture))
+                    volumeTextureSupport = '+';
+
+                bool     hasFailures = false;
+                uint32_t testedTypes = 1;
+                uint32_t supportedTypes = 0;
+                char     surfaceCreate = '~';
+                char     textureCreate = '~';
+                char     cubeTextureCreate = '~';
+                char     volumeTextureCreate = '~';
+
+                if (!Usage) {
+                    // D3DFMT_R8G8B8 is used in Hidden & Dangerous Deluxe;
+                    // D3DFMT_P8 (8-bit palleted textures) are required by some early d3d8 games
+                    statusSurface = m_device->CreateImageSurface(256, 256, surfaceFormat, &surface);
+                } else if (Usage == D3DUSAGE_RENDERTARGET) {
+                    statusSurface = m_device->CreateRenderTarget(256, 256, surfaceFormat, D3DMULTISAMPLE_NONE, FALSE, &surface);
+                } else if (Usage == D3DUSAGE_DEPTHSTENCIL) {
+                    statusSurface = m_device->CreateDepthStencilSurface(256, 256, surfaceFormat, D3DMULTISAMPLE_NONE, &surface);
+                }
+
+                if (FAILED(statusSurface)) {
+                    surfaceCreate = '-';
+                } else {
+                    supportedTypes++;
+                    surfaceCreate = '+';
+                    surface = nullptr;
+                }
+
+                if (SUCCEEDED(statusTexture)) {
+                    testedTypes++;
+                    // D3DFMT_L6V5U5 is used in Star Wars: Republic Commando for bump mapping;
+                    // LotR: Fellowship of the Ring atempts to create a D3DFMT_P8 texture directly
+                    statusTexture = m_device->CreateTexture(256, 256, 1, Usage, surfaceFormat, D3DPOOL_DEFAULT, &texture);
+
+                    if (FAILED(statusTexture)) {
+                        hasFailures = true;
+                        textureCreate = '-';
+                    } else {
+                        supportedTypes++;
+                        textureCreate = '+';
+                        texture = nullptr;
+                    }
+                }
+
+                if (SUCCEEDED(statusCubeTexture)) {
+                    testedTypes++;
+
+                    statusCubeTexture = m_device->CreateCubeTexture(256, 1, Usage, surfaceFormat, D3DPOOL_DEFAULT, &cubeTexture);
+
+                    if (FAILED(statusCubeTexture)) {
+                        hasFailures = true;
+                        cubeTextureCreate = '-';
+                    } else {
+                        supportedTypes++;
+                        cubeTextureCreate = '+';
+                        cubeTexture = nullptr;
+                    }
+                }
+
+                if (SUCCEEDED(statusVolumeTexture)) {
+                    testedTypes++;
+
+                    statusVolumeTexture = m_device->CreateVolumeTexture(256, 256, 256, 1, Usage, surfaceFormat, D3DPOOL_DEFAULT, &volumeTexture);
+
+                    if (FAILED(statusVolumeTexture)) {
+                        hasFailures = true;
+                        volumeTextureCreate = '-';
+                    } else {
+                        supportedTypes++;
+                        volumeTextureCreate = '+';
+                        volumeTexture = nullptr;
+                    }
+                }
+
+                if (hasFailures) {
+                    std::cout << format("  ! The ", formatIter->second, " format is improperly supported") << std::endl;
+                } else if (testedTypes > 2 && testedTypes - 1 <= supportedTypes) {
+                    supportedFormats++;
+                    std::cout << format("  + The ", formatIter->second, " format is fully supported") << std::endl;
+                } else if (supportedTypes) {
+                    supportedFormats++;
+                    std::cout << format("  ~ The ", formatIter->second, " format is partially supported") << std::endl;
+                } else {
+                    std::cout << format("  - The ", formatIter->second, " format is not supported") << std::endl;
+                }
+
+                if (!Usage)
+                    std::cout << format("      Surface: ", surfaceSupport, "/", surfaceCreate);
+                else if (Usage == D3DUSAGE_RENDERTARGET)
+                    std::cout << format("      RT: ", surfaceSupport, "/", surfaceCreate);
+                else if (Usage == D3DUSAGE_DEPTHSTENCIL)
+                    std::cout << format("      DS: ", surfaceSupport, "/", surfaceCreate);
+
+                std::cout << format("  Texture: ", textureSupport, "/", textureCreate,
+                                    "  CubeTexture: ", cubeTextureSupport, "/", cubeTextureCreate,
+                                    "  VolumeTexture: ", volumeTextureSupport, "/", volumeTextureCreate) << std::endl;
+            }
+
+            std::cout << format("A total of ", supportedFormats, " formats are supported") << std::endl;
+        }
+
         // Multisample support check
         void listMultisampleSupport(BOOL windowed) {
             std::map<D3DMULTISAMPLE_TYPE, char const*> msTypes = { {D3DMULTISAMPLE_NONE,       "D3DMULTISAMPLE_NONE"},
@@ -1754,39 +1971,6 @@ class RGBTriangle {
             }
         }
 
-        // CheckDeviceMultiSampleType formats test
-        void testCheckDeviceMultiSampleTypeFormats() {
-            resetOrRecreateDevice();
-
-            std::map<D3DFORMAT, char const*> sfFormats = { {D3DFMT_D16_LOCKABLE, "D3DFMT_D16_LOCKABLE"},
-                                                           {D3DFMT_DXT1, "D3DFMT_DXT1"},
-                                                           {D3DFMT_DXT2, "D3DFMT_DXT2"},
-                                                           {D3DFMT_DXT3, "D3DFMT_DXT3"},
-                                                           {D3DFMT_DXT4, "D3DFMT_DXT4"},
-                                                           {D3DFMT_DXT5, "D3DFMT_DXT5"} };
-
-            std::map<D3DFORMAT, char const*>::iterator sfFormatIter;
-
-            std::cout << std::endl << "Running CheckDeviceMultiSampleType formats tests:" << std::endl;
-
-            for (sfFormatIter = sfFormats.begin(); sfFormatIter != sfFormats.end(); ++sfFormatIter) {
-                D3DFORMAT surfaceFormat = sfFormatIter->first;
-
-                m_totalTests++;
-
-                // None of the above textures are supported with anything beside D3DMULTISAMPLE_NONE
-                HRESULT status = m_d3d->CheckDeviceMultiSampleType(0, D3DDEVTYPE_HAL, surfaceFormat,
-                                                                   FALSE, D3DMULTISAMPLE_2_SAMPLES);
-
-                if (SUCCEEDED(status)) {
-                    std::cout << format("  - The ", sfFormatIter->second , " format test has failed") << std::endl;
-                } else {
-                    m_passedTests++;
-                    std::cout << format("  + The ", sfFormatIter->second ," format test has passed") << std::endl;
-                }
-            }
-        }
-
         // D3D Device capabilities tests
         void testDeviceCapabilities() {
             createDeviceWithFlags(&m_pp, D3DCREATE_SOFTWARE_VERTEXPROCESSING, D3DDEVTYPE_HAL, true);
@@ -1852,209 +2036,35 @@ class RGBTriangle {
             }
         }
 
-        // Format tests for all known D3D8 formats
-        void testFormats(DWORD Usage) {
+        // CheckDeviceMultiSampleType formats test
+        void testCheckDeviceMultiSampleTypeFormats() {
             resetOrRecreateDevice();
 
-            // D3DFMT_UNKNOWN will fail everywhere, so start with the next format
-            std::map<D3DFORMAT, char const*> formats = { {D3DFMT_R8G8B8,       "D3DFMT_R8G8B8"},
-                                                         {D3DFMT_A8R8G8B8,     "D3DFMT_A8R8G8B8"},
-                                                         {D3DFMT_X8R8G8B8,     "D3DFMT_X8R8G8B8"},
-                                                         {D3DFMT_R5G6B5,       "D3DFMT_R5G6B5"},
-                                                         {D3DFMT_X1R5G5B5,     "D3DFMT_X1R5G5B5"},
-                                                         {D3DFMT_A1R5G5B5,     "D3DFMT_A1R5G5B5"},
-                                                         {D3DFMT_A4R4G4B4,     "D3DFMT_A4R4G4B4"},
-                                                         {D3DFMT_R3G3B2,       "D3DFMT_R3G3B2"},
-                                                         {D3DFMT_A8,           "D3DFMT_A8"},
-                                                         {D3DFMT_A8R3G3B2,     "D3DFMT_A8R3G3B2"},
-                                                         {D3DFMT_X4R4G4B4,     "D3DFMT_X4R4G4B4"},
-                                                         {D3DFMT_A2B10G10R10,  "D3DFMT_A2B10G10R10"},
-                                                         {D3DFMT_G16R16,       "D3DFMT_G16R16"},
-                                                         {D3DFMT_A8P8,         "D3DFMT_A8P8"},
-                                                         {D3DFMT_P8,           "D3DFMT_P8"},
-                                                         {D3DFMT_L8,           "D3DFMT_L8"},
-                                                         {D3DFMT_A8L8,         "D3DFMT_A8L8"},
-                                                         {D3DFMT_A4L4,         "D3DFMT_A4L4"},
-                                                         {D3DFMT_V8U8,         "D3DFMT_V8U8"},
-                                                         {D3DFMT_L6V5U5,       "D3DFMT_L6V5U5"},
-                                                         {D3DFMT_X8L8V8U8,     "D3DFMT_X8L8V8U8"},
-                                                         {D3DFMT_Q8W8V8U8,     "D3DFMT_Q8W8V8U8"},
-                                                         {D3DFMT_V16U16,       "D3DFMT_V16U16"},
-                                                         {D3DFMT_W11V11U10,    "D3DFMT_W11V11U10"},
-                                                         {D3DFMT_A2W10V10U10,  "D3DFMT_A2W10V10U10"},
-                                                         {D3DFMT_UYVY,         "D3DFMT_UYVY"},
-                                                         {D3DFMT_YUY2,         "D3DFMT_YUY2"},
-                                                         {D3DFMT_DXT1,         "D3DFMT_DXT1"},
-                                                         {D3DFMT_DXT2,         "D3DFMT_DXT2"},
-                                                         {D3DFMT_DXT3,         "D3DFMT_DXT3"},
-                                                         {D3DFMT_DXT4,         "D3DFMT_DXT4"},
-                                                         {D3DFMT_DXT5,         "D3DFMT_DXT5"},
-                                                         {D3DFMT_D16_LOCKABLE, "D3DFMT_D16_LOCKABLE"},
-                                                         {D3DFMT_D32,          "D3DFMT_D32"},
-                                                         {D3DFMT_D15S1,        "D3DFMT_D15S1"},
-                                                         {D3DFMT_D24S8,        "D3DFMT_D24S8"},
-                                                         {D3DFMT_D16,          "D3DFMT_D16"},
-                                                         {D3DFMT_D24X8,        "D3DFMT_D24X8"},
-                                                         {D3DFMT_D24X4S4,      "D3DFMT_D24X4S4"},
-                                                         // Consacrated (enum) formats end here
-                                                         {(D3DFORMAT) MAKEFOURCC('A', 'T', 'I', '1'), "D3DFMT_ATI1"},
-                                                         {(D3DFORMAT) MAKEFOURCC('A', 'T', 'I', '2'), "D3DFMT_ATI2"},
-                                                         {(D3DFORMAT) MAKEFOURCC('Y', 'U', 'Y', '2'), "D3DFMT_YUY2"} };
+            std::map<D3DFORMAT, char const*> sfFormats = { {D3DFMT_D16_LOCKABLE, "D3DFMT_D16_LOCKABLE"},
+                                                           {D3DFMT_DXT1, "D3DFMT_DXT1"},
+                                                           {D3DFMT_DXT2, "D3DFMT_DXT2"},
+                                                           {D3DFMT_DXT3, "D3DFMT_DXT3"},
+                                                           {D3DFMT_DXT4, "D3DFMT_DXT4"},
+                                                           {D3DFMT_DXT5, "D3DFMT_DXT5"} };
 
-            std::map<D3DFORMAT, char const*>::iterator formatIter;
+            std::map<D3DFORMAT, char const*>::iterator sfFormatIter;
 
-            Com<IDirect3DSurface8> surface;
-            Com<IDirect3DTexture8> texture;
-            Com<IDirect3DCubeTexture8> cubeTexture;
-            Com<IDirect3DVolumeTexture8> volumeTexture;
+            std::cout << std::endl << "Running CheckDeviceMultiSampleType formats tests:" << std::endl;
 
-            if (Usage == 0)
-                std::cout << std::endl << "Running texture format tests:" << std::endl;
-            else if (Usage == D3DUSAGE_RENDERTARGET)
-                std::cout << std::endl << "Running render target format tests:" << std::endl;
+            for (sfFormatIter = sfFormats.begin(); sfFormatIter != sfFormats.end(); ++sfFormatIter) {
+                D3DFORMAT surfaceFormat = sfFormatIter->first;
 
-            for (formatIter = formats.begin(); formatIter != formats.end(); ++formatIter) {
-                D3DFORMAT surfaceFormat = formatIter->first;
+                m_totalTests++;
 
-                HRESULT statusSurface       = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, Usage, D3DRTYPE_SURFACE, formatIter->first);
-                HRESULT statusTexture       = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, Usage, D3DRTYPE_TEXTURE, formatIter->first);
-                HRESULT statusCubeTexture   = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, Usage, D3DRTYPE_CUBETEXTURE, formatIter->first);
-                HRESULT statusVolumeTexture = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, Usage, D3DRTYPE_VOLUMETEXTURE, formatIter->first);
+                // None of the above textures are supported with anything beside D3DMULTISAMPLE_NONE
+                HRESULT status = m_d3d->CheckDeviceMultiSampleType(0, D3DDEVTYPE_HAL, surfaceFormat,
+                                                                   FALSE, D3DMULTISAMPLE_2_SAMPLES);
 
-                char surfaceSupport = '-';
-                char textureSupport = '-';
-                char cubeTextureSupport = '-';
-                char volumeTextureSupport = '-';
-
-                if (SUCCEEDED(statusSurface))
-                    surfaceSupport = '+';
-                if (SUCCEEDED(statusTexture))
-                    textureSupport = '+';
-                if (SUCCEEDED(statusCubeTexture))
-                    cubeTextureSupport = '+';
-                if (SUCCEEDED(statusVolumeTexture))
-                    volumeTextureSupport = '+';
-
-                bool formatOverallPass = true;
-                char surfaceCreate = '~';
-                char textureCreate = '~';
-                char cubeTextureCreate = '~';
-                char volumeTextureCreate = '~';
-
-                // D3DFMT_R8G8B8 is used in Hidden & Dangerous Deluxe;
-                // D3DFMT_P8 (8-bit palleted textures) are required by some early d3d8 games
-                statusSurface = m_device->CreateImageSurface(256, 256, surfaceFormat, &surface);
-
-                // Note: CreateImageSurface calls should never fail, even with unsupported surface formats
-                if (FAILED(statusSurface)) {
-                    m_totalTests++;
-                    surfaceCreate = '-';
-                    formatOverallPass = false;
+                if (SUCCEEDED(status)) {
+                    std::cout << format("  - The ", sfFormatIter->second , " format test has failed") << std::endl;
                 } else {
-                    m_totalTests++;
                     m_passedTests++;
-                    surfaceCreate = '+';
-                    surface = nullptr;
-                }
-
-                if (SUCCEEDED(statusTexture)) {
-                    // D3DFMT_L6V5U5 is used in Star Wars: Republic Commando for bump mapping;
-                    // LotR: Fellowship of the Ring atempts to create a D3DFMT_P8 texture directly
-                    statusTexture = m_device->CreateTexture(256, 256, 1, 0, surfaceFormat, D3DPOOL_DEFAULT, &texture);
-
-                    if (FAILED(statusTexture)) {
-                        m_totalTests++;
-                        textureCreate = '-';
-                        formatOverallPass = false;
-                    } else {
-                        m_totalTests++;
-                        m_passedTests++;
-                        textureCreate = '+';
-                        texture = nullptr;
-                    }
-                }
-
-                if (SUCCEEDED(statusCubeTexture)) {
-                    statusCubeTexture = m_device->CreateCubeTexture(256, 1, 0, surfaceFormat, D3DPOOL_DEFAULT, &cubeTexture);
-
-                    if (FAILED(statusCubeTexture)) {
-                        m_totalTests++;
-                        cubeTextureCreate = '-';
-                        formatOverallPass = false;
-                    } else {
-                        m_totalTests++;
-                        m_passedTests++;
-                        cubeTextureCreate = '+';
-                        cubeTexture = nullptr;
-                    }
-                }
-
-                if (SUCCEEDED(statusVolumeTexture)) {
-                    statusVolumeTexture = m_device->CreateVolumeTexture(256, 256, 256, 1, 0, surfaceFormat, D3DPOOL_DEFAULT, &volumeTexture);
-
-                    if (FAILED(statusVolumeTexture)) {
-                        m_totalTests++;
-                        volumeTextureCreate = '-';
-                        formatOverallPass = false;
-                    } else {
-                        m_totalTests++;
-                        m_passedTests++;
-                        volumeTextureCreate = '+';
-                        volumeTexture = nullptr;
-                    }
-                }
-
-                if (formatOverallPass)
-                    std::cout << format("  + The ", formatIter->second, " format test has passed") << std::endl;
-                else
-                std::cout << format("  - The ", formatIter->second, " format test has failed") << std::endl;
-                std::cout << format("      Surface: ", surfaceSupport, "/", surfaceCreate,
-                                        "  Texture: ", textureSupport, "/", textureCreate,
-                                        "  CubeTexture: ", cubeTextureSupport, "/", cubeTextureCreate,
-                                        "  VolumeTexture: ", volumeTextureSupport, "/", volumeTextureCreate) << std::endl;
-            }
-        }
-
-        // Depth Stencil format tests
-        void testDepthStencilFormats() {
-            resetOrRecreateDevice();
-
-            HRESULT status;
-            D3DPRESENT_PARAMETERS dsPP;
-
-            memcpy(&dsPP, &m_pp, sizeof(m_pp));
-            dsPP.EnableAutoDepthStencil = TRUE;
-
-            std::map<D3DFORMAT, char const*> dsFormats = { {D3DFMT_D16_LOCKABLE, "D3DFMT_D16_LOCKABLE"},
-                                                           {D3DFMT_D32, "D3DFMT_D32"},
-                                                           {D3DFMT_D15S1, "D3DFMT_D15S1"},
-                                                           {D3DFMT_D24S8, "D3DFMT_D24S8"},
-                                                           {D3DFMT_D16, "D3DFMT_D16"},
-                                                           {D3DFMT_D24X8, "D3DFMT_D24X8"},
-                                                           {D3DFMT_D24X4S4, "D3DFMT_D24X4S4"} };
-
-            std::map<D3DFORMAT, char const*>::iterator dsFormatIter;
-
-            std::cout << std::endl << "Running depth stencil format tests:" << std::endl;
-
-            for (dsFormatIter = dsFormats.begin(); dsFormatIter != dsFormats.end(); ++dsFormatIter) {
-                dsPP.AutoDepthStencilFormat = dsFormatIter->first;
-
-                status = m_d3d->CheckDepthStencilMatch(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
-                                                       dsPP.BackBufferFormat, dsPP.BackBufferFormat,
-                                                       dsPP.AutoDepthStencilFormat);
-                if (FAILED(status)) {
-                    std::cout << format("  ~ The ", dsFormatIter->second, " format is not supported") << std::endl;
-                } else {
-                    m_totalTests++;
-
-                    status = createDeviceWithFlags(&dsPP, D3DCREATE_HARDWARE_VERTEXPROCESSING, D3DDEVTYPE_HAL, false);
-                    if (FAILED(status)) {
-                        std::cout << format("  - The ", dsFormatIter->second, " format test has failed") << std::endl;
-                    } else {
-                        m_passedTests++;
-                        std::cout << format("  + The ", dsFormatIter->second, " format test has passed") << std::endl;
-                    }
+                    std::cout << format("  + The ", sfFormatIter->second ," format test has passed") << std::endl;
                 }
             }
         }
@@ -2212,6 +2222,9 @@ int main(int, char**) {
         rgbTriangle.listAdapterDisplayModes();
         rgbTriangle.listBackBufferFormats(FALSE);
         rgbTriangle.listBackBufferFormats(TRUE);
+        rgbTriangle.listSurfaceFormats(0);
+        rgbTriangle.listSurfaceFormats(D3DUSAGE_RENDERTARGET);
+        rgbTriangle.listSurfaceFormats(D3DUSAGE_DEPTHSTENCIL);
         rgbTriangle.listMultisampleSupport(FALSE);
         rgbTriangle.listMultisampleSupport(TRUE);
         rgbTriangle.listVendorFormatHacksSupport();
@@ -2259,11 +2272,8 @@ int main(int, char**) {
         // outright crashes on certain native drivers/hardware
         //rgbTriangle.testRectBoxClearingOnLock();
         rgbTriangle.testCheckDeviceMultiSampleTypeValidation();
-        rgbTriangle.testCheckDeviceMultiSampleTypeFormats();
         rgbTriangle.testDeviceCapabilities();
-        rgbTriangle.testFormats(0);
-        rgbTriangle.testFormats(D3DUSAGE_RENDERTARGET);
-        rgbTriangle.testDepthStencilFormats();
+        rgbTriangle.testCheckDeviceMultiSampleTypeFormats();
         rgbTriangle.printTestResults();
 
         // D3D8 triangle
