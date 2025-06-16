@@ -315,6 +315,11 @@ class RGBTriangle {
             for (formatIter = formats.begin(); formatIter != formats.end(); ++formatIter) {
                 D3DFORMAT surfaceFormat = formatIter->first;
 
+                // skip checking ATI1/2 support for depth stencil as that apparently hangs Nvidia native in D3D8...
+                if (Usage == D3DUSAGE_DEPTHSTENCIL && (surfaceFormat == (D3DFORMAT) MAKEFOURCC('A', 'T', 'I', '1') ||
+                                                       surfaceFormat == (D3DFORMAT) MAKEFOURCC('A', 'T', 'I', '2')))
+                    continue;
+
                 HRESULT statusSurface       = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, Usage, D3DRTYPE_SURFACE, surfaceFormat);
                 HRESULT statusTexture       = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, Usage, D3DRTYPE_TEXTURE, surfaceFormat);
                 HRESULT statusCubeTexture   = m_d3d->CheckDeviceFormat(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, Usage, D3DRTYPE_CUBETEXTURE, surfaceFormat);
