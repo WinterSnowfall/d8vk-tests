@@ -282,7 +282,18 @@ class RGBTriangle {
                                                          {(D3DFORMAT) MAKEFOURCC('D', 'F', '1', '6'), "D3DFMT_DF16"},
                                                          {(D3DFORMAT) MAKEFOURCC('D', 'F', '2', '4'), "D3DFMT_DF24"},
                                                          {(D3DFORMAT) MAKEFOURCC('I', 'N', 'T', 'Z'), "D3DFMT_INTZ"},
-                                                         {(D3DFORMAT) MAKEFOURCC('N', 'U', 'L', 'L'), "D3DFMT_NULL"} };
+                                                         {(D3DFORMAT) MAKEFOURCC('N', 'U', 'L', 'L'), "D3DFMT_NULL"},
+                                                         // Nobody seems to support these, but they are queried a lot
+                                                         {(D3DFORMAT) MAKEFOURCC('E', 'X', 'T', '1'), "D3DFMT_EXT1"},
+                                                         {(D3DFORMAT) MAKEFOURCC('F', 'X', 'T', '1'), "D3DFMT_FXT1"},
+                                                         {(D3DFORMAT) MAKEFOURCC('G', 'X', 'T', '1'), "D3DFMT_GXT1"},
+                                                         {(D3DFORMAT) MAKEFOURCC('H', 'X', 'T', '1'), "D3DFMT_HXT1"},
+                                                         {(D3DFORMAT) MAKEFOURCC('A', 'L', '1', '6'), "D3DFMT_AL16"},
+                                                         {(D3DFORMAT) MAKEFOURCC('A', 'R', '1', '6'), "D3DFMT_AL16"},
+                                                         {(D3DFORMAT) MAKEFOURCC(' ', 'R', '1', '6'), "D3DFMT_R16"},
+                                                         // L16 already exists as a dedicated format, but some
+                                                         // games also query the below FOURCC for some reason...
+                                                         {(D3DFORMAT) MAKEFOURCC(' ', 'L', '1', '6'), "D3DFMT_L16_FOURCC"} };
 
             std::map<D3DFORMAT, char const*>::iterator formatIter;
 
@@ -1632,17 +1643,27 @@ class RGBTriangle {
         void testCheckDeviceMultiSampleTypeValidation() {
             resetOrRecreateDevice();
 
+            constexpr D3DFORMAT D3DFMT_NULL = (D3DFORMAT) MAKEFOURCC('N', 'U', 'L', 'L');
+
             m_totalTests++;
 
             // The call will fail with anything above D3DMULTISAMPLE_16_SAMPLES
             HRESULT statusSample = m_d3d->CheckDeviceMultiSampleType(0, D3DDEVTYPE_HAL, m_pp.BackBufferFormat, FALSE,
-                                                                    (D3DMULTISAMPLE_TYPE) ((UINT) D3DMULTISAMPLE_16_SAMPLES * 2), 0);
+                                                                     (D3DMULTISAMPLE_TYPE) ((UINT) D3DMULTISAMPLE_16_SAMPLES * 2), NULL);
 
             // The call will fail with D3DFMT_UNKNOWN
             HRESULT statusUnknown = m_d3d->CheckDeviceMultiSampleType(0, D3DDEVTYPE_HAL, D3DFMT_UNKNOWN,
-                                                                      FALSE, D3DMULTISAMPLE_NONE, 0);
+                                                                      FALSE, D3DMULTISAMPLE_NONE, NULL);
 
-            if (FAILED(statusSample) && FAILED(statusUnknown)) {
+            // The call will pass with D3DFMT_NULL
+            HRESULT statusNull = m_d3d->CheckDeviceMultiSampleType(0, D3DDEVTYPE_HAL, D3DFMT_NULL,
+                                                                   FALSE, D3DMULTISAMPLE_NONE, NULL);
+
+            // The call will faill with D3DFMT_NULL above D3DMULTISAMPLE_16_SAMPLES
+            HRESULT statusNullSample = m_d3d->CheckDeviceMultiSampleType(0, D3DDEVTYPE_HAL, D3DFMT_NULL, FALSE,
+                                                                         (D3DMULTISAMPLE_TYPE) ((UINT) D3DMULTISAMPLE_16_SAMPLES * 2), NULL);
+
+            if (FAILED(statusSample) && FAILED(statusUnknown) && SUCCEEDED(statusNull) && FAILED(statusNullSample)) {
                 m_passedTests++;
                 std::cout << "  + The CheckDeviceMultiSampleType validation test has passed" << std::endl;
             } else {
