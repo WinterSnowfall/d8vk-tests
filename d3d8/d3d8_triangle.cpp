@@ -295,7 +295,9 @@ class RGBTriangle {
                                                          {(D3DFORMAT) MAKEFOURCC('D', 'F', '2', '4'), "D3DFMT_DF24"},
                                                          {(D3DFORMAT) MAKEFOURCC('I', 'N', 'T', 'Z'), "D3DFMT_INTZ"},
                                                          {(D3DFORMAT) MAKEFOURCC('N', 'U', 'L', 'L'), "D3DFMT_NULL"},
-                                                         // Nobody seems to support these, but they are queried a lot
+                                                         // Nobody seems to support these, but they are queried
+                                                         {(D3DFORMAT) MAKEFOURCC('N', 'V', 'H', 'S'), "D3DFMT_NVHS"},
+                                                         {(D3DFORMAT) MAKEFOURCC('N', 'V', 'H', 'U'), "D3DFMT_NVHU"},
                                                          {(D3DFORMAT) MAKEFOURCC('E', 'X', 'T', '1'), "D3DFMT_EXT1"},
                                                          {(D3DFORMAT) MAKEFOURCC('F', 'X', 'T', '1'), "D3DFMT_FXT1"},
                                                          {(D3DFORMAT) MAKEFOURCC('G', 'X', 'T', '1'), "D3DFMT_GXT1"},
