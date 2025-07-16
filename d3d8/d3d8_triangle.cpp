@@ -1967,6 +1967,38 @@ class RGBTriangle {
             }
         }
 
+        // Tests Lock calls on textures in various pool with D3DLOCK_DISCARD | D3DLOCK_READONLY
+        void testPoolLockingFlagBehavior() {
+            resetOrRecreateDevice();
+
+            m_totalTests++;
+
+            Com<IDirect3DTexture8> textureDefault;
+            Com<IDirect3DTexture8> textureManaged;
+            Com<IDirect3DTexture8> textureSystemMem;
+            Com<IDirect3DTexture8> textureScratch;
+
+            D3DLOCKED_RECT lockedRect;
+
+            m_device->CreateTexture(256, 256, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &textureDefault);
+            m_device->CreateTexture(256, 256, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_MANAGED, &textureManaged);
+            m_device->CreateTexture(256, 256, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &textureSystemMem);
+            m_device->CreateTexture(256, 256, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_SCRATCH, &textureScratch);
+
+            HRESULT statusDefault = textureDefault->LockRect(0, &lockedRect, NULL, D3DLOCK_DISCARD | D3DLOCK_READONLY);
+            HRESULT statusManaged = textureManaged->LockRect(0, &lockedRect, NULL, D3DLOCK_DISCARD | D3DLOCK_READONLY);
+            HRESULT statusSystemMem = textureSystemMem->LockRect(0, &lockedRect, NULL, D3DLOCK_DISCARD | D3DLOCK_READONLY);
+            HRESULT statusScratch = textureScratch->LockRect(0, &lockedRect, NULL, D3DLOCK_DISCARD | D3DLOCK_READONLY);
+
+            // LockRect calls will fail on DEFAULT but work on MANAGED/SYSTEMMEM/SCRATCH
+            if (FAILED(statusDefault) && SUCCEEDED(statusManaged) && SUCCEEDED(statusSystemMem) && SUCCEEDED(statusScratch)) {
+                m_passedTests++;
+                std::cout << "  + The pool locking flag behavior test has passed" << std::endl;
+            } else {
+                std::cout << "  - The pool locking flag behavior test has failed" << std::endl;
+            }
+        }
+
         // Various CheckDeviceMultiSampleType validation tests
         void testCheckDeviceMultiSampleTypeValidation() {
             resetOrRecreateDevice();
@@ -2299,6 +2331,7 @@ int main(int, char**) {
         rgbTriangle.testClearWithUnboundDepthStencil();
         // outright crashes on certain native drivers/hardware
         //rgbTriangle.testRectBoxClearingOnLock();
+        rgbTriangle.testPoolLockingFlagBehavior();
         rgbTriangle.testCheckDeviceMultiSampleTypeValidation();
         rgbTriangle.testDeviceCapabilities();
         rgbTriangle.testCheckDeviceMultiSampleTypeFormats();

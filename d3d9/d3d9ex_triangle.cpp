@@ -1568,6 +1568,35 @@ class RGBTriangle {
             }
         }
 
+        // Tests Lock calls on textures in various pool with D3DLOCK_DISCARD | D3DLOCK_READONLY
+        void testPoolLockingFlagBehavior() {
+            resetOrRecreateDevice();
+
+            m_totalTests++;
+
+            Com<IDirect3DTexture9> textureDefault;
+            Com<IDirect3DTexture9> textureSystemMem;
+            Com<IDirect3DTexture9> textureScratch;
+
+            D3DLOCKED_RECT lockedRect;
+
+            m_device->CreateTexture(256, 256, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &textureDefault, NULL);
+            m_device->CreateTexture(256, 256, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &textureSystemMem, NULL);
+            m_device->CreateTexture(256, 256, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_SCRATCH, &textureScratch, NULL);
+
+            HRESULT statusDefault = textureDefault->LockRect(0, &lockedRect, NULL, D3DLOCK_DISCARD | D3DLOCK_READONLY);
+            HRESULT statusSystemMem = textureSystemMem->LockRect(0, &lockedRect, NULL, D3DLOCK_DISCARD | D3DLOCK_READONLY);
+            HRESULT statusScratch = textureScratch->LockRect(0, &lockedRect, NULL, D3DLOCK_DISCARD | D3DLOCK_READONLY);
+
+            // LockRect calls will fail on DEFAULT but work on SYSTEMMEM/SCRATCH
+            if (FAILED(statusDefault) && SUCCEEDED(statusSystemMem) && SUCCEEDED(statusScratch)) {
+                m_passedTests++;
+                std::cout << "  + The pool locking flag behavior test has passed" << std::endl;
+            } else {
+                std::cout << "  - The pool locking flag behavior test has failed" << std::endl;
+            }
+        }
+
         // DF formats CheckDeviceFormat tests
         void testDFFormatsCheckDeviceFormat() {
             resetOrRecreateDevice();
@@ -1835,6 +1864,7 @@ int main(int, char**) {
         rgbTriangle.testCreateVertexShaderInit();
         // outright crashes on certain native drivers/hardware
         //rgbTriangle.testRectBoxClearingOnLock();
+        rgbTriangle.testPoolLockingFlagBehavior();
         rgbTriangle.testDFFormatsCheckDeviceFormat();
         rgbTriangle.testCheckDeviceMultiSampleTypeValidation();
         rgbTriangle.testCheckDeviceMultiSampleTypeFormats();
