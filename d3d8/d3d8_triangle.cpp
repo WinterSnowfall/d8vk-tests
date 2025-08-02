@@ -1833,6 +1833,45 @@ class RGBTriangle {
             }
         }
 
+        // Tests patch related calls
+        void testPatchCalls() {
+            resetOrRecreateDevice();
+
+            float             numSegs = 3;
+            D3DRECTPATCH_INFO rectPatchInfo = { };
+            D3DTRIPATCH_INFO  triPatchInfo = { };
+
+            m_totalTests++;
+
+            // All draw calls will return D3D_OK, even on a driver that
+            // does not implement any form of patches/TruForm
+            HRESULT rectStatusInv  = m_device->DrawRectPatch(0, &numSegs, NULL);
+            HRESULT triStatusInv   = m_device->DrawTriPatch(0, &numSegs, NULL);
+            HRESULT rectStatus     = m_device->DrawRectPatch(1, &numSegs, NULL);
+            HRESULT triStatus      = m_device->DrawTriPatch(2, &numSegs, NULL);
+            HRESULT rectStatus2    = m_device->DrawRectPatch(3, &numSegs, &rectPatchInfo);
+            HRESULT triStatus2     = m_device->DrawTriPatch(4, &numSegs, &triPatchInfo);
+            // All delete calls will fail on drivers that
+            // do not implement any form of patches/TruForm
+            HRESULT delOneStatus   = m_device->DeletePatch(1);
+            HRESULT delTwoStatus   = m_device->DeletePatch(2);
+            HRESULT delThreeStatus = m_device->DeletePatch(3);
+            HRESULT delFourStatus  = m_device->DeletePatch(4);
+            HRESULT delFiveStatus  = m_device->DeletePatch(5);
+
+            if (SUCCEEDED(rectStatusInv) && SUCCEEDED(triStatusInv)
+                && SUCCEEDED(rectStatus) && SUCCEEDED(triStatus)
+                && SUCCEEDED(rectStatus2) && SUCCEEDED(triStatus2)
+                && FAILED(delOneStatus) && FAILED(delTwoStatus) && FAILED(delThreeStatus)
+                && FAILED(delFourStatus) && FAILED(delFiveStatus)) {
+                m_passedTests++;
+                std::cout << "  + The patch calls test has passed" << std::endl;
+            // The test might fail on systems that actually support TruForm
+            } else {
+                std::cout << "  - The patch calls test has failed" << std::endl;
+            }
+        }
+
         void testCheckDeviceFormatWithBuffers() {
             resetOrRecreateDevice();
 
@@ -2327,6 +2366,7 @@ int main(int, char**) {
         rgbTriangle.testPointSizeMinRSDefaultValue();
         rgbTriangle.testUnknownFormatObjectCreation();
         rgbTriangle.testDeviceWithoutHWND();
+        rgbTriangle.testPatchCalls();
         rgbTriangle.testCheckDeviceFormatWithBuffers();
         rgbTriangle.testClearWithUnboundDepthStencil();
         // outright crashes on certain native drivers/hardware
