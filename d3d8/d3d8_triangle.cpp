@@ -1643,24 +1643,42 @@ class RGBTriangle {
             resetOrRecreateDevice();
 
             DWORD offset = 100;
-            D3DVIEWPORT8 vp1 = {0, 0, m_pp.BackBufferWidth + offset,
+            D3DVIEWPORT8 vp1 = {0, 0, m_pp.BackBufferWidth - 1,
+                                m_pp.BackBufferHeight - 1, 1.0, 0.0};
+            D3DVIEWPORT8 vp2 = {0, 0, m_pp.BackBufferWidth - 1,
+                                m_pp.BackBufferHeight - 1, 1.0, 1.0};
+            D3DVIEWPORT8 vp3 = {0, 0, m_pp.BackBufferWidth + offset,
                                 m_pp.BackBufferHeight + offset, 0.0, 1.0};
-            D3DVIEWPORT8 vp2 = {offset * 2, offset * 2, m_pp.BackBufferWidth - offset / 2,
+            D3DVIEWPORT8 vp4 = {offset * 2, offset * 2, m_pp.BackBufferWidth - offset / 2,
                                 m_pp.BackBufferHeight - offset / 2, 0.0, 1.0};
-
-            // not really needed, more of a d3d8to9 quirk to trigger viewport validation
-            Com<IDirect3DSurface8> rt;
-            m_device->GetRenderTarget(&rt);
+            D3DVIEWPORT8 vp5 = {65536, 65536, 65536, 65536, 9.9, 0.0};
+            D3DVIEWPORT8 vpr1 = { };
+            D3DVIEWPORT8 vpr2 = { };
 
             m_totalTests++;
+            // MinZ > MaxZ. In this situation MaxZ will
+            // automagically be set to MinZ + 0.001f.
+            HRESULT statusVP1 = m_device->SetViewport(&vp1);
+            m_device->GetViewport(&vpr1);
+            //std::cout << format("  * vpr.MinZ: ", vpr.MinZ) << std::endl;
+            //std::cout << format("  * vpr.MaxZ: ", vpr.MaxZ) << std::endl;
+            // MinZ = MaxZ. Behaves the same as MinZ > MaxZ.
+            HRESULT statusVP2 = m_device->SetViewport(&vp2);
+            m_device->GetViewport(&vpr2);
             // according to D3D8 docs, this call should fail "if pViewport describes
             // a region that cannot exist within the render target surface"
-            HRESULT statusVP1 = m_device->SetViewport(&vp1);
+            HRESULT statusVP3 = m_device->SetViewport(&vp3);
             // a viewport with a too great X or Y offset should be rejected even
             // if its dimensions are technically smaller than the render target surface
-            HRESULT statusVP2 = m_device->SetViewport(&vp2);
+            HRESULT statusVP4 = m_device->SetViewport(&vp4);
+            // this is a totally bullshit viewport (will be rejected by D3D8)
+            HRESULT statusVP5 = m_device->SetViewport(&vp5);
+            // using a null viewport will outright crash on the native implementation
+            //HRESULT statusVP6 = m_device->SetViewport(NULL);
 
-            if (FAILED(statusVP1) && FAILED(statusVP2)) {
+            if (SUCCEEDED(statusVP1) && vpr1.MaxZ == vpr1.MinZ + 0.001f &&
+                SUCCEEDED(statusVP2) && vpr2.MaxZ == vpr2.MinZ + 0.001f &&
+                FAILED(statusVP3) && FAILED(statusVP4) && FAILED(statusVP5)) {
                 m_passedTests++;
                 std::cout << "  + The invalid viewports test has passed" << std::endl;
             } else {

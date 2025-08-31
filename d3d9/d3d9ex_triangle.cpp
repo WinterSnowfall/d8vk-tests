@@ -1317,6 +1317,52 @@ class RGBTriangle {
             }
         }
 
+        // Invalid (outside of the render target) viewports test
+        void testInvalidViewports() {
+            resetOrRecreateDevice();
+
+            DWORD offset = 100;
+            D3DVIEWPORT9 vp1 = {0, 0, m_pp.BackBufferWidth - 1,
+                                m_pp.BackBufferHeight - 1, 1.0, 0.0};
+            D3DVIEWPORT9 vp2 = {0, 0, m_pp.BackBufferWidth - 1,
+                                m_pp.BackBufferHeight - 1, 1.0, 1.0};
+            D3DVIEWPORT9 vp3 = {0, 0, m_pp.BackBufferWidth + offset,
+                                m_pp.BackBufferHeight + offset, 0.0, 1.0};
+            D3DVIEWPORT9 vp4 = {offset * 2, offset * 2, m_pp.BackBufferWidth - offset / 2,
+                                m_pp.BackBufferHeight - offset / 2, 0.0, 1.0};
+            D3DVIEWPORT9 vp5 = {65536, 65536, 65536, 65536, 9.9, 0.0};
+            D3DVIEWPORT9 vpr1 = { };
+            D3DVIEWPORT9 vpr2 = { };
+
+            m_totalTests++;
+            // MinZ > MaxZ. In this situation MaxZ will
+            // automagically be set to MinZ + 0.001f.
+            HRESULT statusVP1 = m_device->SetViewport(&vp1);
+            m_device->GetViewport(&vpr1);
+            //std::cout << format("  * vpr.MinZ: ", vpr.MinZ) << std::endl;
+            //std::cout << format("  * vpr.MaxZ: ", vpr.MaxZ) << std::endl;
+            // MinZ = MaxZ. Behaves the same as MinZ > MaxZ.
+            HRESULT statusVP2 = m_device->SetViewport(&vp2);
+            m_device->GetViewport(&vpr2);
+            // this works just fine in D3D9
+            HRESULT statusVP3 = m_device->SetViewport(&vp3);
+            // this also works just fine in D3D9
+            HRESULT statusVP4 = m_device->SetViewport(&vp4);
+            // this is a totally bullshit viewport (will work in D3D9)
+            HRESULT statusVP5 = m_device->SetViewport(&vp5);
+            // using a null viewport will outright crash on the native implementation
+            //HRESULT statusVP6 = m_device->SetViewport(NULL);
+
+            if (SUCCEEDED(statusVP1) && vpr1.MaxZ == vpr1.MinZ + 0.001f &&
+                SUCCEEDED(statusVP2) && vpr2.MaxZ == vpr2.MinZ + 0.001f &&
+                SUCCEEDED(statusVP3) && SUCCEEDED(statusVP4) && SUCCEEDED(statusVP5)) {
+                m_passedTests++;
+                std::cout << "  + The invalid viewports test has passed" << std::endl;
+            } else {
+                std::cout << "  - The invalid viewports test has failed" << std::endl;
+            }
+        }
+
         // Create and use a device with a NULL HWND
         void testDeviceWithoutHWND() {
             // use a separate device for this test
@@ -1897,6 +1943,7 @@ int main(int, char**) {
         rgbTriangle.testGetDeviceCapsWithDeviceTypes();
         rgbTriangle.testMultiplyTransformRecordingAndCapture();
         rgbTriangle.testCursorHotSpotCoordinates();
+        rgbTriangle.testInvalidViewports();
         rgbTriangle.testDeviceWithoutHWND();
         // outright crashes on certain native drivers/hardware
         //rgbTriangle.testPatchCalls();
