@@ -1939,6 +1939,40 @@ class RGBTriangle {
             }
         }
 
+        // Test UpdateTexture calls with various source/destination texture sizes
+        void testUpdateTextureSizes() {
+            resetOrRecreateDevice();
+
+            m_totalTests++;
+
+            Com<IDirect3DTexture8> textureSrc1;
+            Com<IDirect3DTexture8> textureDst1;
+            Com<IDirect3DTexture8> textureSrc2;
+            Com<IDirect3DTexture8> textureDst2;
+            Com<IDirect3DTexture8> textureSrc3;
+            Com<IDirect3DTexture8> textureDst3;
+
+            // This passes on native
+            m_device->CreateTexture(320, 554, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &textureSrc1);
+            m_device->CreateTexture(320, 556, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &textureDst1);
+            HRESULT status1 = m_device->UpdateTexture(textureSrc1.ptr(), textureDst1.ptr());
+            // This also passes on native
+            m_device->CreateTexture(160, 278, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &textureSrc2);
+            m_device->CreateTexture(320, 556, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &textureDst2);
+            // ... and even this passes on native
+            HRESULT status2 = m_device->UpdateTexture(textureSrc2.ptr(), textureDst2.ptr());
+            m_device->CreateTexture(360, 590, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &textureSrc3);
+            m_device->CreateTexture(320, 556, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &textureDst3);
+            HRESULT status3 = m_device->UpdateTexture(textureSrc3.ptr(), textureDst3.ptr());
+
+            if (SUCCEEDED(status1) && SUCCEEDED(status2) && SUCCEEDED(status3)) {
+                m_passedTests++;
+                std::cout << "  + The UpdateTexture sizes test has passed" << std::endl;
+            } else {
+                std::cout << "  - The UpdateTexture sizes test has failed" << std::endl;
+            }
+        }
+
         // Rect/Box clearing behavior on lock test
         void testRectBoxClearingOnLock() {
             resetOrRecreateDevice();
@@ -2387,6 +2421,7 @@ int main(int, char**) {
         rgbTriangle.testPatchCalls();
         rgbTriangle.testCheckDeviceFormatWithBuffers();
         rgbTriangle.testClearWithUnboundDepthStencil();
+        rgbTriangle.testUpdateTextureSizes();
         // outright crashes on certain native drivers/hardware
         //rgbTriangle.testRectBoxClearingOnLock();
         rgbTriangle.testPoolLockingFlagBehavior();
