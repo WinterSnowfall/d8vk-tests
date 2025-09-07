@@ -295,7 +295,11 @@ class RGBTriangle {
                                                          {(D3DFORMAT) MAKEFOURCC(' ', 'R', '1', '6'), "D3DFMT_R16"},
                                                          // L16 already exists as a dedicated format, but some
                                                          // games also query the below FOURCC for some reason...
-                                                         {(D3DFORMAT) MAKEFOURCC(' ', 'L', '1', '6'), "D3DFMT_L16_FOURCC"} };
+                                                         {(D3DFORMAT) MAKEFOURCC(' ', 'L', '1', '6'), "D3DFMT_L16_FOURCC"},
+                                                         // Obscure video formats used by some arcade game ports
+                                                         {(D3DFORMAT) MAKEFOURCC('W', 'V', 'C', '1'), "D3DFMT_WVC1"},
+                                                         {(D3DFORMAT) MAKEFOURCC('I', 'Y', 'U', 'V'), "D3DFMT_IYUV"},
+                                                         {(D3DFORMAT) MAKEFOURCC('I', '4', '2', '0'), "D3DFMT_I420"} };
 
             std::map<D3DFORMAT, char const*>::iterator formatIter;
 
