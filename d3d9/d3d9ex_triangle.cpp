@@ -1023,7 +1023,7 @@ class RGBTriangle {
             std::cout << std::endl << "Listing available texture memory:" << std::endl;
 
             uint32_t availableMemory = m_device->GetAvailableTextureMem();
-            
+
             std::cout << format("  ~ Bytes: ", availableMemory) << std::endl;
         }
 
@@ -1757,11 +1757,11 @@ class RGBTriangle {
             HRESULT statusNull = m_d3d->CheckDeviceMultiSampleType(0, D3DDEVTYPE_HAL, D3DFMT_NULL,
                                                                    FALSE, D3DMULTISAMPLE_NONE, NULL);
 
-            // The call will faill with D3DFMT_NULL above D3DMULTISAMPLE_16_SAMPLES
-            HRESULT statusNullSample = m_d3d->CheckDeviceMultiSampleType(0, D3DDEVTYPE_HAL, D3DFMT_NULL, FALSE,
-                                                                         (D3DMULTISAMPLE_TYPE) ((UINT) D3DMULTISAMPLE_16_SAMPLES * 2), NULL);
+            // The call will fail with D3DFMT_NULL and anything above D3DMULTISAMPLE_2_SAMPLES
+            HRESULT statusNull2Samples = m_d3d->CheckDeviceMultiSampleType(0, D3DDEVTYPE_HAL, D3DFMT_NULL,
+                                                                           FALSE, D3DMULTISAMPLE_2_SAMPLES, NULL);
 
-            if (FAILED(statusSample) && FAILED(statusUnknown) && SUCCEEDED(statusNull) && FAILED(statusNullSample)) {
+            if (FAILED(statusSample) && FAILED(statusUnknown) && SUCCEEDED(statusNull) && FAILED(statusNull2Samples)) {
                 m_passedTests++;
                 std::cout << "  + The CheckDeviceMultiSampleType validation test has passed" << std::endl;
             } else {
