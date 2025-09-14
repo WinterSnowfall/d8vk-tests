@@ -2121,10 +2121,11 @@ class RGBTriangle {
                                                                    FALSE, D3DMULTISAMPLE_NONE);
 
             // The call will fail with D3DFMT_NULL and anything above D3DMULTISAMPLE_2_SAMPLES
-            HRESULT statusNull2Samples = m_d3d->CheckDeviceMultiSampleType(0, D3DDEVTYPE_HAL, D3DFMT_NULL,
-                                                                           FALSE, D3DMULTISAMPLE_2_SAMPLES);
+            // on cards that don't support the format/vendor hack, or above D3DMULTISAMPLE_16_SAMPLES on cards that do
+            HRESULT statusNullSamples = m_d3d->CheckDeviceMultiSampleType(0, D3DDEVTYPE_HAL, D3DFMT_NULL, FALSE,
+                                                                          (D3DMULTISAMPLE_TYPE) ((UINT) D3DMULTISAMPLE_16_SAMPLES * 2));
 
-            if (FAILED(statusSample) && FAILED(statusUnknown) && SUCCEEDED(statusNull) && FAILED(statusNull2Samples)) {
+            if (FAILED(statusSample) && FAILED(statusUnknown) && SUCCEEDED(statusNull) && FAILED(statusNullSamples)) {
                 m_passedTests++;
                 std::cout << "  + The CheckDeviceMultiSampleType validation test has passed" << std::endl;
             } else {
