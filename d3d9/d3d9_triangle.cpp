@@ -50,10 +50,15 @@ class RGBTriangle {
 
     public:
 
-        static const UINT WINDOW_WIDTH  = 700;
-        static const UINT WINDOW_HEIGHT = 700;
+        static constexpr const char* TRIANGLE_ID    = "D3D9_Triangle";
+        static constexpr const char* TRIANGLE_TITLE = "D3D9 Triangle - Blisto Modern Testing Edition";
+
+        static constexpr UINT WINDOW_WIDTH  = 700;
+        static constexpr UINT WINDOW_HEIGHT = 700;
 
         RGBTriangle(HWND hWnd) : m_hWnd(hWnd) {
+            std::cout << RGBTriangle::TRIANGLE_TITLE << std::endl << std::endl;
+
             decltype(Direct3DCreate9)* Direct3DCreate9 = nullptr;
             HMODULE hm = LoadLibraryA("d3d9.dll");
             Direct3DCreate9 = (decltype(Direct3DCreate9))GetProcAddress(hm, "Direct3DCreate9");
@@ -118,8 +123,8 @@ class RGBTriangle {
             m_pp.SwapEffect = D3DSWAPEFFECT_COPY;
             // according to D3D9 spec "0 is treated as 1" here
             m_pp.BackBufferCount = 0;
-            m_pp.BackBufferWidth = WINDOW_WIDTH;
-            m_pp.BackBufferHeight = WINDOW_HEIGHT;
+            m_pp.BackBufferWidth = RGBTriangle::WINDOW_WIDTH;
+            m_pp.BackBufferHeight = RGBTriangle::WINDOW_HEIGHT;
             m_pp.BackBufferFormat = dm.Format;
 
             createDeviceWithFlags(&m_pp, D3DCREATE_HARDWARE_VERTEXPROCESSING, D3DDEVTYPE_HAL, true);
@@ -1447,8 +1452,8 @@ class RGBTriangle {
             presentParams.SwapEffect = D3DSWAPEFFECT_COPY;
             // according to D3D9 spec "0 is treated as 1" here
             presentParams.BackBufferCount = 0;
-            presentParams.BackBufferWidth = WINDOW_WIDTH;
-            presentParams.BackBufferHeight = WINDOW_HEIGHT;
+            presentParams.BackBufferWidth = RGBTriangle::WINDOW_WIDTH;
+            presentParams.BackBufferHeight = RGBTriangle::WINDOW_HEIGHT;
             presentParams.BackBufferFormat = m_pp.BackBufferFormat;
 
             DWORD behaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
@@ -2002,13 +2007,13 @@ LRESULT WINAPI WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 int main(int, char**) {
     WNDCLASSEX wc = {sizeof(WNDCLASSEX), CS_CLASSDC, WindowProc, 0L, 0L,
                      GetModuleHandle(NULL), NULL, LoadCursor(nullptr, IDC_ARROW), NULL, NULL,
-                     "D3D9_Triangle", NULL};
+                     RGBTriangle::TRIANGLE_ID, NULL};
     RegisterClassEx(&wc);
 
-    HWND hWnd = CreateWindow("D3D9_Triangle", "D3D9 Triangle - Blisto Modern Testing Edition",
-                              WS_OVERLAPPEDWINDOW, 50, 50,
-                              RGBTriangle::WINDOW_WIDTH, RGBTriangle::WINDOW_HEIGHT,
-                              GetDesktopWindow(), NULL, wc.hInstance, NULL);
+    HWND hWnd = CreateWindow(RGBTriangle::TRIANGLE_ID, RGBTriangle::TRIANGLE_TITLE,
+                             WS_OVERLAPPEDWINDOW, 50, 50,
+                             RGBTriangle::WINDOW_WIDTH, RGBTriangle::WINDOW_HEIGHT,
+                             GetDesktopWindow(), NULL, wc.hInstance, NULL);
 
     MSG msg;
 
@@ -2070,7 +2075,7 @@ int main(int, char**) {
                 DispatchMessage(&msg);
 
                 if (msg.message == WM_QUIT) {
-                    UnregisterClass("D3D9_Triangle", wc.hInstance);
+                    UnregisterClass(RGBTriangle::TRIANGLE_ID, wc.hInstance);
                     return msg.wParam;
                 }
             } else {
@@ -2080,7 +2085,7 @@ int main(int, char**) {
 
     } catch (const Error& e) {
         std::cerr << e.message() << std::endl;
-        UnregisterClass("D3D9_Triangle", wc.hInstance);
+        UnregisterClass(RGBTriangle::TRIANGLE_ID, wc.hInstance);
         return msg.wParam;
     }
 }
