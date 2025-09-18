@@ -1230,6 +1230,50 @@ class RGBTriangle {
             }
         }
 
+        // DrawIndexedPrimitive test with various NumVertices/primCount values
+        void testDrawIndexedPrimitiveMaxPrimCount() {
+            resetOrRecreateDevice();
+
+            Com<IDirect3DVertexBuffer8> vertexBuffer;
+            Com<IDirect3DIndexBuffer8>  indexBuffer;
+
+            void* vertices;
+            m_device->CreateVertexBuffer(m_rgbVerticesSize, 0, RGBT_FVF_CODES,
+                                         D3DPOOL_DEFAULT, &vertexBuffer);
+            vertexBuffer->Lock(0, m_rgbVerticesSize, reinterpret_cast<BYTE**>(&vertices), 0);
+            memcpy(vertices, m_rgbVertices.data(), m_rgbVerticesSize);
+            vertexBuffer->Unlock();
+
+            std::array<uint32_t, 8> indices_values = { 0, 1, 2, 1, 2, 1, 0, 1 };
+            const size_t indices_size = indices_values.size() * sizeof(uint32_t);
+            void* indices;
+            m_device->CreateIndexBuffer(256, 0, D3DFMT_INDEX32, D3DPOOL_DEFAULT, &indexBuffer);
+            indexBuffer->Lock(0, indices_size, reinterpret_cast<BYTE**>(&indices), 0);
+            memcpy(indices, indices_values.data(), indices_size);
+            indexBuffer->Unlock();
+
+            m_totalTests++;
+
+            m_device->BeginScene();
+            m_device->SetStreamSource(0, vertexBuffer.ptr(), sizeof(RGBVERTEX));
+            m_device->SetIndices(indexBuffer.ptr(), 0);
+            m_device->SetVertexShader(RGBT_FVF_CODES);
+            // 8388607 is the highest reported cap I've seen (on modern Intel Windows drivers)
+            HRESULT statusDrawOneHigh  = m_device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 8, 0, 8388608);
+            HRESULT statusDrawZeroHigh = m_device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 0, 8388608);
+            HRESULT statusDrawOneLow   = m_device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 8, 0, 1);
+            HRESULT statusDrawZeroLow  = m_device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 0, 1);
+            m_device->EndScene();
+
+            if (SUCCEEDED(statusDrawOneHigh) && SUCCEEDED(statusDrawZeroHigh)
+             && SUCCEEDED(statusDrawOneLow)  && SUCCEEDED(statusDrawZeroLow)) {
+                m_passedTests++;
+                std::cout << "  + The DrawIndexedPrimitive max primCount test has passed" << std::endl;
+            } else {
+                std::cout << "  - The DrawIndexedPrimitive max primCount has failed" << std::endl;
+            }
+        }
+
         // CreateDevice with various devices types test
         void testDeviceTypes() {
             // D3DDEVTYPE_REF is available on Windows 8 and above
@@ -2404,6 +2448,7 @@ int main(int, char**) {
         rgbTriangle.testPureDeviceSetSWVPRenderState();
         rgbTriangle.testPureDeviceOnlyWithHWVP();
         rgbTriangle.testClipStatus();
+        rgbTriangle.testDrawIndexedPrimitiveMaxPrimCount();
         rgbTriangle.testDeviceTypes();
         rgbTriangle.testGetDeviceCapsWithDeviceTypes();
         rgbTriangle.testDefaultPoolAllocationReset();
