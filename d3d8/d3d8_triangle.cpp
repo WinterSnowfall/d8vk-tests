@@ -1455,25 +1455,51 @@ class RGBTriangle {
             }
         }
 
+        // CreateStateBlock with invalid D3DSTATEBLOCKTYPE test
+        void testInvalidStateBlockType() {
+            resetOrRecreateDevice();
+
+            //DWORD stateBlockTokenZero = 0;
+            DWORD stateBlockTokenAll = 0;
+            DWORD stateBlockTokenFour = 0;
+            DWORD stateBlockTokenFiveHundred = 0;
+
+            m_totalTests++;
+
+            // 0 will be accepted, but leads to undefined behavior,
+            // while everything above 3 (D3DSBT_VERTEXSTATE) will be rejected
+            //HRESULT statusZero = m_device->CreateStateBlock(D3DSTATEBLOCKTYPE(0), &stateBlockTokenZero);
+            HRESULT statusAll = m_device->CreateStateBlock(D3DSBT_ALL, &stateBlockTokenAll);
+            HRESULT statusFour = m_device->CreateStateBlock(D3DSTATEBLOCKTYPE(4), &stateBlockTokenFour);
+            HRESULT statusFiveHundred = m_device->CreateStateBlock(D3DSTATEBLOCKTYPE(500), &stateBlockTokenFiveHundred);
+
+            if (SUCCEEDED(statusAll) && FAILED(statusFour) && FAILED(statusFiveHundred)) {
+                m_passedTests++;
+                std::cout << "  + The CreateStateBlock with invalid D3DSTATEBLOCKTYPE test has passed" << std::endl;
+            } else {
+                std::cout << "  - The CreateStateBlock with invalid D3DSTATEBLOCKTYPE test has failed" << std::endl;
+            }
+        }
+
         // BeginStateBlock & other state block calls test
         void testBeginStateBlockCalls() {
             resetOrRecreateDevice();
 
-            DWORD deleteStateBlockToken = 0;
+            DWORD createStateBlockToken = 0;
             DWORD endStateBlockToken = 0;
-            m_device->CreateStateBlock(D3DSBT_ALL, &deleteStateBlockToken);
+            m_device->CreateStateBlock(D3DSBT_ALL, &createStateBlockToken);
             m_device->BeginStateBlock();
 
             m_totalTests++;
             // no other calls except EndStateBlock() will succeed insides of a BeginStateBlock()
-            HRESULT statusDelete = m_device->DeleteStateBlock(deleteStateBlockToken);
             HRESULT statusBegin = m_device->BeginStateBlock();
-            HRESULT statusApply = m_device->ApplyStateBlock(deleteStateBlockToken);
-            HRESULT statusCapture = m_device->CaptureStateBlock(deleteStateBlockToken);
-            HRESULT statusCreate = m_device->CreateStateBlock(D3DSBT_ALL, &deleteStateBlockToken);
+            HRESULT statusApply = m_device->ApplyStateBlock(createStateBlockToken);
+            HRESULT statusCapture = m_device->CaptureStateBlock(createStateBlockToken);
+            HRESULT statusDelete = m_device->DeleteStateBlock(createStateBlockToken);
+            HRESULT statusCreate = m_device->CreateStateBlock(D3DSBT_ALL, &createStateBlockToken);
             HRESULT statusEnd = m_device->EndStateBlock(&endStateBlockToken);
 
-            if (FAILED(statusDelete) && FAILED(statusBegin) && FAILED(statusApply)
+            if (FAILED(statusBegin) && FAILED(statusApply) && FAILED(statusDelete)
              && FAILED(statusCapture) && FAILED(statusCreate) && SUCCEEDED(statusEnd)) {
                 m_passedTests++;
                 std::cout << "  + The BeginStateBlock & other state block calls test has passed" << std::endl;
@@ -2455,6 +2481,7 @@ int main(int, char**) {
         rgbTriangle.testCreateVertexShaderHandleGeneration();
         rgbTriangle.testCreateStateBlockAndReset();
         rgbTriangle.testCreateStateBlockMonotonicTokens(100);
+        rgbTriangle.testInvalidStateBlockType();
         rgbTriangle.testBeginStateBlockCalls();
         rgbTriangle.testMultiplyTransformRecordingAndCapture();
         // native drivers don't appear to validate tokens at

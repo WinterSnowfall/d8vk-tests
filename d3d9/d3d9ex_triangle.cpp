@@ -1271,6 +1271,59 @@ class RGBTriangle {
             }
         }
 
+        // CreateStateBlock with invalid D3DSTATEBLOCKTYPE test
+        void testInvalidStateBlockType() {
+            resetOrRecreateDevice();
+
+            //Com<IDirect3DStateBlock9> stateBlockZero;
+            Com<IDirect3DStateBlock9> stateBlockAll;
+            Com<IDirect3DStateBlock9> stateBlockFour;
+            Com<IDirect3DStateBlock9> stateBlockFiveHundred;
+
+            m_totalTests++;
+
+            // 0 will be accepted, but leads to undefined behavior,
+            // while everything above 3 (D3DSBT_VERTEXSTATE) will be rejected
+            //HRESULT statusZero = m_device->CreateStateBlock(D3DSTATEBLOCKTYPE(0), &stateBlockZero);
+            HRESULT statusAll = m_device->CreateStateBlock(D3DSBT_ALL, &stateBlockAll);
+            HRESULT statusFour = m_device->CreateStateBlock(D3DSTATEBLOCKTYPE(4), &stateBlockFour);
+            HRESULT statusFiveHundred = m_device->CreateStateBlock(D3DSTATEBLOCKTYPE(500), &stateBlockFiveHundred);
+
+            if (SUCCEEDED(statusAll) && FAILED(statusFour) && FAILED(statusFiveHundred)) {
+                m_passedTests++;
+                std::cout << "  + The CreateStateBlock with invalid D3DSTATEBLOCKTYPE test has passed" << std::endl;
+            } else {
+                std::cout << "  - The CreateStateBlock with invalid D3DSTATEBLOCKTYPE test has failed" << std::endl;
+            }
+        }
+
+        // BeginStateBlock & other state block calls test
+        void testBeginStateBlockCalls() {
+            resetOrRecreateDevice();
+
+            Com<IDirect3DStateBlock9> createStateBlock;
+            Com<IDirect3DStateBlock9> endStateBlock;
+            m_device->CreateStateBlock(D3DSBT_ALL, &createStateBlock);
+            m_device->BeginStateBlock();
+
+            m_totalTests++;
+            // no other calls except EndStateBlock() will succeed insides of a BeginStateBlock()
+            HRESULT statusBegin = m_device->BeginStateBlock();
+            HRESULT statusApply = createStateBlock->Apply();
+            HRESULT statusCapture = createStateBlock->Capture();
+            createStateBlock = nullptr;
+            HRESULT statusCreate = m_device->CreateStateBlock(D3DSBT_ALL, &createStateBlock);
+            HRESULT statusEnd = m_device->EndStateBlock(&endStateBlock);
+
+            if (FAILED(statusBegin) && FAILED(statusApply)
+             && FAILED(statusCapture) && FAILED(statusCreate) && SUCCEEDED(statusEnd)) {
+                m_passedTests++;
+                std::cout << "  + The BeginStateBlock & other state block calls test has passed" << std::endl;
+            } else {
+                std::cout << "  - The BeginStateBlock & other state block calls test has failed" << std::endl;
+            }
+        }
+
         // MultiplyTransform with state blocks test
         void testMultiplyTransformRecordingAndCapture() {
             resetOrRecreateDevice();
@@ -2031,6 +2084,8 @@ int main(int, char**) {
         rgbTriangle.testDrawIndexedPrimitiveMaxPrimCount();
         rgbTriangle.testDeviceTypes();
         rgbTriangle.testGetDeviceCapsWithDeviceTypes();
+        rgbTriangle.testInvalidStateBlockType();
+        rgbTriangle.testBeginStateBlockCalls();
         rgbTriangle.testMultiplyTransformRecordingAndCapture();
         rgbTriangle.testCursorHotSpotCoordinates();
         rgbTriangle.testInvalidViewports();
